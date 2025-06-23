@@ -27,4 +27,8 @@ impl Token {
     pub fn is_kind(&self, kind: TokenKind) -> bool {
         self.kind == kind
     }
+
+    pub fn kind(&self) -> &TokenKind {
+        &self.kind
+    }
 }
