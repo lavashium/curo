@@ -19,7 +19,7 @@ pub trait Visitor {
 
     fn visit_expression(&mut self, expression: &Expression) {
         match expression {
-            Expression::Constant { constant } => {
+            Expression::Constant { constant: _ } => {
 
             },
         }

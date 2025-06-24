@@ -1,18 +1,13 @@
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Identifier(pub String);
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Preprocessor(pub String);
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Constant(pub String);
+
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TokenKind {
     Keyword(KeywordKind),
-    Identifier(Identifier),
+    Identifier(String),
     Operator(OperatorKind),
     Punctuation(PunctuationKind),
-    Preprocessor(Preprocessor),
-    Constant(Constant),
+    Preprocessor(String),
+    Constant(String),
     Unknown(String),
 }
 
@@ -47,7 +42,7 @@ macro_rules! token_keyword {
 #[macro_export]
 macro_rules! token_identifier {
     ($name:expr) => {
-        TokenKind::Identifier(Identifier($name.to_string()))
+        TokenKind::Identifier($name.to_string())
     };
 }
 
@@ -75,7 +70,7 @@ macro_rules! token_preprocessor {
 #[macro_export]
 macro_rules! token_constant {
     ($val:expr) => {
-        TokenKind::Constant(Constant($val.to_string()))
+        TokenKind::Constant($val.to_string())
     };
 }
 

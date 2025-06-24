@@ -1,22 +1,22 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Program {
     pub function_definition: Function,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Function {
     pub identifier_name: String,
     pub statement_body: Statement,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Statement {
     Return {
         expression: Expression,
     },
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Expression {
     Constant {
         constant: String

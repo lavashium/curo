@@ -95,7 +95,7 @@ impl TokenProducer for KeywordProducer {
             "int" => token_keyword!(Int),
             "return" => token_keyword!(Return),
             "void" => token_keyword!(Void),
-            _ => TokenKind::Identifier(Identifier(lexeme.clone())),
+            _ => TokenKind::Identifier(lexeme.clone()),
         };
 
         let span = lexer.span_from(start_pos);
@@ -157,7 +157,7 @@ impl TokenProducer for ConstantProducer {
         let end_ptr = lexer.pointer();
         let lexeme = lexer.peek_slice((start_ptr, end_ptr))?.to_string();
 
-        let kind = TokenKind::Constant(Constant(lexeme.clone()));
+        let kind = TokenKind::Constant(lexeme.clone());
 
         let span = lexer.span_from(start_pos);
 
