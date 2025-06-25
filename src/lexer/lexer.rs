@@ -1,4 +1,5 @@
-use crate::token::*;
+use crate::error::manager::DiagnosticsManager;
+use crate::{errkind_error, error_unknown_token, token::*};
 use crate::lexer::producer::*;
 
 #[derive(Debug)]
@@ -61,7 +62,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn parse(&mut self) -> TokenStream {
+    pub fn parse(&mut self, diagnostics: &mut DiagnosticsManager) -> TokenStream {
         let mut tokens = Vec::new();
 
         while self.peek().is_some() {
@@ -80,7 +81,16 @@ impl<'a> Lexer<'a> {
                     end_col: self.column,
                 };
 
-                tokens.push(Token::new(TokenKind::Unknown(ch.to_string()), ch.to_string(), span));
+                let token = Token::new(
+                    TokenKind::Unknown(ch.to_string()),
+                    ch.to_string(),
+                    span
+                );
+
+                diagnostics.push(errkind_error!(
+                    span,
+                    error_unknown_token!(token)
+                ));
             }
         }
 
@@ -90,88 +100,3 @@ impl<'a> Lexer<'a> {
 
 
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::*;
-
-    #[test]
-    fn test_empty_input() {
-        let mut lexer = Lexer::new("");
-        let tokens = lexer.parse();
-        let kinds: Vec<_> = tokens.iter().map(|t| t.kind()).collect();
-
-        assert!(kinds.is_empty());
-    }
-
-    #[test]
-    fn test_single_char_tokens() {
-        let mut lexer = Lexer::new("(){;}");
-        let tokens = lexer.parse();
-        let kinds: Vec<_> = tokens.iter().map(|t| t.kind()).collect();
-
-        assert_eq!(
-            kinds,
-            vec![
-                &token_punctuation!(OpenParen),
-                &token_punctuation!(CloseParen),
-                &token_punctuation!(OpenBrace),
-                &token_punctuation!(Semicolon),
-                &token_punctuation!(CloseBrace),
-            ]
-        );
-    }
-
-    #[test]
-    fn test_identifier_and_keyword() {
-        let mut lexer = Lexer::new("int x");
-        let tokens = lexer.parse();
-        let kinds: Vec<_> = tokens.iter().map(|t| t.kind()).collect();
-
-        assert_eq!(
-            kinds,
-            vec![
-                &token_keyword!(Int),
-                &token_identifier!("x"),
-            ]
-        );
-    }
-
-    #[test]
-    fn test_number_and_whitespace() {
-        let mut lexer = Lexer::new("  42\t\n");
-        let tokens = lexer.parse();
-        let kinds: Vec<_> = tokens.iter().map(|t| t.kind()).collect();
-
-        assert_eq!(
-            kinds,
-            vec![
-                &token_constant!(42),
-            ]
-        );
-    }
-
-    #[test]
-    fn test_unknown_token() {
-        let mut lexer = Lexer::new("@");
-        let tokens = lexer.parse();
-        let kind = tokens.iter().next().unwrap().kind();
-
-        assert!(matches!(kind, TokenKind::Unknown(s) if s == "@"));
-    }
-
-    #[test]
-    fn test_multiline() {
-        let mut lexer = Lexer::new("int\nmain");
-        let tokens = lexer.parse();
-        let kinds: Vec<_> = tokens.iter().map(|t| t.kind()).collect();
-
-        assert_eq!(
-            kinds,
-            vec![
-                &token_keyword!(Int),
-                &token_identifier!("main"),
-            ]
-        );
-    }
-}

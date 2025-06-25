@@ -1,6 +1,6 @@
 use crate::token::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Span {
     pub start_line: usize,
     pub start_col: usize,
