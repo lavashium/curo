@@ -5,18 +5,18 @@ use crate::ast::*;
 use crate::*;
 
 macro_rules! error_expect {
-    ($parser:expr, $kind:expr, $diagnostics:expr) => {{
-        match $parser.source_tokens.consume() {
+    ($self:expr, $kind:expr) => {{
+        match $self.parser.source_tokens.consume() {
             Some(token) if token.kind() == &$kind => Some(token),
             Some(found) => {
-                $diagnostics.push(errkind_error!(
+                $self.diagnostics.push(errkind_error!(
                     found.span,
                     error_expected_token!($kind.clone(), found.clone())
                 ));
                 None
             }
             None => {
-                $diagnostics.push(errkind_error!(
+                $self.diagnostics.push(errkind_error!(
                     Span::default(),
                     error_unexpected_eof!()
                 ));
@@ -27,12 +27,12 @@ macro_rules! error_expect {
 }
 
 macro_rules! error_consume_unwrap {
-    ($parser:expr, $kind:ident, $diagnostics:expr) => {{
-        match $parser.source_tokens.consume() {
+    ($self:expr, $kind:ident) => {{
+        match $self.parser.source_tokens.consume() {
             Some(token) => match token.kind() {
                 TokenKind::$kind(inner) => Some(inner.to_owned()),
                 _ => {
-                    $diagnostics.push(errkind_error!(
+                    $self.diagnostics.push(errkind_error!(
                         token.span,
                         error_unexpected_token!(token.clone(), [TokenKind::$kind("".to_string())])
                     ));
@@ -40,7 +40,7 @@ macro_rules! error_consume_unwrap {
                 }
             },
             None => {
-                $diagnostics.push(errkind_error!(
+                $self.diagnostics.push(errkind_error!(
                     Span::default(),
                     error_unexpected_eof!()
                 ));
@@ -50,80 +50,77 @@ macro_rules! error_consume_unwrap {
     }};
 }
 
-pub fn parse_program(parser: &mut Parser, diagnostics: &mut DiagnosticsManager) -> Option<Program> {
-    let function = parse_function(parser, diagnostics)?;
+pub struct ParserRules<'a> {
+    parser: &'a mut Parser,
+    diagnostics: &'a mut DiagnosticsManager,
+}
 
-    if parser.source_tokens.any_tokens() {
-        for token in parser.source_tokens.iter() {
-            diagnostics.push(errkind_error!(
-                token.span,
-                error_custom!(
-                    "Leftover tokens"
-                )
-            ));
-        }
-        return None;
+impl<'a> ParserRules<'a> {
+    pub fn new(parser: &'a mut Parser, diagnostics: &'a mut DiagnosticsManager) -> Self {
+        ParserRules { parser, diagnostics }
     }
 
-    Some(Program {
-        function_definition: function
-    })
-}
+    pub fn parse_program(&mut self) -> Option<Program> {
+        let function = self.parse_function()?;
 
-fn parse_function(parser: &mut Parser, diagnostics: &mut DiagnosticsManager) -> Option<Function> {
-    error_expect!(parser, token_keyword!(Int), diagnostics)?;
-
-    let identifier = parse_identifier(parser, diagnostics)?;
-
-    error_expect!(parser, token_punctuation!(OpenParen), diagnostics)?;
-    error_expect!(parser, token_keyword!(Void), diagnostics)?;
-    error_expect!(parser, token_punctuation!(CloseParen), diagnostics)?;
-    error_expect!(parser, token_punctuation!(OpenBrace), diagnostics)?;
-
-    let statement = parse_statement(parser, diagnostics)?;
-
-    error_expect!(parser, token_punctuation!(CloseBrace), diagnostics)?;
-
-    Some(Function {
-        identifier_name: identifier,
-        statement_body: statement,
-    })
-}
-
-fn parse_statement(parser: &mut Parser, diagnostics: &mut DiagnosticsManager) -> Option<Statement> {
-    match parser.source_tokens.peek()?.kind() {
-
-        TokenKind::Keyword(KeywordKind::Return) => {
-            error_expect!(parser, token_keyword!(Return), diagnostics)?;
-            let expression = parse_expression(parser, diagnostics)?;
-            error_expect!(parser, token_punctuation!(Semicolon), diagnostics)?;
-            Some(Statement::Return {
-                expression: expression 
-            })
-        },
-
-        _ => None,
-    }
-}
-
-fn parse_expression(parser: &mut Parser, diagnostics: &mut DiagnosticsManager) -> Option<Expression> {
-    match parser.source_tokens.peek()?.kind() {
-
-        TokenKind::Constant(_) => {
-            let constant = parse_constant(parser, diagnostics)?;
-            Some(Expression::Constant {
-                constant: constant
-            })
+        if self.parser.source_tokens.any_tokens() {
+            for token in self.parser.source_tokens.iter() {
+                self.diagnostics.push(errkind_error!(
+                    token.span,
+                    error_custom!("Leftover tokens")
+                ));
+            }
+            return None;
         }
 
-        _ => None
+        Some(Program {
+            function_definition: function,
+        })
     }
-}
 
-fn parse_identifier(parser: &mut Parser, diagnostics: &mut DiagnosticsManager) -> Option<String> {
-    error_consume_unwrap!(parser, Identifier, diagnostics)
-}
+    fn parse_function(&mut self) -> Option<Function> {
+        error_expect!(self, token_keyword!(Int))?;
+        let identifier = self.parse_identifier()?;
+        error_expect!(self, token_punctuation!(OpenParen))?;
+        error_expect!(self, token_keyword!(Void))?;
+        error_expect!(self, token_punctuation!(CloseParen))?;
+        error_expect!(self, token_punctuation!(OpenBrace))?;
+        let statement = self.parse_statement()?;
+        error_expect!(self, token_punctuation!(CloseBrace))?;
 
-fn parse_constant(parser: &mut Parser, diagnostics: &mut DiagnosticsManager) -> Option<String> {
-    error_consume_unwrap!(parser, Constant, diagnostics)
+        Some(Function {
+            identifier_name: identifier,
+            statement_body: statement,
+        })
+    }
+
+    fn parse_statement(&mut self) -> Option<Statement> {
+        match self.parser.source_tokens.peek()?.kind() {
+            TokenKind::Keyword(KeywordKind::Return) => {
+                error_expect!(self, token_keyword!(Return))?;
+                let expression = self.parse_expression()?;
+                error_expect!(self, token_punctuation!(Semicolon))?;
+                Some(Statement::Return { expression })
+            }
+            _ => None,
+        }
+    }
+
+    fn parse_expression(&mut self) -> Option<Expression> {
+        match self.parser.source_tokens.peek()?.kind() {
+            TokenKind::Constant(_) => {
+                let constant = self.parse_constant()?;
+                Some(Expression::Constant { constant })
+            }
+            _ => None,
+        }
+    }
+
+    fn parse_identifier(&mut self) -> Option<String> {
+        error_consume_unwrap!(self, Identifier)
+    }
+
+    fn parse_constant(&mut self) -> Option<String> {
+        error_consume_unwrap!(self, Constant)
+    }
 }

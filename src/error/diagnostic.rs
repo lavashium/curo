@@ -12,10 +12,10 @@ pub enum Severity {
 impl std::fmt::Display for Severity {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Severity::Error => write!(f, "error"),
+            Severity::Error   => write!(f, "error"),
             Severity::Warning => write!(f, "warning"),
-            Severity::Note => write!(f, "note"),
-            Severity::Help => write!(f, "help"),
+            Severity::Note    => write!(f, "note"),
+            Severity::Help    => write!(f, "help"),
         }
     }
 }
@@ -55,9 +55,9 @@ impl DiagnosticKind {
                 expected.to_user_string(),
                 found.lexeme
             ),
-            DiagnosticKind::UnexpectedEof => "unexpected end of file".to_string(),
+            DiagnosticKind::UnexpectedEof   => "unexpected end of file".to_string(),
             DiagnosticKind::InvalidType(ty) => format!("invalid type '{}'", ty),
-            DiagnosticKind::Custom(msg) => msg.clone(),
+            DiagnosticKind::Custom(msg)     => msg.clone(),
         }
     }
 }

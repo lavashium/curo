@@ -92,10 +92,10 @@ impl TokenProducer for KeywordProducer {
         let lexeme = lexer.peek_slice((start_ptr, end_ptr))?.to_string();
 
         let kind = match lexeme.as_str() {
-            "int" => token_keyword!(Int),
+            "int"    => token_keyword!(Int),
             "return" => token_keyword!(Return),
-            "void" => token_keyword!(Void),
-            _ => TokenKind::Identifier(lexeme.clone()),
+            "void"   => token_keyword!(Void),
+            _        => TokenKind::Identifier(lexeme.clone()),
         };
 
         let span = lexer.span_from(start_pos);

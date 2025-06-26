@@ -9,7 +9,9 @@ pub struct DiagnosticsManager {
 }
 
 impl DiagnosticsManager {
-    pub fn new(source_code: String, filename: String) -> Self {
+    pub fn new(source_code: impl ToString, filename: impl ToString) -> Self {
+        let source_code = source_code.to_string();
+        let filename = filename.to_string();
         DiagnosticsManager {
             diagnostics: Vec::new(),
             source_code,

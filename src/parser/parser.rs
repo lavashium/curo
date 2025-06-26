@@ -15,6 +15,7 @@ impl Parser {
     }
 
     pub fn parse(&mut self, diagnostics: &mut DiagnosticsManager) -> Option<Program> {
-        rules::parse_program(self, diagnostics)
+        let mut rules = rules::ParserRules::new(self, diagnostics);
+        rules.parse_program()
     }
 }

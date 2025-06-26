@@ -1,6 +1,7 @@
 use crate::error::manager::DiagnosticsManager;
-use crate::{errkind_error, error_unknown_token, token::*};
+use crate::token::*;
 use crate::lexer::producer::*;
+use crate::*;
 
 #[derive(Debug)]
 pub struct Lexer<'a> {
