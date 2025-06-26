@@ -2,11 +2,15 @@
 
 > This repo documents my journey of writing a C compiler from scratch.
 
-For help, check:  
+### For help, check:  
+- Commits  
 - Code (duh)  
 - Comments (if any)  
-- Commits  
+- `cargo doc`
 
-For help, don't check:
-- Documentation (if any)
-- Bug reports (no bugs, my code is perfect)  
+### For help, don't check:  
+- Bug reports (no bugs, my code is perfect)
+
+### How to use?
+
+I wish I knew myself

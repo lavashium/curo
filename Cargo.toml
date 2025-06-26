@@ -1,6 +1,14 @@
-[package]
-name = "compiler"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+resolver = "3"
 
-[dependencies]
+members = [
+  "language",
+  "common",
+  "frontend",
+#   "middleend",
+#   "optimizer",
+#   "backend-common",
+#   "backend-x86_64",
+#   "backend-arm",
+  "driver", "language",
+]

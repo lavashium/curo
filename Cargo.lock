@@ -3,5 +3,29 @@
 version = 4
 
 [[package]]
-name = "compiler"
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "language",
+]
+
+[[package]]
+name = "driver"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "frontend",
+ "language",
+]
+
+[[package]]
+name = "frontend"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "language",
+]
+
+[[package]]
+name = "language"
 version = "0.1.0"
