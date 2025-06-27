@@ -7,3 +7,4 @@ edition = "2024"
 language = { path = "../language" }
 common = { path = "../common" }
 frontend = { path = "../frontend" }
+backend = { path = "../backend" }

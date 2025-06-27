@@ -12,7 +12,7 @@ impl Parser {
         Parser { source_tokens }
     }
 
-    pub fn parse(&mut self, diagnostics: &mut DiagnosticsManager) -> Option<Program> {
+    pub fn parse(&mut self, diagnostics: &mut DiagnosticsManager) -> Option<AstProgram> {
         let mut rules = rules::ParserRules::new(self, diagnostics);
         rules.parse_program()
     }

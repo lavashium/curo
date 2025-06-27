@@ -62,17 +62,17 @@ impl<'a> ParserRules<'a> {
         }
     }
 
-    pub fn parse_program(&mut self) -> Option<Program> {
+    pub fn parse_program(&mut self) -> Option<AstProgram> {
         let function = self.parse_function()?;
 
         error_expect!(self, token_eof!());
 
-        Some(Program {
+        Some(AstProgram {
             function_definition: function,
         })
     }
 
-    fn parse_function(&mut self) -> Option<Function> {
+    fn parse_function(&mut self) -> Option<AstFunction> {
         error_expect!(self, token_keyword!(Int))?;
         let identifier = self.parse_identifier()?;
         error_expect!(self, token_punctuation!(OpenParen))?;
@@ -82,19 +82,19 @@ impl<'a> ParserRules<'a> {
         let statement = self.parse_statement()?;
         error_expect!(self, token_punctuation!(CloseBrace))?;
 
-        Some(Function {
-            identifier_name: identifier,
-            statement_body: statement,
+        Some(AstFunction {
+            name: identifier,
+            body: statement,
         })
     }
 
-    fn parse_statement(&mut self) -> Option<Statement> {
+    fn parse_statement(&mut self) -> Option<AstStatement> {
         match self.parser.source_tokens.peek()?.kind() {
             TokenKind::Keyword(KeywordKind::Return) => {
                 error_expect!(self, token_keyword!(Return))?;
                 let expression = self.parse_expression()?;
                 error_expect!(self, token_punctuation!(Semicolon))?;
-                Some(Statement::Return { expression })
+                Some(AstStatement::Return { expression })
             }
             _ => {
                 let token = self.parser.source_tokens.peek()?;
@@ -107,11 +107,11 @@ impl<'a> ParserRules<'a> {
         }
     }
 
-    fn parse_expression(&mut self) -> Option<Expression> {
+    fn parse_expression(&mut self) -> Option<AstExpression> {
         match self.parser.source_tokens.peek()?.kind() {
             TokenKind::Constant(_) => {
                 let constant = self.parse_constant()?;
-                Some(Expression::Constant { constant })
+                Some(AstExpression::Constant { constant })
             }
             _ => {
                 let token = self.parser.source_tokens.peek()?;

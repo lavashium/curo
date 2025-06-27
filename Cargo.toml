@@ -4,11 +4,10 @@ resolver = "3"
 members = [
   "language",
   "common",
+  "driver",
   "frontend",
 #   "middleend",
 #   "optimizer",
-#   "backend-common",
-#   "backend-x86_64",
-#   "backend-arm",
-  "driver", "language",
+  "backend",
 ]
+

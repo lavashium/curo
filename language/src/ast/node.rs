@@ -1,28 +1,28 @@
-#[derive(Debug, PartialEq)]
-pub struct Program {
-    pub function_definition: Function,
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AstProgram {
+    pub function_definition: AstFunction,
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Function {
-    pub identifier_name: String,
-    pub statement_body: Statement,
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AstFunction {
+    pub name: String,
+    pub body: AstStatement,
 }
 
-#[derive(Debug, PartialEq)]
-pub enum Statement {
-    Return { expression: Expression },
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AstStatement {
+    Return { expression: AstExpression },
 }
 
-#[derive(Debug, PartialEq)]
-pub enum Expression {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AstExpression {
     Constant { constant: String },
 }
 
 #[macro_export]
 macro_rules! ast_expression_constant {
     ($value:expr) => {
-        Expression::Constant {
+        AstExpression::Constant {
             constant: $value.to_string(),
         }
     };
@@ -31,14 +31,14 @@ macro_rules! ast_expression_constant {
 #[macro_export]
 macro_rules! ast_statement_return {
     ($expr:expr) => {
-        Statement::Return { expression: $expr }
+        AstStatement::Return { expression: $expr }
     };
 }
 
 #[macro_export]
 macro_rules! ast_function {
     ($name:expr, $stmt:expr) => {
-        Function {
+        AstFunction {
             identifier_name: $name.to_string(),
             statement_body: $stmt,
         }
@@ -48,7 +48,7 @@ macro_rules! ast_function {
 #[macro_export]
 macro_rules! ast_program {
     ($func:expr) => {
-        Program {
+        AstProgram {
             function_definition: $func,
         }
     };
