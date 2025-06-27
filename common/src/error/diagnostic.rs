@@ -32,7 +32,6 @@ pub enum DiagnosticKind {
         found: Token,
     },
     UnexpectedEof,
-    InvalidType(String),
     Custom(String),
 }
 
@@ -40,7 +39,7 @@ impl DiagnosticKind {
     pub fn message(&self) -> String {
         match self {
             DiagnosticKind::UnknownToken(token) => {
-                format!("unknown token '{}'", token.lexeme)
+                format!("unknown {} '{}'", token.kind.to_user_string(), token.lexeme)
             }
             DiagnosticKind::UnexpectedToken { found, expected } => {
                 let expected_str = expected
@@ -56,7 +55,6 @@ impl DiagnosticKind {
                 found.lexeme
             ),
             DiagnosticKind::UnexpectedEof => "unexpected end of file".to_string(),
-            DiagnosticKind::InvalidType(ty) => format!("invalid type '{}'", ty),
             DiagnosticKind::Custom(msg) => msg.clone(),
         }
     }

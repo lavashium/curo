@@ -2,8 +2,8 @@ use std::env;
 use std::fs;
 use std::process::exit;
 
-use frontend::*;
 use common::*;
+use frontend::*;
 
 #[derive(Debug, PartialEq, Eq)]
 enum CompilationStage {
@@ -19,12 +19,15 @@ fn parse_args() -> Option<CompilationStage> {
         return None;
     }
 
-    let stage = args.iter().find_map(|arg| match arg.as_str() {
-        "--lex" => Some(CompilationStage::Lex),
-        "--parse" => Some(CompilationStage::Parse),
-        "--codegen" => Some(CompilationStage::Codegen),
-        _ => None,
-    }).unwrap_or(CompilationStage::Parse);
+    let stage = args
+        .iter()
+        .find_map(|arg| match arg.as_str() {
+            "--lex" => Some(CompilationStage::Lex),
+            "--parse" => Some(CompilationStage::Parse),
+            "--codegen" => Some(CompilationStage::Codegen),
+            _ => None,
+        })
+        .unwrap_or(CompilationStage::Parse);
 
     Some(stage)
 }
@@ -56,7 +59,7 @@ fn main() {
     }
 
     if stage == CompilationStage::Lex {
-        println!("{:?}", tokens);
+        println!("{:#?}", tokens);
         exit(0);
     }
 

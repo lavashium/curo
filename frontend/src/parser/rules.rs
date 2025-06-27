@@ -96,7 +96,14 @@ impl<'a> ParserRules<'a> {
                 error_expect!(self, token_punctuation!(Semicolon))?;
                 Some(Statement::Return { expression })
             }
-            _ => None,
+            _ => {
+                let token = self.parser.source_tokens.peek()?;
+                self.diagnostics.push(
+                    errkind_error!(token.span, error_unknown_token!(token.clone()))
+                        .with(errkind_note!(token.span, "expected an statement here")),
+                );
+                None
+            }
         }
     }
 
@@ -106,7 +113,14 @@ impl<'a> ParserRules<'a> {
                 let constant = self.parse_constant()?;
                 Some(Expression::Constant { constant })
             }
-            _ => None,
+            _ => {
+                let token = self.parser.source_tokens.peek()?;
+                self.diagnostics.push(
+                    errkind_error!(token.span, error_unknown_token!(token.clone()))
+                        .with(errkind_note!(token.span, "expected an expression here")),
+                );
+                None
+            }
         }
     }
 
