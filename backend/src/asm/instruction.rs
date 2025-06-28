@@ -15,11 +15,11 @@ pub enum AsmInstruction {
         source: AsmOperand,
         dest: AsmOperand,
     },
-    Ret
+    Ret,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AsmOperand {
     Imm(i32),
-    Register
+    Register,
 }

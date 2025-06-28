@@ -20,7 +20,11 @@ impl ToAsmString for AsmFunction {
         output.push_str(&format!("{}.globl {}\n", indent, self.name));
         output.push_str(&format!("{}:\n", self.name));
         for instr in &self.instructions {
-            output.push_str(&format!("{}{}\n", indent, instr.to_asm_string(indent_level + 1)));
+            output.push_str(&format!(
+                "{}{}\n",
+                indent,
+                instr.to_asm_string(indent_level + 1)
+            ));
         }
         output
     }
@@ -30,7 +34,11 @@ impl ToAsmString for AsmInstruction {
     fn to_asm_string(&self, _indent_level: usize) -> String {
         match self {
             AsmInstruction::Mov { source, dest } => {
-                format!("movl {}, {}", source.to_asm_string(0), dest.to_asm_string(0))
+                format!(
+                    "movl {}, {}",
+                    source.to_asm_string(0),
+                    dest.to_asm_string(0)
+                )
             }
             AsmInstruction::Ret => "ret".to_string(),
         }
