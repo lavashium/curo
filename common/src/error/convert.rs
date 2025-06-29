@@ -11,7 +11,7 @@ impl UserFriendlyDisplay for TokenKind {
             TokenKind::Identifier(_) => "identifier",
             TokenKind::Operator(_) => "operator",
             TokenKind::Punctuation(punc) => punc.to_user_string(),
-            TokenKind::Preprocessor(_) => "preprocessor directive",
+            TokenKind::Irrelevant => "irrelevant",
             TokenKind::Constant(_) => "constant",
             TokenKind::Unknown(_) => "unknown token",
             TokenKind::EOF => "<END OF LINE>",

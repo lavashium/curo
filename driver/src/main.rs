@@ -82,6 +82,7 @@ fn main() {
                 stage,
                 PipelineStage::Lexer | PipelineStage::Parser | PipelineStage::AssemblyGeneration
             ) {
+                println!("{}", output);
                 exit(0);
             }
 

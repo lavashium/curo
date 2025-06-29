@@ -29,7 +29,7 @@ impl<'a> Lexer<'a> {
             .map(|&b| b as char)
     }
 
-    pub fn peek_slice(&mut self, span: (usize, usize)) -> Option<&str> {
+    pub fn peek_slice(&self, span: (usize, usize)) -> Option<&str> {
         let (start, end) = span;
         self.source_code.get(start..end)
     }
@@ -63,66 +63,13 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn skip_single_line_comment(&mut self) {
-        self.advance();
-        self.advance();
-
-        while let Some(ch) = self.peek() {
-            if ch == '\n' {
-                break;
-            }
-            self.advance();
-        }
-    }
-
-    fn skip_multi_line_comment(&mut self) {
-        self.advance();
-        self.advance();
-
-        while let Some(ch) = self.advance() {
-            if ch == '*' && self.peek() == Some('/') {
-                self.advance();
-                break;
-            }
-        }
-    }
-
-    fn skip_comments(&mut self) -> bool {
-        if self.peek() == Some('/') {
-            if self
-                .source_code
-                .as_bytes()
-                .get(self.pointer + 1)
-                .map(|&b| b as char)
-                == Some('/')
-            {
-                self.skip_single_line_comment();
-                return true;
-            } else if self
-                .source_code
-                .as_bytes()
-                .get(self.pointer + 1)
-                .map(|&b| b as char)
-                == Some('*')
-            {
-                self.skip_multi_line_comment();
-                return true;
-            }
-        }
-        false
-    }
-
     pub fn parse(&mut self, diagnostics: &mut DiagnosticsManager) -> TokenStream {
         let mut tokens = Vec::new();
 
         while self.peek().is_some() {
-            if self.skip_comments() {
-                continue;
-            }
-
-            if let Some(token) = PRODUCERS::try_all(self) {
-                if !matches!(token.kind, TokenKind::Unknown(ref s) if s == "Whitespace") {
-                    tokens.push(token)
+            if let Some(token) = PRODUCERS::try_all(self, diagnostics) {
+                if !matches!(token.kind(), TokenKind::Irrelevant) {
+                    tokens.push(token);
                 }
             } else {
                 let ch = self.advance().unwrap();

@@ -4,9 +4,9 @@ pub enum TokenKind {
     Identifier(String),
     Operator(OperatorKind),
     Punctuation(PunctuationKind),
-    Preprocessor(String),
     Constant(String),
     Unknown(String),
+    Irrelevant,
     EOF,
 }
 
@@ -19,7 +19,8 @@ pub enum KeywordKind {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OperatorKind {
-    //curently not used
+    Complement,
+    Negation,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -84,5 +85,12 @@ macro_rules! token_unknown {
 macro_rules! token_eof {
     () => {
         TokenKind::EOF
+    };
+}
+
+#[macro_export]
+macro_rules! token_irrelevant {
+    () => {
+        TokenKind::Irrelevant
     };
 }

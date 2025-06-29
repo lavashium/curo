@@ -1,6 +1,5 @@
 use backend::*;
 use common::DiagnosticsManager;
-use std::fs;
 use frontend::*;
 
 #[derive(Debug, PartialEq, Eq)]
