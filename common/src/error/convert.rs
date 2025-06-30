@@ -1,7 +1,23 @@
-use language::token::*;
+use language::*;
 
 pub trait UserFriendlyDisplay {
     fn to_user_string(&self) -> &'static str;
+}
+
+impl UserFriendlyDisplay for GenericKind {
+    fn to_user_string(&self) -> &'static str {
+        match self {
+            GenericKind::Keyword => "keyword",
+            GenericKind::Identifier => "identifier",
+            GenericKind::Operator => "operator",
+            GenericKind::Punctuation => "punctuation",
+            GenericKind::Constant => "constant",
+            GenericKind::Unknown => "unknown generic token",
+            GenericKind::Statement => "statement",
+            GenericKind::Expression => "expression",
+            GenericKind::EOF => "<END OF LINE>",
+        }
+    }
 }
 
 impl UserFriendlyDisplay for TokenKind {

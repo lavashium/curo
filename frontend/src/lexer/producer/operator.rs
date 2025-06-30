@@ -1,6 +1,6 @@
 use crate::lexer::Lexer;
 use crate::lexer::producer::TokenProducer;
-use common::{errkind_error, error_custom, DiagnosticsManager};
+use common::*;
 use language::*;
 
 pub struct OperatorProducer;

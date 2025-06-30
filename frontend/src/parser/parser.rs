@@ -1,4 +1,4 @@
-use super::rules;
+use super::rules::*;
 use common::error::manager::DiagnosticsManager;
 use language::ast::*;
 use language::token::*;
@@ -13,7 +13,6 @@ impl Parser {
     }
 
     pub fn parse(&mut self, diagnostics: &mut DiagnosticsManager) -> Option<AstProgram> {
-        let mut rules = rules::ParserRules::new(self, diagnostics);
-        rules.parse_program()
+        ParserRules::new(self, diagnostics).parse_program()
     }
 }

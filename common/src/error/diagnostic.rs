@@ -1,5 +1,5 @@
 use super::convert::*;
-use language::token::*;
+use language::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Severity {
@@ -31,9 +31,22 @@ pub enum DiagnosticKind {
         expected: TokenKind,
         found: Token,
     },
+
+    UnexpectedGeneric {
+        found: Token,
+        expected: Vec<GenericKind>,
+    },
+    ExpectedGeneric {
+        expected: GenericKind,
+        found: Token,
+    },
+
     UnexpectedEof,
+    InvalidType(String),
+    InvalidGenericType(GenericKind),
     Custom(String),
 }
+
 
 impl DiagnosticKind {
     pub fn message(&self) -> String {
@@ -41,6 +54,7 @@ impl DiagnosticKind {
             DiagnosticKind::UnknownToken(token) => {
                 format!("unknown {} '{}'", token.kind.to_user_string(), token.lexeme)
             }
+
             DiagnosticKind::UnexpectedToken { found, expected } => {
                 let expected_str = expected
                     .iter()
@@ -49,16 +63,38 @@ impl DiagnosticKind {
                     .join(" or ");
                 format!("expected {}, found '{}'", expected_str, found.lexeme)
             }
+
             DiagnosticKind::ExpectedToken { expected, found } => format!(
                 "expected '{}', found '{}'",
                 expected.to_user_string(),
                 found.lexeme
             ),
+
+            DiagnosticKind::UnexpectedGeneric { found, expected } => {
+                let expected_str = expected
+                    .iter()
+                    .map(|k| k.to_user_string())
+                    .collect::<Vec<_>>()
+                    .join(" or ");
+                format!("expected {}, found '{}'", expected_str, found.lexeme)
+            }
+
+            DiagnosticKind::ExpectedGeneric { expected, found } => format!(
+                "expected {}, found '{}'",
+                expected.to_user_string(),
+                found.lexeme
+            ),
+
             DiagnosticKind::UnexpectedEof => "unexpected end of file".to_string(),
+
+            DiagnosticKind::InvalidType(ty) => format!("invalid type '{}'", ty),
+            DiagnosticKind::InvalidGenericType(ty) => format!("invalid type {}", ty.to_user_string()),
+
             DiagnosticKind::Custom(msg) => msg.clone(),
         }
     }
 }
+
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Diagnostic {
@@ -179,3 +215,31 @@ macro_rules! errkind_help {
         $crate::error::diagnostic::Diagnostic::help($span, $msg)
     };
 }
+
+#[macro_export]
+macro_rules! error_expected_generic {
+    ($expected:expr, $found:expr) => {
+        $crate::error::diagnostic::DiagnosticKind::ExpectedGeneric {
+            expected: $expected,
+            found: $found,
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! error_unexpected_generic {
+    ($found:expr, [$($expected:expr),+ $(,)?]) => {
+        $crate::error::diagnostic::DiagnosticKind::UnexpectedGeneric {
+            found: $found,
+            expected: vec![$($expected),+],
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! error_invalid_generic_type {
+    ($ty:expr) => {
+        $crate::error::diagnostic::DiagnosticKind::InvalidGenericType($ty)
+    };
+}
+
