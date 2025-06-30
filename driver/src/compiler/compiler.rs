@@ -52,6 +52,10 @@ impl<'a> Compiler<'a> {
 
         let program = program.expect("Parser returned None despite no diagnostics errors");
 
+        if stage == PipelineStage::Parser {
+            return Ok(format!{"{:#?}", program})
+        }
+
         let mut translator = Translator::new(program);
         let hl_asm = translator.parse();
 

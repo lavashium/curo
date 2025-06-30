@@ -59,18 +59,18 @@ impl<'a> Visitor for FunctionBodyTranslator<'a> {
         }
     }
 
-    fn visit_expression(&mut self, expression: &AstExpression) {
-        match expression {
-            AstExpression::Constant { constant } => {
-                if let Ok(value) = constant.parse::<i32>() {
-                    self.instructions.push(AsmInstruction::Mov {
-                        source: AsmOperand::Imm(value),
-                        dest: AsmOperand::Register,
-                    });
-                } else {
-                    panic!("Invalid constant: {}", constant);
-                }
-            }
-        }
+    fn visit_expression(&mut self, _expression: &AstExpression) {
+        // match expression {
+        //     AstExpression::Constant { constant } => {
+        //         if let Ok(value) = constant.parse::<i32>() {
+        //             self.instructions.push(AsmInstruction::Mov {
+        //                 source: AsmOperand::Imm(value),
+        //                 dest: AsmOperand::Register,
+        //             });
+        //         } else {
+        //             panic!("Invalid constant: {}", constant);
+        //         }
+        //     }
+        // }
     }
 }

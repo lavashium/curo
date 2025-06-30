@@ -17,6 +17,16 @@ pub enum AstStatement {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AstExpression {
     Constant { constant: String },
+    Unary {
+        operator: UnaryKind,
+        operand: Box<AstExpression>,
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum UnaryKind {
+    Complement,
+    Negation,
 }
 
 #[macro_export]

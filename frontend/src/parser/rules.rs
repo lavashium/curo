@@ -90,12 +90,14 @@ impl<'a> ParserRules<'a> {
 
     fn parse_statement(&mut self) -> Option<AstStatement> {
         match self.parser.source_tokens.peek()?.kind() {
+
             TokenKind::Keyword(KeywordKind::Return) => {
                 error_expect!(self, token_keyword!(Return))?;
                 let expression = self.parse_expression()?;
                 error_expect!(self, token_punctuation!(Semicolon))?;
                 Some(AstStatement::Return { expression })
-            }
+            },
+
             _ => {
                 let token = self.parser.source_tokens.peek()?;
                 self.diagnostics.push(
@@ -109,10 +111,27 @@ impl<'a> ParserRules<'a> {
 
     fn parse_expression(&mut self) -> Option<AstExpression> {
         match self.parser.source_tokens.peek()?.kind() {
+
             TokenKind::Constant(_) => {
                 let constant = self.parse_constant()?;
                 Some(AstExpression::Constant { constant })
             }
+
+            TokenKind::Operator(OperatorKind::Complement) |
+            TokenKind::Operator(OperatorKind::Negation) => {
+                let operator = self.parse_unop()?;
+                let operand = self.parse_expression()?;
+                let operand = Box::new(operand);
+                Some(AstExpression::Unary { operator, operand })
+            },
+
+            TokenKind::Punctuation(PunctuationKind::OpenParen) => {
+                self.parser.source_tokens.consume()?;
+                let inner_expression = self.parse_expression()?;
+                error_expect!(self, token_punctuation!(CloseParen))?;
+                Some(inner_expression)
+            },
+
             _ => {
                 let token = self.parser.source_tokens.peek()?;
                 self.diagnostics.push(
@@ -130,5 +149,20 @@ impl<'a> ParserRules<'a> {
 
     fn parse_constant(&mut self) -> Option<String> {
         error_consume_unwrap!(self, Constant)
+    }
+
+    fn parse_unop(&mut self) -> Option<UnaryKind> {
+        match self.parser.source_tokens.consume()?.kind() {
+            TokenKind::Operator(OperatorKind::Complement) => Some(UnaryKind::Complement),
+            TokenKind::Operator(OperatorKind::Negation) => Some(UnaryKind::Negation),
+            _ => {
+                let token = self.parser.source_tokens.peek()?;
+                self.diagnostics.push(
+                    errkind_error!(token.span, error_unknown_token!(token.clone()))
+                        .with(errkind_note!(token.span, "expected an unary operator here")),
+                );
+                None
+            }
+        }
     }
 }
