@@ -1,5 +1,5 @@
-use language::*;
 use super::*;
+use language::*;
 
 pub trait FunctionParser<'a> {
     fn parse_function(&mut self) -> ParseResult<AstFunction>;

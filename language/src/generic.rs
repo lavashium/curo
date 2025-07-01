@@ -1,6 +1,6 @@
 use crate::TokenKind;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GenericKind {
     Keyword,
     Identifier,
@@ -10,7 +10,7 @@ pub enum GenericKind {
     Unknown,
     EOF,
     Statement,
-    Expression
+    Expression,
 }
 
 impl TokenKind {

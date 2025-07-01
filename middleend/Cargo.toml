@@ -1,11 +1,8 @@
 [package]
-name = "driver"
+name = "middleend"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 language = { path = "../language" }
 common = { path = "../common" }
-frontend = { path = "../frontend" }
-middleend = { path = "../middleend" }
-backend = { path = "../backend" }

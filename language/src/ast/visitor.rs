@@ -20,7 +20,10 @@ pub trait Visitor {
     fn visit_expression(&mut self, expression: &AstExpression) {
         match expression {
             AstExpression::Constant { constant: _ } => {}
-            AstExpression::Unary { operator: _, operand } => operand.accept(self),
+            AstExpression::Unary {
+                operator: _,
+                operand,
+            } => operand.accept(self),
         }
     }
 }

@@ -37,11 +37,9 @@ impl TokenProducer for ConstantProducer {
                 let lexeme = lexer.peek_slice((start_ptr, end_ptr))?.to_string();
                 let span = lexer.span_from(start_pos);
 
-                let invalid_token = Token::new(TokenKind::Unknown(lexeme.clone()), lexeme.clone(), span);
-                let diag = errkind_error!(
-                    span,
-                    error_unknown_token!(invalid_token.clone())
-                );
+                let invalid_token =
+                    Token::new(TokenKind::Unknown(lexeme.clone()), lexeme.clone(), span);
+                let diag = errkind_error!(span, error_unknown_token!(invalid_token.clone()));
                 diagnostics.push(diag);
 
                 return Some(invalid_token);

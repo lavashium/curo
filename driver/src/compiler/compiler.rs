@@ -1,6 +1,7 @@
 use backend::*;
 use common::DiagnosticsManager;
 use frontend::*;
+use middleend::*;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ErrCode {
@@ -12,7 +13,10 @@ pub enum ErrCode {
 pub enum PipelineStage {
     Lexer,
     Parser,
+    TacGeneration,
     AssemblyGeneration,
+    AssemblyAllocation,
+    AssemblyLegalization,
     CodeEmission,
 }
 
@@ -53,18 +57,41 @@ impl<'a> Compiler<'a> {
         let program = program.expect("Parser returned None despite no diagnostics errors");
 
         if stage == PipelineStage::Parser {
-            return Ok(format!{"{:#?}", program})
+            return Ok(format! {"{:#?}", program});
         }
 
-        let mut translator = Translator::new(program);
-        let hl_asm = translator.parse();
+        let mut generator = TacGenerator::new();
+        let tac = generator.parse(program);
 
-        match stage {
-            PipelineStage::Lexer => unreachable!(),
-            PipelineStage::Parser => unreachable!(),
-            PipelineStage::AssemblyGeneration => Ok(format!("{:#?}", hl_asm)),
-            PipelineStage::CodeEmission => Ok(hl_asm.to_asm_string(1)),
+        if stage == PipelineStage::TacGeneration {
+            return Ok(format! {"{:#?}", tac})
         }
+
+        let translator = AsmGenerator::new();
+        let asm_ast = translator.generate(tac.clone());
+
+        if stage == PipelineStage::AssemblyGeneration {
+            return Ok(format! {"{:#?}", asm_ast})
+        }
+
+        let allocator = AsmAllocator::new();
+        let (asm_allocated, stack_size) = allocator.allocate(asm_ast);
+
+        if stage == PipelineStage::AssemblyAllocation {
+            return Ok(format! {"{:#?}", asm_allocated})
+        }
+
+        let legalizer = AsmLegalizer::new(stack_size);
+        let asm_legal = legalizer.legalize(asm_allocated);
+
+        if stage == PipelineStage::AssemblyLegalization {
+            return Ok(format! {"{:#?}", asm_legal})
+        }
+
+        let emitter = CodeEmitter::new();
+        let asm = emitter.emit(asm_legal);
+
+        Ok(asm)
     }
 
     pub fn preprocess(input_file: &std::path::Path) -> Result<std::path::PathBuf, String> {

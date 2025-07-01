@@ -21,19 +21,18 @@ impl TokenProducer for OperatorProducer {
                         span,
                         error_custom!("Decrement operator is NOT supported")
                     ));
-                    return None
+                    return None;
                 }
                 "++" => {
                     lexer.advance();
                     lexer.advance();
-
 
                     let span = lexer.span_from(start_pos);
                     diagnostics.push(errkind_error!(
                         span,
                         error_custom!("Increment operator is NOT supported")
                     ));
-                    return None
+                    return None;
                 }
                 _ => {}
             }

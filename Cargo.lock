@@ -25,6 +25,7 @@ dependencies = [
  "common",
  "frontend",
  "language",
+ "middleend",
 ]
 
 [[package]]
@@ -38,3 +39,11 @@ dependencies = [
 [[package]]
 name = "language"
 version = "0.1.0"
+
+[[package]]
+name = "middleend"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "language",
+]

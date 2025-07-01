@@ -21,7 +21,10 @@ fn main() {
         match arg.as_str() {
             "--lex" => stage = PipelineStage::Lexer,
             "--parse" => stage = PipelineStage::Parser,
+            "--tacky" => stage = PipelineStage::TacGeneration,
             "--codegen" => stage = PipelineStage::AssemblyGeneration,
+            "--allocation" => stage = PipelineStage::AssemblyAllocation,
+            "--legalization" => stage = PipelineStage::AssemblyLegalization,
             "-S" => {
                 stage = PipelineStage::CodeEmission;
                 emit_assembly_only = true;
@@ -78,10 +81,7 @@ fn main() {
             exit(code as i32);
         }
         Ok(output) => {
-            if matches!(
-                stage,
-                PipelineStage::Lexer | PipelineStage::Parser | PipelineStage::AssemblyGeneration
-            ) {
+            if !matches!(stage, PipelineStage::CodeEmission) {
                 println!("{}", output);
                 exit(0);
             }

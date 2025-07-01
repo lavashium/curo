@@ -5,21 +5,40 @@ pub struct AsmProgram {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AsmFunction {
-    pub name: String,
+    pub identifier: String,
     pub instructions: Vec<AsmInstruction>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AsmInstruction {
     Mov {
-        source: AsmOperand,
-        dest: AsmOperand,
+        src: AsmOperand,
+        dst: AsmOperand,
     },
+    Unary {
+        unary_operator: AsmUnaryOperator,
+        operand: AsmOperand,
+    },
+    AllocateStack(i32),
     Ret,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AsmUnaryOperator {
+    Neg,
+    Not,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AsmOperand {
     Imm(i32),
-    Register,
+    Reg(AsmReg),
+    Pseudo(String),
+    Stack(i32),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AsmReg {
+    AX,
+    R10,
 }

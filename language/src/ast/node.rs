@@ -16,11 +16,13 @@ pub enum AstStatement {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AstExpression {
-    Constant { constant: String },
+    Constant {
+        constant: String,
+    },
     Unary {
         operator: UnaryKind,
         operand: Box<AstExpression>,
-    }
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -49,8 +51,8 @@ macro_rules! ast_statement_return {
 macro_rules! ast_function {
     ($name:expr, $stmt:expr) => {
         AstFunction {
-            identifier_name: $name.to_string(),
-            statement_body: $stmt,
+            name: $name.to_string(),
+            body: $stmt,
         }
     };
 }

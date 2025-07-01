@@ -1,55 +1,76 @@
 use crate::asm::*;
 
-pub trait ToAsmString {
-    fn to_asm_string(&self, indent_level: usize) -> String;
-}
+pub struct CodeEmitter;
 
-impl ToAsmString for AsmProgram {
-    fn to_asm_string(&self, indent_level: usize) -> String {
-        let mut output = String::new();
-        output.push_str(&self.function_definition.to_asm_string(indent_level));
+impl CodeEmitter {
+    pub fn new() -> Self {
+        Self
+    }
+
+    pub fn emit(&self, program: AsmProgram) -> String {
+        let mut output = self.emit_function(&program.function_definition);
         output.push_str("\n.section .note.GNU-stack,\"\",@progbits\n");
         output
     }
-}
 
-impl ToAsmString for AsmFunction {
-    fn to_asm_string(&self, indent_level: usize) -> String {
-        let indent = " ".repeat(indent_level * 4);
+    fn emit_function(&self, function: &AsmFunction) -> String {
         let mut output = String::new();
-        output.push_str(&format!("{}.globl {}\n", indent, self.name));
-        output.push_str(&format!("{}:\n", self.name));
-        for instr in &self.instructions {
-            output.push_str(&format!(
-                "{}{}\n",
-                indent,
-                instr.to_asm_string(indent_level + 1)
-            ));
+
+        output.push_str(&format!(".globl {}\n", function.identifier));
+        output.push_str(&format!("{}:\n", function.identifier));
+        output.push_str("  pushq %rbp\n");
+        output.push_str("  movq %rsp, %rbp\n");
+
+        for instr in &function.instructions {
+            match instr {
+                AsmInstruction::Ret => {
+                    output.push_str("  movq %rbp, %rsp\n");
+                    output.push_str("  popq %rbp\n");
+                    output.push_str("  ret\n");
+                }
+                _ => {
+                    output.push_str(&self.emit_instruction(instr));
+                }
+            }
         }
+
         output
     }
-}
 
-impl ToAsmString for AsmInstruction {
-    fn to_asm_string(&self, _indent_level: usize) -> String {
-        match self {
-            AsmInstruction::Mov { source, dest } => {
+    fn emit_instruction(&self, instr: &AsmInstruction) -> String {
+        match instr {
+            AsmInstruction::Mov { src, dst } => {
                 format!(
-                    "movl {}, {}",
-                    source.to_asm_string(0),
-                    dest.to_asm_string(0)
+                    "  movl {}, {}\n",
+                    self.emit_operand(src),
+                    self.emit_operand(dst)
                 )
             }
-            AsmInstruction::Ret => "ret".to_string(),
+            AsmInstruction::Unary { unary_operator, operand } => {
+                let op_str = match unary_operator {
+                    AsmUnaryOperator::Neg => "negl",
+                    AsmUnaryOperator::Not => "notl",
+                };
+                format!("  {} {}\n", op_str, self.emit_operand(operand))
+            }
+            AsmInstruction::AllocateStack(size) => {
+                format!("  subq ${}, %rsp\n", size)
+            }
+            AsmInstruction::Ret => {
+                String::new()
+            }
         }
     }
-}
 
-impl ToAsmString for AsmOperand {
-    fn to_asm_string(&self, _indent_level: usize) -> String {
-        match self {
-            AsmOperand::Register => "%eax".to_string(),
-            AsmOperand::Imm(i) => format!("${}", i),
+    fn emit_operand(&self, operand: &AsmOperand) -> String {
+        match operand {
+            AsmOperand::Reg(reg) => match reg {
+                AsmReg::AX => "%eax".to_string(),
+                AsmReg::R10 => "%r10d".to_string(),
+            },
+            AsmOperand::Stack(offset) => format!("{}(%rbp)", offset),
+            AsmOperand::Imm(value) => format!("${}", value),
+            AsmOperand::Pseudo(_) => panic!("Pseudo operand should not exist at emission"),
         }
     }
 }

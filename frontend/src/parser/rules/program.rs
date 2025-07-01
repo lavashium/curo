@@ -1,5 +1,5 @@
-use language::*;
 use super::*;
+use language::*;
 
 pub trait ProgramParser<'a> {
     fn parse_program(&mut self) -> ParseResult<AstProgram>;

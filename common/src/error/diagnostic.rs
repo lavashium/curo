@@ -47,7 +47,6 @@ pub enum DiagnosticKind {
     Custom(String),
 }
 
-
 impl DiagnosticKind {
     pub fn message(&self) -> String {
         match self {
@@ -88,13 +87,14 @@ impl DiagnosticKind {
             DiagnosticKind::UnexpectedEof => "unexpected end of file".to_string(),
 
             DiagnosticKind::InvalidType(ty) => format!("invalid type '{}'", ty),
-            DiagnosticKind::InvalidGenericType(ty) => format!("invalid type {}", ty.to_user_string()),
+            DiagnosticKind::InvalidGenericType(ty) => {
+                format!("invalid type {}", ty.to_user_string())
+            }
 
             DiagnosticKind::Custom(msg) => msg.clone(),
         }
     }
 }
-
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Diagnostic {
@@ -242,4 +242,3 @@ macro_rules! error_invalid_generic_type {
         $crate::error::diagnostic::DiagnosticKind::InvalidGenericType($ty)
     };
 }
-

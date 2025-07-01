@@ -1,23 +1,20 @@
-mod program;
-mod function;
-mod statement;
 mod expression;
+mod function;
+mod program;
+mod statement;
 
-pub use program::*;
-pub use function::*;
-pub use statement::*;
 pub use expression::*;
+pub use function::*;
+pub use program::*;
+pub use statement::*;
 
-use language::*;
-use common::*;
 use crate::Parser;
+use common::*;
+use language::*;
 
 macro_rules! push_eof_error {
     ($diagnostics:expr) => {
-        $diagnostics.push(errkind_error!(
-            Span::default(),
-            error_unexpected_eof!()
-        ));
+        $diagnostics.push(errkind_error!(Span::default(), error_unexpected_eof!()));
     };
 }
 
@@ -28,7 +25,7 @@ macro_rules! error_expect {
             Some(found) => {
                 $self.diagnostics.push(errkind_error!(
                     found.span,
-                    error_expected_generic!($kind.to_generic(), found.clone())
+                    error_expected_token!($kind, found.clone())
                 ));
                 None
             }
@@ -73,7 +70,7 @@ impl<'a> ParserRules<'a> {
     pub fn new(parser: &'a mut Parser, diagnostics: &'a mut DiagnosticsManager) -> Self {
         Self {
             parser,
-            diagnostics
+            diagnostics,
         }
     }
 

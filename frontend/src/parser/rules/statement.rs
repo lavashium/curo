@@ -1,5 +1,5 @@
-use language::*;
 use super::*;
+use language::*;
 
 pub trait StatementParser<'a> {
     fn parse_statement(&mut self) -> ParseResult<AstStatement>;
