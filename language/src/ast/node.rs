@@ -23,12 +23,26 @@ pub enum AstExpression {
         operator: UnaryKind,
         operand: Box<AstExpression>,
     },
+    Binary {
+        operator: BinaryKind,
+        left: Box<AstExpression>,
+        right: Box<AstExpression>,
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UnaryKind {
     Complement,
-    Negation,
+    Negate,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum BinaryKind {
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Remainder,
 }
 
 #[macro_export]

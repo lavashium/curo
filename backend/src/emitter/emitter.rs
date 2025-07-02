@@ -59,18 +59,42 @@ impl CodeEmitter {
             AsmInstruction::Ret => {
                 String::new()
             }
+            AsmInstruction::Binary { binary_operator, operand1, operand2 } => {
+                format!(
+                    "  {} {}, {}\n",
+                    self.emit_operator(binary_operator),
+                    self.emit_operand(operand1),
+                    self.emit_operand(operand2)
+                )
+            }
+            AsmInstruction::Cdq => {
+                format!("  cdq\n")
+            }
+            AsmInstruction::Idiv { operand } => {
+                format!("  idivl {}\n", self.emit_operand(operand))
+            }
         }
     }
 
     fn emit_operand(&self, operand: &AsmOperand) -> String {
         match operand {
             AsmOperand::Reg(reg) => match reg {
-                AsmReg::AX => "%eax".to_string(),
-                AsmReg::R10 => "%r10d".to_string(),
-            },
+                AsmReg::AX => "%eax",
+                AsmReg::R10 => "%r10d",
+                AsmReg::DX => "%edx",
+                AsmReg::R11 => "%r11d"
+            }.to_string(),
             AsmOperand::Stack(offset) => format!("{}(%rbp)", offset),
             AsmOperand::Imm(value) => format!("${}", value),
             AsmOperand::Pseudo(_) => panic!("Pseudo operand should not exist at emission"),
         }
+    }
+
+    fn emit_operator(&self, operator: &AsmBinaryOperator) -> String {
+        match operator {
+            AsmBinaryOperator::Sub => "subl",
+            AsmBinaryOperator::Mult => "imull",
+            AsmBinaryOperator::Add => "addl",
+        }.to_string()
     }
 }

@@ -19,8 +19,12 @@ pub enum KeywordKind {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OperatorKind {
-    Complement,
-    Negation,
+    Tilde,
+    Minus,
+    Plus,
+    Asterisk,
+    ForwardSlash,
+    PercentSign,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

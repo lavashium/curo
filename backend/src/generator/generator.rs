@@ -46,7 +46,7 @@ impl AsmGenerator {
                 instructions.push(AsmInstruction::Ret);
             }
             TacInstruction::Unary {
-                unary_operator,
+                operator,
                 source,
                 destination,
             } => {
@@ -55,9 +55,48 @@ impl AsmGenerator {
                     dst: self.convert_operand(&destination),
                 });
                 instructions.push(AsmInstruction::Unary {
-                    unary_operator: self.convert_unary_operator(&unary_operator),
+                    unary_operator: self.convert_unary_operator(&operator),
                     operand: self.convert_operand(&destination),
                 });
+            }
+            TacInstruction::Binary { operator, source1, source2, destination } => {
+                if operator == BinaryKind::Divide {
+                    instructions.push(AsmInstruction::Mov {
+                        src: self.convert_operand(&source1),
+                        dst: AsmOperand::Reg(AsmReg::AX),
+                    });
+                    instructions.push(AsmInstruction::Cdq);
+                    instructions.push(AsmInstruction::Idiv { 
+                        operand: self.convert_operand(&source2),
+                    });
+                    instructions.push(AsmInstruction::Mov { 
+                        src: AsmOperand::Reg(AsmReg::AX), 
+                        dst: self.convert_operand(&destination),
+                    });
+                } else if operator == BinaryKind::Remainder {
+                    instructions.push(AsmInstruction::Mov {
+                        src: self.convert_operand(&source1),
+                        dst: AsmOperand::Reg(AsmReg::AX),
+                    });
+                    instructions.push(AsmInstruction::Cdq);
+                    instructions.push(AsmInstruction::Idiv { 
+                        operand: self.convert_operand(&source2),
+                    });
+                    instructions.push(AsmInstruction::Mov { 
+                        src: AsmOperand::Reg(AsmReg::DX), 
+                        dst: self.convert_operand(&destination),
+                    });
+                } else {
+                    instructions.push(AsmInstruction::Mov {
+                        src: self.convert_operand(&source1),
+                        dst: self.convert_operand(&destination),
+                    });
+                    instructions.push(AsmInstruction::Binary { 
+                        binary_operator: self.convert_binary_operator(&operator), 
+                        operand1: self.convert_operand(&source2), 
+                        operand2: self.convert_operand(&destination) 
+                    });
+                }
             }
         }
         instructions
@@ -75,8 +114,17 @@ impl AsmGenerator {
 
     fn convert_unary_operator(&self, op: &UnaryKind) -> AsmUnaryOperator {
         match op {
-            UnaryKind::Negation => AsmUnaryOperator::Neg,
+            UnaryKind::Negate => AsmUnaryOperator::Neg,
             UnaryKind::Complement => AsmUnaryOperator::Not,
+        }
+    }
+
+    fn convert_binary_operator(&self, op: &BinaryKind) -> AsmBinaryOperator {
+        match op {
+            BinaryKind::Add => AsmBinaryOperator::Add,
+            BinaryKind::Subtract => AsmBinaryOperator::Sub,
+            BinaryKind::Multiply => AsmBinaryOperator::Mult,
+            _ => unreachable!()
         }
     }
 }

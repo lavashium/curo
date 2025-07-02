@@ -40,21 +40,29 @@ impl AsmAllocator {
     }
 
     fn visit_instruction(&mut self, instr: AsmInstruction) -> AsmInstruction {
-        use AsmInstruction::*;
         match instr {
-            Mov { src, dst } => Mov {
+            AsmInstruction::Mov { src, dst } => AsmInstruction::Mov {
                 src: self.replace_operand(src),
                 dst: self.replace_operand(dst),
             },
-            Unary {
+            AsmInstruction::Unary {
                 unary_operator,
                 operand,
-            } => Unary {
+            } => AsmInstruction::Unary {
                 unary_operator,
                 operand: self.replace_operand(operand),
             },
-            Ret => Ret,
-            AllocateStack(_) => AllocateStack(0),
+            AsmInstruction::Ret => AsmInstruction::Ret,
+            AsmInstruction::Cdq => AsmInstruction::Cdq,
+            AsmInstruction::AllocateStack(_) => AsmInstruction::AllocateStack(0),
+            AsmInstruction::Binary { binary_operator, operand1, operand2 } => AsmInstruction::Binary {
+                binary_operator,
+                operand1: self.replace_operand(operand1),
+                operand2: self.replace_operand(operand2),
+            },
+            AsmInstruction::Idiv { operand } => AsmInstruction::Idiv {
+                operand: self.replace_operand(operand),
+            }
         }
     }
 

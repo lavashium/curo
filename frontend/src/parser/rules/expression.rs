@@ -1,55 +1,121 @@
 use super::*;
 use language::*;
 
+macro_rules! precedence {
+    ($operator:expr; $($op:ident => $val:expr),* $(,)?) => {
+        match $operator {
+            $(
+                OperatorKind::$op => $val,
+            )*
+            _ => 0,
+        }
+    }
+}
+
+fn get_precedence(operator: &OperatorKind) -> u8 {
+    precedence!(operator;
+        Asterisk     => 50,
+        ForwardSlash => 50,
+        PercentSign  => 50,
+        Plus         => 45,
+        Minus        => 45,
+    )
+}
+
 pub trait ExpressionParser<'a> {
     fn parse_expression(&mut self) -> ParseResult<AstExpression>;
+    fn parse_binary_expression(&mut self, min_prec: u8) -> ParseResult<AstExpression>;
 }
 
 impl<'a> ExpressionParser<'a> for ParserRules<'a> {
     fn parse_expression(&mut self) -> ParseResult<AstExpression> {
-        match self.parser.source_tokens.peek()?.kind() {
-            TokenKind::Constant(_) => {
-                let constant = self.unwrap_constant()?;
-                Some(AstExpression::Constant { constant })
-            }
+        self.parse_binary_expression(0)
+    }
 
-            TokenKind::Operator(OperatorKind::Complement)
-            | TokenKind::Operator(OperatorKind::Negation) => {
-                let operator = match self.parser.source_tokens.consume()?.kind() {
-                    TokenKind::Operator(OperatorKind::Complement) => UnaryKind::Complement,
-                    TokenKind::Operator(OperatorKind::Negation) => UnaryKind::Negation,
-                    _ => {
-                        let token = self.parser.source_tokens.peek()?;
-                        self.diagnostics.push(
-                            errkind_error!(token.span, error_unknown_token!(token.clone()))
-                                .with(errkind_note!(token.span, "expected a unary operator here")),
-                        );
-                        return None;
+    fn parse_binary_expression(&mut self, min_prec: u8) -> ParseResult<AstExpression> {
+        let mut lhs = {
+            match self.parser.source_tokens.peek()?.kind() {
+                TokenKind::Constant(_) => {
+                    let constant = self.unwrap_constant()?;
+                    AstExpression::Constant { constant }
+                }
+
+                TokenKind::Operator(OperatorKind::Tilde)
+                | TokenKind::Operator(OperatorKind::Minus) => {
+                    let operator = match self.parser.source_tokens.consume()?.kind() {
+                        TokenKind::Operator(OperatorKind::Tilde) => UnaryKind::Complement,
+                        TokenKind::Operator(OperatorKind::Minus) => UnaryKind::Negate,
+                        _ => {
+                            let token = self.parser.source_tokens.peek()?;
+                            self.diagnostics.push(
+                                errkind_error!(token.span, error_unknown_token!(token.clone()))
+                                    .with(errkind_note!(token.span, "expected a unary operator here")),
+                            );
+                            return None;
+                        }
+                    };
+
+                    let operand = self.parse_binary_expression(50)?;
+                    AstExpression::Unary {
+                        operator,
+                        operand: Box::new(operand),
                     }
-                };
+                }
 
-                let operand = self.parse_expression()?;
-                Some(AstExpression::Unary {
-                    operator,
-                    operand: Box::new(operand),
-                })
+                TokenKind::Punctuation(PunctuationKind::OpenParen) => {
+                    self.expect(token_punctuation!(OpenParen))?;
+                    let inner = self.parse_expression()?;
+                    self.expect(token_punctuation!(CloseParen))?;
+                    inner
+                }
+
+                _ => {
+                    let token = self.parser.source_tokens.peek()?;
+                    self.diagnostics.push(
+                        errkind_error!(token.span, error_unknown_token!(token.clone()))
+                            .with(errkind_note!(token.span, "expected an expression here")),
+                    );
+                    return None;
+                }
+            }
+        };
+
+        loop {
+            let next_token = match self.parser.source_tokens.peek() {
+                Some(tok) => tok,
+                None => break,
+            };
+
+            let op_kind = match next_token.kind() {
+                TokenKind::Operator(op) => op.clone(),
+                _ => break,
+            };
+
+            let prec = get_precedence(&op_kind);
+            if prec < min_prec {
+                break;
             }
 
-            TokenKind::Punctuation(PunctuationKind::OpenParen) => {
-                self.expect(token_punctuation!(OpenParen))?;
-                let inner = self.parse_expression()?;
-                self.expect(token_punctuation!(CloseParen))?;
-                Some(inner)
-            }
+            self.parser.source_tokens.consume()?;
 
-            _ => {
-                let token = self.parser.source_tokens.peek()?;
-                self.diagnostics.push(
-                    errkind_error!(token.span, error_unknown_token!(token.clone()))
-                        .with(errkind_note!(token.span, "expected an expression here")),
-                );
-                None
-            }
+            let rhs = self.parse_binary_expression(prec + 1)?;
+
+            let op_kind: BinaryKind = match op_kind {
+                OperatorKind::Asterisk => BinaryKind::Multiply,
+                OperatorKind::ForwardSlash => BinaryKind::Divide,
+                OperatorKind::PercentSign => BinaryKind::Remainder,
+                OperatorKind::Minus => BinaryKind::Subtract,
+                OperatorKind::Plus => BinaryKind::Add,
+                OperatorKind::Tilde => unreachable!()
+            };
+
+            lhs = AstExpression::Binary {
+                operator: op_kind,
+                left:  Box::new(lhs),
+                right: Box::new(rhs),
+            };
         }
+
+        Some(lhs)
     }
 }

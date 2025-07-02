@@ -19,6 +19,15 @@ pub enum AsmInstruction {
         unary_operator: AsmUnaryOperator,
         operand: AsmOperand,
     },
+    Binary {
+        binary_operator: AsmBinaryOperator,
+        operand1: AsmOperand,
+        operand2: AsmOperand,
+    },
+    Idiv {
+        operand: AsmOperand,
+    },
+    Cdq,
     AllocateStack(i32),
     Ret,
 }
@@ -27,6 +36,13 @@ pub enum AsmInstruction {
 pub enum AsmUnaryOperator {
     Neg,
     Not,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AsmBinaryOperator {
+    Add,
+    Sub,
+    Mult
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,4 +57,6 @@ pub enum AsmOperand {
 pub enum AsmReg {
     AX,
     R10,
+    DX,
+    R11
 }

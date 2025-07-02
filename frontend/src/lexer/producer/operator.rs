@@ -40,8 +40,12 @@ impl TokenProducer for OperatorProducer {
 
         let ch = lexer.peek()?;
         let kind = match ch {
-            '-' => token_operator!(Negation),
-            '~' => token_operator!(Complement),
+            '-' => token_operator!(Minus),
+            '~' => token_operator!(Tilde),
+            '+' => token_operator!(Plus),
+            '*' => token_operator!(Asterisk),
+            '/' => token_operator!(ForwardSlash),
+            '%' => token_operator!(PercentSign),
             _ => return None,
         };
 

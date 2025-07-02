@@ -1,4 +1,4 @@
-use crate::UnaryKind;
+use crate::{UnaryKind, BinaryKind};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TacProgram {
@@ -17,10 +17,16 @@ pub enum TacInstruction {
         val: TacVal,
     },
     Unary {
-        unary_operator: UnaryKind,
+        operator: UnaryKind,
         source: TacVal,
         destination: TacVal,
     },
+    Binary {
+        operator: BinaryKind,
+        source1: TacVal,
+        source2: TacVal,
+        destination: TacVal,
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
