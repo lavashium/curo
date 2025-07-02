@@ -10,7 +10,7 @@ impl TempGen {
     }
 
     pub fn next(&mut self) -> TacVal {
-        let temp = format!("@t{}", self.counter);
+        let temp = format!("%t{}", self.counter);
         self.counter += 1;
         TacVal::Var(temp)
     }

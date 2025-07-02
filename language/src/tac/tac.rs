@@ -1,4 +1,4 @@
-use crate::{UnaryKind, BinaryKind};
+use crate::{BinaryKind, UnaryKind};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TacProgram {
@@ -26,7 +26,7 @@ pub enum TacInstruction {
         source1: TacVal,
         source2: TacVal,
         destination: TacVal,
-    }
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

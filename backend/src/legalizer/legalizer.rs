@@ -1,4 +1,5 @@
 use crate::asm::*;
+use super::fixes::*;
 
 pub struct AsmLegalizer {
     stack_size: i32,
@@ -21,81 +22,16 @@ impl AsmLegalizer {
 
         function.instructions = instructions;
 
-        AsmProgram { function_definition: function }
-    }
-
-    fn fix_instruction(&self, instr: AsmInstruction) -> Vec<AsmInstruction> {
-        match instr {
-            AsmInstruction::Mov { src, dst } if self.both_stack_operands(&src, &dst) => {
-                vec![
-                    AsmInstruction::Mov {
-                        src,
-                        dst: AsmOperand::Reg(AsmReg::R10),
-                    },
-                    AsmInstruction::Mov {
-                        src: AsmOperand::Reg(AsmReg::R10),
-                        dst,
-                    },
-                ]
-            }
-
-            AsmInstruction::Idiv { operand } if matches!(operand, AsmOperand::Imm(_)) => {
-                vec![
-                    AsmInstruction::Mov {
-                        src: operand,
-                        dst: AsmOperand::Reg(AsmReg::R10),
-                    },
-                    AsmInstruction::Idiv {
-                        operand: AsmOperand::Reg(AsmReg::R10),
-                    },
-                ]
-            }
-
-            AsmInstruction::Binary { binary_operator: AsmBinaryOperator::Mult, operand1, operand2 }
-                if self.is_stack_operand(&operand2) =>
-            {   
-                vec![
-                    AsmInstruction::Mov {
-                        src: operand1.clone(),
-                        dst: AsmOperand::Reg(AsmReg::R11),
-                    },
-                    AsmInstruction::Binary {
-                        binary_operator: AsmBinaryOperator::Mult,
-                        operand1: operand2.clone(),
-                        operand2: AsmOperand::Reg(AsmReg::R11),
-                    },
-                    AsmInstruction::Mov {
-                        src: AsmOperand::Reg(AsmReg::R11),
-                        dst: operand2,
-                    },
-                ]
-            }
-
-            AsmInstruction::Binary { binary_operator, operand1, operand2 }
-                if self.both_stack_operands(&operand1, &operand2) =>
-            {
-                vec![
-                    AsmInstruction::Mov {
-                        src: operand1,
-                        dst: AsmOperand::Reg(AsmReg::R10),
-                    },
-                    AsmInstruction::Binary {
-                        binary_operator,
-                        operand1: AsmOperand::Reg(AsmReg::R10),
-                        operand2,
-                    },
-                ]
-            }
-
-            _ => vec![instr],
+        AsmProgram {
+            function_definition: function,
         }
     }
 
-    fn both_stack_operands(&self, src: &AsmOperand, dst: &AsmOperand) -> bool {
-        self.is_stack_operand(src) && self.is_stack_operand(dst)
-    }
-
-    fn is_stack_operand(&self, op: &AsmOperand) -> bool {
-        matches!(op, AsmOperand::Stack(_))
+    fn fix_instruction(&self, instr: AsmInstruction) -> Vec<AsmInstruction> {
+        if let Some(instructions) = FIXES::try_all(&instr) {
+            return instructions;
+        } else {
+            return vec![instr];
+        }
     }
 }

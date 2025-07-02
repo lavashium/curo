@@ -49,7 +49,10 @@ impl<'a> ExpressionParser<'a> for ParserRules<'a> {
                             let token = self.parser.source_tokens.peek()?;
                             self.diagnostics.push(
                                 errkind_error!(token.span, error_unknown_token!(token.clone()))
-                                    .with(errkind_note!(token.span, "expected a unary operator here")),
+                                    .with(errkind_note!(
+                                        token.span,
+                                        "expected a unary operator here"
+                                    )),
                             );
                             return None;
                         }
@@ -106,12 +109,12 @@ impl<'a> ExpressionParser<'a> for ParserRules<'a> {
                 OperatorKind::PercentSign => BinaryKind::Remainder,
                 OperatorKind::Minus => BinaryKind::Subtract,
                 OperatorKind::Plus => BinaryKind::Add,
-                OperatorKind::Tilde => unreachable!()
+                OperatorKind::Tilde => unreachable!(),
             };
 
             lhs = AstExpression::Binary {
                 operator: op_kind,
-                left:  Box::new(lhs),
+                left: Box::new(lhs),
                 right: Box::new(rhs),
             };
         }

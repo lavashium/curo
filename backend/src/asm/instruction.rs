@@ -21,8 +21,8 @@ pub enum AsmInstruction {
     },
     Binary {
         binary_operator: AsmBinaryOperator,
-        operand1: AsmOperand,
-        operand2: AsmOperand,
+        src: AsmOperand,
+        dst: AsmOperand,
     },
     Idiv {
         operand: AsmOperand,
@@ -42,7 +42,7 @@ pub enum AsmUnaryOperator {
 pub enum AsmBinaryOperator {
     Add,
     Sub,
-    Mult
+    Mult,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -58,5 +58,5 @@ pub enum AsmReg {
     AX,
     R10,
     DX,
-    R11
+    R11,
 }

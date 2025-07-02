@@ -46,7 +46,10 @@ impl CodeEmitter {
                     self.emit_operand(dst)
                 )
             }
-            AsmInstruction::Unary { unary_operator, operand } => {
+            AsmInstruction::Unary {
+                unary_operator,
+                operand,
+            } => {
                 let op_str = match unary_operator {
                     AsmUnaryOperator::Neg => "negl",
                     AsmUnaryOperator::Not => "notl",
@@ -56,15 +59,17 @@ impl CodeEmitter {
             AsmInstruction::AllocateStack(size) => {
                 format!("  subq ${}, %rsp\n", size)
             }
-            AsmInstruction::Ret => {
-                String::new()
-            }
-            AsmInstruction::Binary { binary_operator, operand1, operand2 } => {
+            AsmInstruction::Ret => String::new(),
+            AsmInstruction::Binary {
+                binary_operator,
+                src,
+                dst,
+            } => {
                 format!(
                     "  {} {}, {}\n",
                     self.emit_operator(binary_operator),
-                    self.emit_operand(operand1),
-                    self.emit_operand(operand2)
+                    self.emit_operand(src),
+                    self.emit_operand(dst)
                 )
             }
             AsmInstruction::Cdq => {
@@ -82,8 +87,9 @@ impl CodeEmitter {
                 AsmReg::AX => "%eax",
                 AsmReg::R10 => "%r10d",
                 AsmReg::DX => "%edx",
-                AsmReg::R11 => "%r11d"
-            }.to_string(),
+                AsmReg::R11 => "%r11d",
+            }
+            .to_string(),
             AsmOperand::Stack(offset) => format!("{}(%rbp)", offset),
             AsmOperand::Imm(value) => format!("${}", value),
             AsmOperand::Pseudo(_) => panic!("Pseudo operand should not exist at emission"),
@@ -95,6 +101,7 @@ impl CodeEmitter {
             AsmBinaryOperator::Sub => "subl",
             AsmBinaryOperator::Mult => "imull",
             AsmBinaryOperator::Add => "addl",
-        }.to_string()
+        }
+        .to_string()
     }
 }

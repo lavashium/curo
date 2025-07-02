@@ -27,7 +27,7 @@ pub enum AstExpression {
         operator: BinaryKind,
         left: Box<AstExpression>,
         right: Box<AstExpression>,
-    }
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

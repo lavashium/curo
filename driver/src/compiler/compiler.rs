@@ -64,28 +64,28 @@ impl<'a> Compiler<'a> {
         let tac = generator.parse(program);
 
         if stage == PipelineStage::TacGeneration {
-            return Ok(format! {"{:#?}", tac})
+            return Ok(format! {"{:#?}", tac});
         }
 
         let translator = AsmGenerator::new();
         let asm_ast = translator.generate(tac.clone());
 
         if stage == PipelineStage::AssemblyGeneration {
-            return Ok(format! {"{:#?}", asm_ast})
+            return Ok(format! {"{:#?}", asm_ast});
         }
 
         let allocator = AsmAllocator::new();
         let (asm_allocated, stack_size) = allocator.allocate(asm_ast);
 
         if stage == PipelineStage::AssemblyAllocation {
-            return Ok(format! {"{:#?}", asm_allocated})
+            return Ok(format! {"{:#?}", asm_allocated});
         }
 
         let legalizer = AsmLegalizer::new(stack_size);
         let asm_legal = legalizer.legalize(asm_allocated);
 
         if stage == PipelineStage::AssemblyLegalization {
-            return Ok(format! {"{:#?}", asm_legal})
+            return Ok(format! {"{:#?}", asm_legal});
         }
 
         let emitter = CodeEmitter::new();

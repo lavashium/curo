@@ -55,14 +55,18 @@ impl AsmAllocator {
             AsmInstruction::Ret => AsmInstruction::Ret,
             AsmInstruction::Cdq => AsmInstruction::Cdq,
             AsmInstruction::AllocateStack(_) => AsmInstruction::AllocateStack(0),
-            AsmInstruction::Binary { binary_operator, operand1, operand2 } => AsmInstruction::Binary {
+            AsmInstruction::Binary {
                 binary_operator,
-                operand1: self.replace_operand(operand1),
-                operand2: self.replace_operand(operand2),
+                src,
+                dst,
+            } => AsmInstruction::Binary {
+                binary_operator,
+                src: self.replace_operand(src),
+                dst: self.replace_operand(dst),
             },
             AsmInstruction::Idiv { operand } => AsmInstruction::Idiv {
                 operand: self.replace_operand(operand),
-            }
+            },
         }
     }
 

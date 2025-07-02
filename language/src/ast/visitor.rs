@@ -19,7 +19,7 @@ pub trait Visitor {
 
     fn visit_expression(&mut self, expression: &AstExpression) {
         match expression {
-            _ => () 
+            _ => (),
         }
     }
 }

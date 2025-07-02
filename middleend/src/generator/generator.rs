@@ -68,12 +68,16 @@ impl TacGenerator {
                 (instructions, destination)
             }
 
-            AstExpression::Binary { operator, left, right } => {
+            AstExpression::Binary {
+                operator,
+                left,
+                right,
+            } => {
                 let mut instructions = Vec::new();
 
-                let (mut instructions_left,  dest_left)  = self.visit_expression(*left);
+                let (mut instructions_left, dest_left) = self.visit_expression(*left);
                 let (mut instructions_right, dest_right) = self.visit_expression(*right);
-                
+
                 let dest = self.tempgen.next();
 
                 instructions.append(&mut instructions_left);
@@ -83,7 +87,7 @@ impl TacGenerator {
                     operator: operator,
                     source1: dest_left,
                     source2: dest_right,
-                    destination: dest.clone(), 
+                    destination: dest.clone(),
                 });
 
                 (instructions, dest)
