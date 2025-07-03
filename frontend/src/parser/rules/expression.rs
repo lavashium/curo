@@ -40,23 +40,11 @@ impl<'a> ExpressionParser<'a> for ParserRules<'a> {
                     AstExpression::Constant { constant }
                 }
 
-                TokenKind::Operator(OperatorKind::Tilde)
-                | TokenKind::Operator(OperatorKind::Minus) => {
-                    let operator = match self.parser.source_tokens.consume()?.kind() {
-                        TokenKind::Operator(OperatorKind::Tilde) => UnaryKind::Complement,
-                        TokenKind::Operator(OperatorKind::Minus) => UnaryKind::Negate,
-                        _ => {
-                            let token = self.parser.source_tokens.peek()?;
-                            self.diagnostics.push(
-                                errkind_error!(token.span, error_unknown_token!(token.clone()))
-                                    .with(errkind_note!(
-                                        token.span,
-                                        "expected a unary operator here"
-                                    )),
-                            );
-                            return None;
-                        }
-                    };
+                TokenKind::Operator(op @ OperatorKind::Tilde) |
+                TokenKind::Operator(op @ OperatorKind::Minus) => {
+                    let operator = op.to_unary()?.clone();
+                    
+                    self.parser.source_tokens.consume();
 
                     let operand = self.parse_binary_expression(50)?;
                     AstExpression::Unary {
@@ -103,14 +91,7 @@ impl<'a> ExpressionParser<'a> for ParserRules<'a> {
 
             let rhs = self.parse_binary_expression(prec + 1)?;
 
-            let op_kind: BinaryKind = match op_kind {
-                OperatorKind::Asterisk => BinaryKind::Multiply,
-                OperatorKind::ForwardSlash => BinaryKind::Divide,
-                OperatorKind::PercentSign => BinaryKind::Remainder,
-                OperatorKind::Minus => BinaryKind::Subtract,
-                OperatorKind::Plus => BinaryKind::Add,
-                OperatorKind::Tilde => unreachable!(),
-            };
+            let op_kind = op_kind.to_binary()?;
 
             lhs = AstExpression::Binary {
                 operator: op_kind,

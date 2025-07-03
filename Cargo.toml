@@ -6,8 +6,8 @@ members = [
   "common",
   "driver",
   "frontend",
-#   "middleend",
-#   "optimizer",
-  "backend", "middleend",
+  "middleend",
+  "backend", 
+  "macros/*",
 ]
 

@@ -1,4 +1,6 @@
 use crate::asm::*;
+use super::emit::ToAsm;
+use asm_macro::emit_instruction;
 
 pub struct CodeEmitter;
 
@@ -18,90 +20,29 @@ impl CodeEmitter {
 
         output.push_str(&format!(".globl {}\n", function.identifier));
         output.push_str(&format!("{}:\n", function.identifier));
-        output.push_str("  pushq %rbp\n");
-        output.push_str("  movq %rsp, %rbp\n");
+        output.push_str("    pushq %rbp\n");
+        output.push_str("    movq %rsp, %rbp\n");
 
         for instr in &function.instructions {
-            match instr {
-                AsmInstruction::Ret => {
-                    output.push_str("  movq %rbp, %rsp\n");
-                    output.push_str("  popq %rbp\n");
-                    output.push_str("  ret\n");
-                }
-                _ => {
-                    output.push_str(&self.emit_instruction(instr));
-                }
-            }
+            output.push_str(&self.emit_instruction(instr));
         }
 
         output
     }
 
     fn emit_instruction(&self, instr: &AsmInstruction) -> String {
-        match instr {
-            AsmInstruction::Mov { src, dst } => {
-                format!(
-                    "  movl {}, {}\n",
-                    self.emit_operand(src),
-                    self.emit_operand(dst)
-                )
-            }
-            AsmInstruction::Unary {
-                unary_operator,
-                operand,
-            } => {
-                let op_str = match unary_operator {
-                    AsmUnaryOperator::Neg => "negl",
-                    AsmUnaryOperator::Not => "notl",
-                };
-                format!("  {} {}\n", op_str, self.emit_operand(operand))
-            }
-            AsmInstruction::AllocateStack(size) => {
-                format!("  subq ${}, %rsp\n", size)
-            }
-            AsmInstruction::Ret => String::new(),
-            AsmInstruction::Binary {
-                binary_operator,
-                src,
-                dst,
-            } => {
-                format!(
-                    "  {} {}, {}\n",
-                    self.emit_operator(binary_operator),
-                    self.emit_operand(src),
-                    self.emit_operand(dst)
-                )
-            }
-            AsmInstruction::Cdq => {
-                format!("  cdq\n")
-            }
-            AsmInstruction::Idiv { operand } => {
-                format!("  idivl {}\n", self.emit_operand(operand))
-            }
-        }
-    }
-
-    fn emit_operand(&self, operand: &AsmOperand) -> String {
-        match operand {
-            AsmOperand::Reg(reg) => match reg {
-                AsmReg::AX => "%eax",
-                AsmReg::R10 => "%r10d",
-                AsmReg::DX => "%edx",
-                AsmReg::R11 => "%r11d",
-            }
-            .to_string(),
-            AsmOperand::Stack(offset) => format!("{}(%rbp)", offset),
-            AsmOperand::Imm(value) => format!("${}", value),
-            AsmOperand::Pseudo(_) => panic!("Pseudo operand should not exist at emission"),
-        }
-    }
-
-    fn emit_operator(&self, operator: &AsmBinaryOperator) -> String {
-        match operator {
-            AsmBinaryOperator::Sub => "subl",
-            AsmBinaryOperator::Mult => "imull",
-            AsmBinaryOperator::Add => "addl",
-        }
-        .to_string()
+        emit_instruction!(instr, {
+            AsmInstruction::Mov { src, dst } => "movl {}, {}", [src, dst],
+            AsmInstruction::Unary { unary_operator, operand} => "{}, {}", [unary_operator, operand],
+            AsmInstruction::Binary { binary_operator, src, dst} => "{} {}, {}", [binary_operator, src, dst],
+            AsmInstruction::Idiv { operand } => "idivl {}", [operand],
+            AsmInstruction::AllocateStack(int) => "subq ${}, %rsp", [int],
+            AsmInstruction::Ret => {
+                "movq %rbp, %rsp", [],
+                "popq %rbp", [],
+                "ret", [],
+            },
+            _ => "", []
+        })
     }
 }
