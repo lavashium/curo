@@ -36,13 +36,13 @@ impl CodeEmitter {
             AsmInstruction::Unary { unary_operator, operand } => "{} {}", [unary_operator, operand],
             AsmInstruction::Binary { binary_operator, src, dst } => "{} {}, {}", [binary_operator, src, dst],
             AsmInstruction::Idiv { operand } => "idivl {}", [operand],
-            AsmInstruction::Cdq => "cdq", [],
             AsmInstruction::AllocateStack(int) => "subq ${}, %rsp", [int],
             AsmInstruction::Ret => {
                 "movq %rbp, %rsp", [],
                 "popq %rbp", [],
                 "ret", [],
             },
+            _ => "", []
         })
     }
 }

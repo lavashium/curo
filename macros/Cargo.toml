@@ -1,0 +1,13 @@
+[workspace]
+resolver = "3"
+
+members = [
+  "language",
+  "common",
+  "driver",
+  "frontend",
+  "middleend",
+  "backend", 
+  "macros/*",
+]
+
