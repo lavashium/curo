@@ -3,6 +3,15 @@
 version = 4
 
 [[package]]
+name = "accessors"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "asm_macro"
 version = "0.1.0"
 dependencies = [
@@ -25,6 +34,15 @@ name = "common"
 version = "0.1.0"
 dependencies = [
  "language",
+]
+
+[[package]]
+name = "constructors"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

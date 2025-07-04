@@ -22,12 +22,12 @@ fn get_precedence(operator: &OperatorKind) -> u8 {
     )
 }
 
-pub trait ExpressionParser<'a> {
+pub trait ExpressionParser {
     fn parse_expression(&mut self) -> ParseResult<AstExpression>;
     fn parse_binary_expression(&mut self, min_prec: u8) -> ParseResult<AstExpression>;
 }
 
-impl<'a> ExpressionParser<'a> for ParserRules<'a> {
+impl<'a> ExpressionParser for ParserRules<'a> {
     fn parse_expression(&mut self) -> ParseResult<AstExpression> {
         self.parse_binary_expression(0)
     }

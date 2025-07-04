@@ -1,11 +1,11 @@
 use super::*;
 use language::*;
 
-pub trait StatementParser<'a> {
+pub trait StatementParser {
     fn parse_statement(&mut self) -> ParseResult<AstStatement>;
 }
 
-impl<'a> StatementParser<'a> for ParserRules<'a> {
+impl<'a> StatementParser for ParserRules<'a> {
     fn parse_statement(&mut self) -> ParseResult<AstStatement> {
         match self.parser.source_tokens.peek()?.kind() {
             TokenKind::Keyword(KeywordKind::Return) => {

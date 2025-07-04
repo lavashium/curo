@@ -1,11 +1,11 @@
 use super::*;
 use language::*;
 
-pub trait FunctionParser<'a> {
+pub trait FunctionParser {
     fn parse_function(&mut self) -> ParseResult<AstFunction>;
 }
 
-impl<'a> FunctionParser<'a> for ParserRules<'a> {
+impl<'a> FunctionParser for ParserRules<'a> {
     fn parse_function(&mut self) -> ParseResult<AstFunction> {
         self.expect(token_keyword!(Int))?;
         let identifier = self.unwrap_identifier()?;

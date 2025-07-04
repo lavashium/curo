@@ -8,6 +8,6 @@ members = [
   "frontend",
   "middleend",
   "backend", 
-  "macros/*",
+  "macros/*", "accessors", "constructors",
 ]
 

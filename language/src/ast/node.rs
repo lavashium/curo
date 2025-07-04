@@ -30,13 +30,13 @@ pub enum AstExpression {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq,)]
 pub enum UnaryKind {
     Complement,
     Negate,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq,)]
 pub enum BinaryKind {
     Add,
     Subtract,

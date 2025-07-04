@@ -68,7 +68,7 @@ impl<'a> Compiler<'a> {
         }
 
         let translator = AsmGenerator::new();
-        let asm_ast = translator.generate(tac.clone());
+        let asm_ast = translator.generate(tac);
 
         if stage == PipelineStage::AssemblyGeneration {
             return Ok(format! {"{:#?}", asm_ast});

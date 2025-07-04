@@ -1,11 +1,11 @@
 use super::*;
 use language::*;
 
-pub trait ProgramParser<'a> {
+pub trait ProgramParser {
     fn parse_program(&mut self) -> ParseResult<AstProgram>;
 }
 
-impl<'a> ProgramParser<'a> for ParserRules<'a> {
+impl<'a> ProgramParser for ParserRules<'a> {
     fn parse_program(&mut self) -> ParseResult<AstProgram> {
         let function = self.parse_function()?;
 
