@@ -2,6 +2,7 @@ use backend::*;
 use common::DiagnosticsManager;
 use frontend::*;
 use middleend::*;
+use language::*;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ErrCode {
@@ -60,7 +61,7 @@ impl<'a> Compiler<'a> {
             return Ok(format! {"{:#?}", program});
         }
 
-        let mut generator = TacGenerator::new();
+        let mut generator = TacGenerator::new(TempGen::new());
         let tac = generator.parse(program);
 
         if stage == PipelineStage::TacGeneration {

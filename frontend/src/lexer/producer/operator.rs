@@ -8,7 +8,7 @@ pub struct OperatorProducer;
 impl TokenProducer for OperatorProducer {
     fn try_match(lexer: &mut Lexer, diagnostics: &mut DiagnosticsManager) -> Option<Token> {
         let start_pos = lexer.current_position();
-        let start_ptr = lexer.pointer();
+        let start_ptr = lexer.get_pointer();
 
         if let Some(slice) = lexer.peek_slice((start_ptr, start_ptr + 2)) {
             match slice {
@@ -17,9 +17,9 @@ impl TokenProducer for OperatorProducer {
                     lexer.advance();
 
                     let span = lexer.span_from(start_pos);
-                    diagnostics.push(errkind_error!(
+                    diagnostics.push(Diagnostic::error(
                         span,
-                        error_custom!("Decrement operator is NOT supported")
+                        DiagnosticKind::Custom("Decrement operator is NOT supported".to_string())
                     ));
                     return None;
                 }
@@ -28,9 +28,9 @@ impl TokenProducer for OperatorProducer {
                     lexer.advance();
 
                     let span = lexer.span_from(start_pos);
-                    diagnostics.push(errkind_error!(
+                    diagnostics.push(Diagnostic::error(
                         span,
-                        error_custom!("Increment operator is NOT supported")
+                        DiagnosticKind::Custom("Increment operator is NOT supported".to_string())
                     ));
                     return None;
                 }

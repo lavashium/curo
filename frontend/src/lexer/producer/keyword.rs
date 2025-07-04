@@ -8,7 +8,7 @@ pub struct KeywordProducer;
 impl TokenProducer for KeywordProducer {
     fn try_match(lexer: &mut Lexer, _diagnostics: &mut DiagnosticsManager) -> Option<Token> {
         let start_pos = lexer.current_position();
-        let start_ptr = lexer.pointer();
+        let start_ptr = lexer.get_pointer();
 
         let ch = lexer.peek()?;
         if !ch.is_ascii_alphabetic() && ch != '_' {
@@ -23,7 +23,7 @@ impl TokenProducer for KeywordProducer {
             }
         }
 
-        let end_ptr = lexer.pointer();
+        let end_ptr = lexer.get_pointer();
         let lexeme = lexer.peek_slice((start_ptr, end_ptr))?.to_string();
 
         let kind = lookup_keyword(&lexeme);

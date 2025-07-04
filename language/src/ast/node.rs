@@ -1,19 +1,28 @@
+use accessors::accessors;
+use constructors::constructors;
+
+#[accessors]
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AstProgram {
     pub function_definition: AstFunction,
 }
 
+#[accessors]
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AstFunction {
     pub name: String,
     pub body: AstStatement,
 }
 
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AstStatement {
     Return { expression: AstExpression },
 }
 
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AstExpression {
     Constant {
@@ -30,12 +39,14 @@ pub enum AstExpression {
     },
 }
 
+#[constructors]
 #[derive(Debug, Copy, Clone, PartialEq, Eq,)]
 pub enum UnaryKind {
     Complement,
     Negate,
 }
 
+#[constructors]
 #[derive(Debug, Copy, Clone, PartialEq, Eq,)]
 pub enum BinaryKind {
     Add,

@@ -9,7 +9,7 @@ impl<'a> ExpressionTransform for GeneratorTransforms<'a> {
     fn transform_expression(&mut self, expression: &AstExpression) -> (Vec<TacInstruction>, TacVal) {
         match expression {
             AstExpression::Constant { constant } => {
-                let val = TacVal::Constant(constant.clone());
+                let val = TacVal::new_constant(constant.clone());
                 (vec![], val)
             }
 
@@ -18,11 +18,11 @@ impl<'a> ExpressionTransform for GeneratorTransforms<'a> {
 
                 let destination = self.generator.tempgen.next();
 
-                instructions.push(TacInstruction::Unary {
-                    operator: *operator,
+                instructions.push(TacInstruction::new_unary (
+                    *operator,
                     source,
-                    destination: destination.clone(),
-                });
+                    destination.clone(),
+                ));
 
                 (instructions, destination)
             }
@@ -42,12 +42,12 @@ impl<'a> ExpressionTransform for GeneratorTransforms<'a> {
                 instructions.append(&mut instructions_left);
                 instructions.append(&mut instructions_right);
 
-                instructions.push(TacInstruction::Binary {
-                    operator: *operator,
-                    source1: dest_left,
-                    source2: dest_right,
-                    destination: destination.clone(),
-                });
+                instructions.push(TacInstruction::new_binary (
+                    *operator,
+                    dest_left,
+                    dest_right,
+                    destination.clone(),
+                ));
 
                 (instructions, destination)
             }

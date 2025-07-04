@@ -6,6 +6,9 @@ use syn::{parse_macro_input, Data, DeriveInput, Fields};
 pub fn constructors(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
     let name = &input.ident;
+    
+    let generics = &input.generics;
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let generated = match &input.data {
         Data::Struct(data_struct) => {
@@ -21,7 +24,7 @@ pub fn constructors(_attr: TokenStream, item: TokenStream) -> TokenStream {
                         quote! { #name }
                     });
                     quote! {
-                        impl #name {
+                        impl #impl_generics #name #ty_generics #where_clause {
                             pub fn new(#(#args),*) -> Self {
                                 Self { #(#init),* }
                             }
@@ -39,7 +42,7 @@ pub fn constructors(_attr: TokenStream, item: TokenStream) -> TokenStream {
                         quote! { #arg }
                     });
                     quote! {
-                        impl #name {
+                        impl #impl_generics #name #ty_generics #where_clause {
                             pub fn new(#(#args),*) -> Self {
                                 Self(#(#init),*)
                             }
@@ -47,7 +50,7 @@ pub fn constructors(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     }
                 }
                 Fields::Unit => quote! {
-                    impl #name {
+                    impl #impl_generics #name #ty_generics #where_clause {
                         pub fn new() -> Self {
                             Self
                         }
@@ -102,7 +105,7 @@ pub fn constructors(_attr: TokenStream, item: TokenStream) -> TokenStream {
             });
 
             quote! {
-                impl #name {
+                impl #impl_generics #name #ty_generics #where_clause {
                     #(#constructors)*
                 }
             }

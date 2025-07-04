@@ -8,7 +8,7 @@ pub struct ConstantProducer;
 impl TokenProducer for ConstantProducer {
     fn try_match(lexer: &mut Lexer, diagnostics: &mut DiagnosticsManager) -> Option<Token> {
         let start_pos = lexer.current_position();
-        let start_ptr = lexer.pointer();
+        let start_ptr = lexer.get_pointer();
 
         let ch = lexer.peek()?;
         if !ch.is_ascii_digit() {
@@ -33,20 +33,22 @@ impl TokenProducer for ConstantProducer {
                     }
                 }
 
-                let end_ptr = lexer.pointer();
+                let end_ptr = lexer.get_pointer();
                 let lexeme = lexer.peek_slice((start_ptr, end_ptr))?.to_string();
                 let span = lexer.span_from(start_pos);
 
                 let invalid_token =
                     Token::new(TokenKind::Unknown(lexeme.clone()), lexeme.clone(), span);
-                let diag = errkind_error!(span, error_unknown_token!(invalid_token.clone()));
-                diagnostics.push(diag);
+                diagnostics.push(Diagnostic::error(
+                    span, 
+                    DiagnosticKind::UnknownToken(invalid_token.clone())
+                ));
 
                 return Some(invalid_token);
             }
         }
 
-        let end_ptr = lexer.pointer();
+        let end_ptr = lexer.get_pointer();
         let lexeme = lexer.peek_slice((start_ptr, end_ptr))?.to_string();
         let span = lexer.span_from(start_pos);
 

@@ -1,3 +1,6 @@
+use constructors::constructors;
+
+#[constructors]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GenericKind {
     Keyword,

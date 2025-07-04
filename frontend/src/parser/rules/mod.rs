@@ -11,10 +11,12 @@ pub use statement::*;
 use crate::Parser;
 use common::*;
 use language::*;
+use constructors::constructors;
+use accessors::accessors;
 
 macro_rules! push_eof_error {
     ($diagnostics:expr) => {
-        $diagnostics.push(errkind_error!(Span::default(), error_unexpected_eof!()));
+        $diagnostics.push(Diagnostic::error(Span::default(), DiagnosticKind::UnexpectedEof));
     };
 }
 
@@ -23,9 +25,9 @@ macro_rules! error_expect {
         match $self.parser.source_tokens.consume() {
             Some(token) if token.kind() == &$kind => Some(token),
             Some(found) => {
-                $self.diagnostics.push(errkind_error!(
-                    found.span,
-                    error_expected_token!($kind, found.clone())
+                $self.diagnostics.push(Diagnostic::error(
+                    found.get_span(),
+                    DiagnosticKind::new_expected_token($kind, found.clone())
                 ));
                 None
             }
@@ -44,9 +46,9 @@ macro_rules! error_consume_unwrap {
                 TokenKind::$kind(inner) => Some(inner.to_owned()),
                 _ => {
                     let expected_kind = GenericKind::$kind;
-                    $self.diagnostics.push(errkind_error!(
-                        token.span,
-                        error_unexpected_generic!(token.clone(), [expected_kind])
+                    $self.diagnostics.push(Diagnostic::error(
+                        token.get_span(),
+                        DiagnosticKind::new_unexpected_generic(token.clone(), vec![expected_kind])
                     ));
                     None
                 }
@@ -61,19 +63,14 @@ macro_rules! error_consume_unwrap {
 
 pub type ParseResult<N> = Option<N>;
 
+#[constructors]
+#[accessors]
 pub struct ParserRules<'a> {
     parser: &'a mut Parser,
     diagnostics: &'a mut DiagnosticsManager,
 }
 
 impl<'a> ParserRules<'a> {
-    pub fn new(parser: &'a mut Parser, diagnostics: &'a mut DiagnosticsManager) -> Self {
-        Self {
-            parser,
-            diagnostics,
-        }
-    }
-
     pub fn expect(&mut self, kind: TokenKind) -> Option<Token> {
         error_expect!(self, kind)
     }

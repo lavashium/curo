@@ -1,14 +1,22 @@
+use accessors::accessors;
+use constructors::constructors;
+
+#[accessors]
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AsmProgram {
-    pub function_definition: AsmFunction,
+    function_definition: AsmFunction,
 }
 
+#[accessors]
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AsmFunction {
-    pub identifier: String,
-    pub instructions: Vec<AsmInstruction>,
+    identifier: String,
+    instructions: Vec<AsmInstruction>,
 }
 
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AsmInstruction {
     Mov {
@@ -32,12 +40,14 @@ pub enum AsmInstruction {
     Ret,
 }
 
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AsmUnaryOperator {
     Neg,
     Not,
 }
 
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AsmBinaryOperator {
     Add,
@@ -45,6 +55,7 @@ pub enum AsmBinaryOperator {
     Mult,
 }
 
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AsmOperand {
     Imm(i32),
@@ -53,6 +64,7 @@ pub enum AsmOperand {
     Stack(i32),
 }
 
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AsmReg {
     AX,

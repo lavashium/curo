@@ -1,6 +1,8 @@
 use super::diagnostic::Diagnostic;
 use std::io::{self, Write};
+use accessors::accessors;
 
+#[accessors]
 #[derive(Debug, Default)]
 pub struct DiagnosticsManager {
     diagnostics: Vec<Diagnostic>,
@@ -33,7 +35,7 @@ impl DiagnosticsManager {
 
         for diag in &self.diagnostics {
             writer.write_diagnostic(diag)?;
-            for child in &diag.children {
+            for child in diag.children() {
                 writer.write_diagnostic(child)?;
             }
         }
@@ -41,6 +43,7 @@ impl DiagnosticsManager {
     }
 }
 
+#[accessors]
 struct DiagnosticWriter<'a, W: Write> {
     filename: &'a str,
     writer: &'a mut W,
@@ -58,20 +61,20 @@ impl<'a, W: Write> DiagnosticWriter<'a, W> {
     }
 
     fn write_diagnostic(&mut self, diag: &Diagnostic) -> io::Result<()> {
-        let line = diag.span.start_line + 1;
-        let col = diag.span.start_col + 1;
+        let line = diag.span().start_line() + 1;
+        let col = diag.span().start_col() + 1;
         writeln!(
             self.writer,
             "{}:{}:{}: {}: {}",
             self.filename,
             line,
             col,
-            diag.severity,
+            diag.severity(),
             diag.message()
         )?;
 
-        if diag.span.start_line < self.lines.len() {
-            let source_line = self.lines[diag.span.start_line];
+        if diag.span().start_line() < &self.lines.len() {
+            let source_line = self.lines[diag.span().get_start_line()];
             writeln!(self.writer, "{:5} | {}", line, source_line)?;
 
             let underline = self.create_underline(diag);
@@ -82,16 +85,16 @@ impl<'a, W: Write> DiagnosticWriter<'a, W> {
 
     fn create_underline(&self, diag: &Diagnostic) -> String {
         let mut underline = String::new();
-        let line_len = self.lines[diag.span.start_line].len();
+        let line_len = self.lines[diag.span().get_start_line()].len();
 
-        for _ in 0..diag.span.start_col {
+        for _ in 0..diag.span().get_start_col() {
             underline.push(' ');
         }
 
-        let underline_len = if diag.span.start_line == diag.span.end_line {
-            (diag.span.end_col - diag.span.start_col).min(line_len - diag.span.start_col)
+        let underline_len = if diag.span().start_line() == diag.span().end_line() {
+            (diag.span().end_col() - diag.span().start_col()).min(line_len - diag.span().start_col())
         } else {
-            line_len - diag.span.start_col
+            line_len - diag.span().start_col()
         };
 
         if underline_len > 0 {

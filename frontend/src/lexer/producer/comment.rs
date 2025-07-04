@@ -7,7 +7,7 @@ pub struct CommentProducer;
 
 impl TokenProducer for CommentProducer {
     fn try_match(lexer: &mut Lexer, diagnostics: &mut DiagnosticsManager) -> Option<Token> {
-        let start_pointer = lexer.pointer();
+        let start_pointer = lexer.get_pointer();
 
         let next_two = lexer.peek_slice((start_pointer, start_pointer + 2))?;
 
@@ -32,7 +32,7 @@ impl TokenProducer for CommentProducer {
             lexer.advance();
 
             while let Some(_) = lexer.peek() {
-                let pos = lexer.pointer();
+                let pos = lexer.get_pointer();
                 if let Some(slice) = lexer.peek_slice((pos, pos + 2)) {
                     if slice == "*/" {
                         lexer.advance();
@@ -48,9 +48,9 @@ impl TokenProducer for CommentProducer {
                 }
                 lexer.advance();
             }
-            diagnostics.push(errkind_error!(
+            diagnostics.push(Diagnostic::error(
                 Span::default(),
-                error_custom!("Unterminated multi-line comment")
+                DiagnosticKind::Custom("Unterminated multi-line comment".to_string())
             ));
             return Some(Token::new(
                 TokenKind::Irrelevant,

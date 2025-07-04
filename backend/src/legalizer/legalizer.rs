@@ -1,30 +1,30 @@
 use crate::asm::*;
 use super::fixes::*;
+use accessors::accessors;
+use constructors::constructors;
 
+#[accessors]
+#[constructors]
 pub struct AsmLegalizer {
     stack_size: i32,
 }
 
 impl AsmLegalizer {
-    pub fn new(stack_size: i32) -> Self {
-        Self { stack_size }
-    }
-
     pub fn legalize(&self, program: AsmProgram) -> AsmProgram {
-        let mut function = program.function_definition;
+        let mut function = program.get_function_definition();
 
-        let mut instructions = Vec::with_capacity(function.instructions.len() + 3);
+        let mut instructions = Vec::with_capacity(function.instructions().len() + 3);
         instructions.push(AsmInstruction::AllocateStack(self.stack_size));
 
-        for instr in function.instructions {
+        for instr in function.get_instructions() {
             instructions.extend(self.fix_instruction(instr));
         }
 
-        function.instructions = instructions;
+        function.set_instructions(instructions);
 
-        AsmProgram {
-            function_definition: function,
-        }
+        AsmProgram::new(
+            function,
+        )
     }
 
     fn fix_instruction(&self, instr: AsmInstruction) -> Vec<AsmInstruction> {

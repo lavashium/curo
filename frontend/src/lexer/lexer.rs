@@ -1,8 +1,11 @@
+use std::rc::Rc;
 use crate::lexer::producer::*;
 use common::error::manager::DiagnosticsManager;
-use common::*;
 use language::token::*;
+use accessors::accessors;
+use common::*;
 
+#[accessors]
 #[derive(Debug)]
 pub struct Lexer<'a> {
     source_code: &'a str,
@@ -50,17 +53,13 @@ impl<'a> Lexer<'a> {
         (self.line, self.column)
     }
 
-    pub fn pointer(&self) -> usize {
-        self.pointer
-    }
-
     pub fn span_from(&self, start: (usize, usize)) -> Span {
-        Span {
-            start_line: start.0,
-            start_col: start.1,
-            end_line: self.line,
-            end_col: self.column,
-        }
+        Span::new(
+            start.0,
+            start.1,
+            self.line,
+            self.column,
+        )
     }
 
     pub fn parse(&mut self, diagnostics: &mut DiagnosticsManager) -> TokenStream {
@@ -73,30 +72,34 @@ impl<'a> Lexer<'a> {
                 }
             } else {
                 let ch = self.advance().unwrap();
-                let start_pos = self.current_position();
 
-                let span = Span {
-                    start_line: start_pos.0,
-                    start_col: start_pos.1,
-                    end_line: self.line,
-                    end_col: self.column,
-                };
+                let span = Span::new(
+                    self.line,
+                    self.column,
+                    self.line,
+                    self.column,
+                );
 
                 let token = Token::new(TokenKind::Unknown(ch.to_string()), ch.to_string(), span);
 
-                diagnostics.push(errkind_error!(span, error_unknown_token!(token)));
+                diagnostics.push(
+                    Diagnostic::error(
+                        span,
+                        DiagnosticKind::new_unknown_token(token),
+                    )
+                );
             }
         }
 
-        let eof_span = Span {
-            start_line: self.line,
-            start_col: self.column,
-            end_line: self.line,
-            end_col: self.column,
-        };
+        let eof_span = Span::new(
+            self.line,
+            self.column,
+            self.line,
+            self.column,
+        );
 
         tokens.push(Token::new(TokenKind::EOF, String::new(), eof_span));
 
-        TokenStream::new(tokens)
+        TokenStream::new(Rc::from(tokens))
     }
 }

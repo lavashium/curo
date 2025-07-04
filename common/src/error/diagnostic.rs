@@ -1,6 +1,9 @@
 use super::convert::*;
 use language::*;
+use accessors::accessors;
+use constructors::constructors;
 
+#[constructors]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Severity {
     Error,
@@ -20,6 +23,7 @@ impl std::fmt::Display for Severity {
     }
 }
 
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DiagnosticKind {
     UnknownToken(Token),
@@ -51,7 +55,7 @@ impl DiagnosticKind {
     pub fn message(&self) -> String {
         match self {
             DiagnosticKind::UnknownToken(token) => {
-                format!("unknown {} '{}'", token.kind.to_user_string(), token.lexeme)
+                format!("unknown {} '{}'", token.kind().to_user_string(), token.lexeme())
             }
 
             DiagnosticKind::UnexpectedToken { found, expected } => {
@@ -60,13 +64,13 @@ impl DiagnosticKind {
                     .map(|k| k.to_user_string())
                     .collect::<Vec<_>>()
                     .join(" or ");
-                format!("expected {}, found '{}'", expected_str, found.lexeme)
+                format!("expected {}, found '{}'", expected_str, found.lexeme())
             }
 
             DiagnosticKind::ExpectedToken { expected, found } => format!(
                 "expected '{}', found '{}'",
                 expected.to_user_string(),
-                found.lexeme
+                found.lexeme()
             ),
 
             DiagnosticKind::UnexpectedGeneric { found, expected } => {
@@ -75,13 +79,13 @@ impl DiagnosticKind {
                     .map(|k| k.to_user_string())
                     .collect::<Vec<_>>()
                     .join(" or ");
-                format!("expected {}, found '{}'", expected_str, found.lexeme)
+                format!("expected {}, found '{}'", expected_str, found.lexeme())
             }
 
             DiagnosticKind::ExpectedGeneric { expected, found } => format!(
                 "expected {}, found '{}'",
                 expected.to_user_string(),
-                found.lexeme
+                found.lexeme()
             ),
 
             DiagnosticKind::UnexpectedEof => "unexpected end of file".to_string(),
@@ -96,12 +100,13 @@ impl DiagnosticKind {
     }
 }
 
+#[accessors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Diagnostic {
-    pub span: Span,
-    pub severity: Severity,
-    pub kind: DiagnosticKind,
-    pub children: Vec<Diagnostic>,
+    span: Span,
+    severity: Severity,
+    kind: DiagnosticKind,
+    children: Vec<Diagnostic>,
 }
 
 impl Diagnostic {
@@ -138,107 +143,4 @@ impl Diagnostic {
         self.children.push(note);
         self
     }
-}
-
-#[macro_export]
-macro_rules! error_unknown_token {
-    ($token:expr) => {
-        $crate::error::diagnostic::DiagnosticKind::UnknownToken($token)
-    };
-}
-
-#[macro_export]
-macro_rules! error_unexpected_token {
-    ($found:expr, [$($expected:expr),+ $(,)?]) => {
-        $crate::error::diagnostic::DiagnosticKind::UnexpectedToken {
-            found: $found,
-            expected: vec![$($expected),+],
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! error_expected_token {
-    ($expected:expr, $found:expr) => {
-        $crate::error::diagnostic::DiagnosticKind::ExpectedToken {
-            expected: $expected,
-            found: $found,
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! error_unexpected_eof {
-    () => {
-        $crate::error::diagnostic::DiagnosticKind::UnexpectedEof
-    };
-}
-
-#[macro_export]
-macro_rules! error_invalid_type {
-    ($ty:expr) => {
-        $crate::error::diagnostic::DiagnosticKind::InvalidType($ty.to_string())
-    };
-}
-
-#[macro_export]
-macro_rules! error_custom {
-    ($msg:expr) => {
-        $crate::error::diagnostic::DiagnosticKind::Custom($msg.to_string())
-    };
-}
-
-#[macro_export]
-macro_rules! errkind_error {
-    ($span:expr, $kind:expr) => {
-        $crate::error::diagnostic::Diagnostic::error($span, $kind)
-    };
-}
-
-#[macro_export]
-macro_rules! errkind_warning {
-    ($span:expr, $kind:expr) => {
-        $crate::error::diagnostic::Diagnostic::warning($span, $kind)
-    };
-}
-
-#[macro_export]
-macro_rules! errkind_note {
-    ($span:expr, $msg:expr) => {
-        $crate::error::diagnostic::Diagnostic::note($span, $msg)
-    };
-}
-
-#[macro_export]
-macro_rules! errkind_help {
-    ($span:expr, $msg:expr) => {
-        $crate::error::diagnostic::Diagnostic::help($span, $msg)
-    };
-}
-
-#[macro_export]
-macro_rules! error_expected_generic {
-    ($expected:expr, $found:expr) => {
-        $crate::error::diagnostic::DiagnosticKind::ExpectedGeneric {
-            expected: $expected,
-            found: $found,
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! error_unexpected_generic {
-    ($found:expr, [$($expected:expr),+ $(,)?]) => {
-        $crate::error::diagnostic::DiagnosticKind::UnexpectedGeneric {
-            found: $found,
-            expected: vec![$($expected),+],
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! error_invalid_generic_type {
-    ($ty:expr) => {
-        $crate::error::diagnostic::DiagnosticKind::InvalidGenericType($ty)
-    };
 }

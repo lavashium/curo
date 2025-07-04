@@ -1,41 +1,54 @@
+use std::rc::Rc;
 use crate::token::{Token, TokenKind};
+use accessors::accessors;
 
-#[derive(Debug)]
+#[accessors]
+#[derive(Debug, Clone)]
 pub struct TokenStream {
-    tokens: Vec<Token>,
+    tokens: Rc<[Token]>,
+    pointer: usize,
 }
 
 impl TokenStream {
-    pub fn new(mut tokens: Vec<Token>) -> Self {
-        tokens.reverse();
-        TokenStream { tokens }
+    pub fn new(tokens: Rc<[Token]>) -> Self {
+        Self {
+            tokens,
+            pointer: 0,
+        }
     }
 
     pub fn consume(&mut self) -> Option<Token> {
-        self.tokens.pop()
+        if self.pointer < self.tokens.len() {
+            let tok = self.tokens[self.pointer].clone();
+            self.pointer += 1;
+            Some(tok)
+        } else {
+            None
+        }
     }
+
 
     pub fn peek(&self) -> Option<&Token> {
-        self.tokens.last()
+        self.tokens.get(self.pointer)
     }
 
-    pub fn consume_expected(&mut self, expected: TokenKind) -> Option<Token> {
+    pub fn consume_expected(&mut self, expected: &TokenKind) -> Option<Token> {
         match self.peek() {
-            Some(actual) if actual.kind == expected => self.consume(),
+            Some(actual) if actual.kind() == expected => self.consume(),
             _ => None,
         }
     }
 
     pub fn any_tokens(&self) -> bool {
-        !self.tokens.is_empty()
+        self.pointer < self.tokens.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.tokens.is_empty()
+        !self.any_tokens()
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &Token> {
-        self.tokens.iter().rev()
+        self.tokens[self.pointer..].iter()
     }
 }
 

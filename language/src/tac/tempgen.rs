@@ -1,5 +1,8 @@
 use crate::TacVal;
+use accessors::accessors;
 
+#[accessors]
+#[derive(Clone)]
 pub struct TempGen {
     counter: usize,
 }

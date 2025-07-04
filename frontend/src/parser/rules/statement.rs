@@ -18,8 +18,12 @@ impl<'a> StatementParser for ParserRules<'a> {
             _ => {
                 let token = self.parser.source_tokens.peek()?;
                 self.diagnostics.push(
-                    errkind_error!(token.span, error_unknown_token!(token.clone()))
-                        .with(errkind_note!(token.span, "expected a statement here")),
+                    Diagnostic::error(
+                        token.get_span(),
+                        DiagnosticKind::new_unknown_token(token.clone())
+                    ).with(
+                        Diagnostic::note(token.get_span(), "expected a statement here")
+                    ),
                 );
                 None
             }

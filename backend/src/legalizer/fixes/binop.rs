@@ -10,55 +10,53 @@ impl Legalizer for BinopLegalizer {
                 binary_operator: AsmBinaryOperator::Mult,
                 src,
                 dst,
-            } if is_stack_operand(&dst) => {
+            } if is_stack_operand(dst) => {
                 Some(vec![
-                    AsmInstruction::Mov {
-                        src: src.clone(),
-                        dst: AsmOperand::Reg(AsmReg::R11),
-                    },
-                    AsmInstruction::Binary {
-                        binary_operator: AsmBinaryOperator::Mult,
-                        src: dst.clone(),
-                        dst: AsmOperand::Reg(AsmReg::R11),
-                    },
-                    AsmInstruction::Mov {
-                        src: AsmOperand::Reg(AsmReg::R11),
-                        dst: dst.clone(),
-                    },
+                    AsmInstruction::new_mov(
+                        src.clone(),
+                        AsmOperand::new_reg(AsmReg::R11),
+                    ),
+                    AsmInstruction::new_binary(
+                        AsmBinaryOperator::new_mult(),
+                        dst.clone(),
+                        AsmOperand::new_reg(AsmReg::R11),
+                    ),
+                    AsmInstruction::new_mov(
+                        AsmOperand::new_reg(AsmReg::R11),
+                        dst.clone(),
+                    ),
                 ])
-            },
+            }
 
             AsmInstruction::Binary {
                 binary_operator,
                 src,
                 dst,
-            } if both_stack_operands(&src, &dst) => {
+            } if both_stack_operands(src, dst) => {
                 Some(vec![
-                    AsmInstruction::Mov {
-                        src: src.clone(),
-                        dst: AsmOperand::Reg(AsmReg::R10),
-                    },
-                    AsmInstruction::Binary {
-                        binary_operator: binary_operator.clone(),
-                        src: AsmOperand::Reg(AsmReg::R10),
-                        dst: dst.clone(),
-                    },
+                    AsmInstruction::new_mov(
+                        src.clone(),
+                        AsmOperand::new_reg(AsmReg::R10),
+                    ),
+                    AsmInstruction::new_binary(
+                        binary_operator.clone(),
+                        AsmOperand::new_reg(AsmReg::R10),
+                        dst.clone(),
+                    ),
                 ])
-            },
+            }
 
-            AsmInstruction::Idiv { 
-                operand,
-            } if matches!(operand, AsmOperand::Imm(_)) => {
+            AsmInstruction::Idiv { operand } if matches!(operand, AsmOperand::Imm(_)) => {
                 Some(vec![
-                    AsmInstruction::Mov {
-                        src: operand.clone(),
-                        dst: AsmOperand::Reg(AsmReg::R10),
-                    },
-                    AsmInstruction::Idiv {
-                        operand: AsmOperand::Reg(AsmReg::R10),
-                    },
+                    AsmInstruction::new_mov(
+                        operand.clone(),
+                        AsmOperand::new_reg(AsmReg::R10),
+                    ),
+                    AsmInstruction::new_idiv(
+                        AsmOperand::new_reg(AsmReg::R10),
+                    ),
                 ])
-            },
+            }
 
             _ => None,
         }

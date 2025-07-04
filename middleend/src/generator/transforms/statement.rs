@@ -12,7 +12,7 @@ impl<'a> StatementTransform for GeneratorTransforms<'a> {
             AstStatement::Return { expression } => {
                 let (mut expression, value) = self.transform_expression(expression);
                 instructions.append(&mut expression);
-                instructions.push(TacInstruction::Return { val: value });
+                instructions.push(TacInstruction::new_return(value));
             }
         }
         return instructions;

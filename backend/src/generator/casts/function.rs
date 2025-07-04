@@ -8,15 +8,15 @@ pub trait FunctionCast {
 
 impl<'a> FunctionCast for GeneratorCasts<'a> {
     fn cast_function(&self, function: &TacFunction) -> AsmFunction {
-        let identifier = function.identifier.clone();
+        let identifier = function.get_identifier();
         let mut instructions = Vec::new();
-        for instruction in function.instructions.clone() {
+        for instruction in function.instructions() {
             let mut instruction = self.cast_instruction(&instruction);
             instructions.append(&mut instruction);
         }
-        AsmFunction {
+        AsmFunction::new(
             identifier,
             instructions,
-        }
+        )
     }
 }

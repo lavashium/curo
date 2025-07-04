@@ -63,8 +63,12 @@ impl<'a> ExpressionParser for ParserRules<'a> {
                 _ => {
                     let token = self.parser.source_tokens.peek()?;
                     self.diagnostics.push(
-                        errkind_error!(token.span, error_unknown_token!(token.clone()))
-                            .with(errkind_note!(token.span, "expected an expression here")),
+                        Diagnostic::error(
+                            token.get_span(), 
+                            DiagnosticKind::UnknownToken(token.clone())
+                        ).with(
+                            Diagnostic::note(token.get_span(), "expected an expression here")
+                        ),
                     );
                     return None;
                 }

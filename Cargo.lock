@@ -15,7 +15,9 @@ dependencies = [
 name = "backend"
 version = "0.1.0"
 dependencies = [
+ "accessors",
  "common",
+ "constructors",
  "language",
  "match_format",
 ]
@@ -24,6 +26,8 @@ dependencies = [
 name = "common"
 version = "0.1.0"
 dependencies = [
+ "accessors",
+ "constructors",
  "language",
 ]
 
@@ -51,13 +55,19 @@ dependencies = [
 name = "frontend"
 version = "0.1.0"
 dependencies = [
+ "accessors",
  "common",
+ "constructors",
  "language",
 ]
 
 [[package]]
 name = "language"
 version = "0.1.0"
+dependencies = [
+ "accessors",
+ "constructors",
+]
 
 [[package]]
 name = "match_format"
@@ -72,7 +82,9 @@ dependencies = [
 name = "middleend"
 version = "0.1.0"
 dependencies = [
+ "accessors",
  "common",
+ "constructors",
  "language",
 ]
 

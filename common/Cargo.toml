@@ -5,3 +5,5 @@ edition = "2024"
 
 [dependencies]
 language = { path = "../language" }
+accessors = { path = "../macros/accessors"}
+constructors = { path = "../macros/constructors"}

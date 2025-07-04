@@ -1,16 +1,14 @@
 use crate::asm::*;
 use super::emit::ToAsm;
 use match_format::emit_instruction;
+use constructors::constructors;
 
+#[constructors]
 pub struct CodeEmitter;
 
 impl CodeEmitter {
-    pub fn new() -> Self {
-        Self
-    }
-
     pub fn emit(&self, program: AsmProgram) -> String {
-        let mut output = self.emit_function(&program.function_definition);
+        let mut output = self.emit_function(&program.function_definition());
         output.push_str("\n.section .note.GNU-stack,\"\",@progbits\n");
         output
     }
@@ -18,12 +16,12 @@ impl CodeEmitter {
     fn emit_function(&self, function: &AsmFunction) -> String {
         let mut output = String::new();
 
-        output.push_str(&format!(".globl {}\n", function.identifier));
-        output.push_str(&format!("{}:\n", function.identifier));
+        output.push_str(&format!(".globl {}\n", function.identifier()));
+        output.push_str(&format!("{}:\n", function.identifier()));
         output.push_str("    pushq %rbp\n");
         output.push_str("    movq %rsp, %rbp\n");
 
-        for instr in &function.instructions {
+        for instr in function.instructions() {
             output.push_str(&self.emit_instruction(instr));
         }
 

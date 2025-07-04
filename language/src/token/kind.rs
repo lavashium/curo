@@ -1,3 +1,6 @@
+use constructors::constructors;
+
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TokenKind {
     Keyword(KeywordKind),
@@ -10,6 +13,7 @@ pub enum TokenKind {
     EOF,
 }
 
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum KeywordKind {
     Int,
@@ -17,6 +21,7 @@ pub enum KeywordKind {
     Void,
 }
 
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OperatorKind {
     Tilde,
@@ -27,6 +32,7 @@ pub enum OperatorKind {
     PercentSign,
 }
 
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PunctuationKind {
     Semicolon,

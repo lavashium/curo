@@ -1,16 +1,23 @@
 use crate::{BinaryKind, UnaryKind};
+use accessors::accessors;
+use constructors::constructors;
 
+#[accessors]
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TacProgram {
-    pub function_definition: TacFunction,
+    function_definition: TacFunction,
 }
 
+#[accessors]
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TacFunction {
-    pub identifier: String,
-    pub instructions: Vec<TacInstruction>,
+    identifier: String,
+    instructions: Vec<TacInstruction>,
 }
 
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TacInstruction {
     Return {
@@ -29,7 +36,7 @@ pub enum TacInstruction {
     },
 }
 
-
+#[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TacVal {
     Constant(String),

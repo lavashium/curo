@@ -6,6 +6,8 @@ use syn::{parse_macro_input, DeriveInput, Data, Fields};
 pub fn accessors(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
     let struct_name = &input.ident;
+    let generics = &input.generics;
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let fields = match &input.data {
         Data::Struct(data_struct) => match &data_struct.fields {
@@ -29,19 +31,19 @@ pub fn accessors(_attr: TokenStream, item: TokenStream) -> TokenStream {
         let field_name = field.ident.as_ref().unwrap();
         let field_ty = &field.ty;
 
+        let getter_ref = quote! {
+            pub fn #field_name(&self) -> &#field_ty {
+                &self.#field_name
+            }
+        };
+
+        let getter_owned_name = format_ident!("get_{}", field_name);
         let getter_owned = quote! {
-            pub fn #field_name(&self) -> #field_ty
+            pub fn #getter_owned_name(&self) -> #field_ty
             where
                 #field_ty: Clone,
             {
                 self.#field_name.clone()
-            }
-        };
-
-        let getter_ref_name = format_ident!("{}_ref", field_name);
-        let getter_ref = quote! {
-            pub fn #getter_ref_name(&self) -> &#field_ty {
-                &self.#field_name
             }
         };
 
@@ -67,8 +69,8 @@ pub fn accessors(_attr: TokenStream, item: TokenStream) -> TokenStream {
         };
 
         methods.push(quote! {
-            #getter_owned
             #getter_ref
+            #getter_owned
             #getter_mut
             #setter
             #into_getter
@@ -78,7 +80,7 @@ pub fn accessors(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let expanded = quote! {
         #input
 
-        impl #struct_name {
+        impl #impl_generics #struct_name #ty_generics #where_clause {
             #(#methods)*
         }
     };
