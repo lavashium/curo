@@ -67,7 +67,7 @@ impl<'a> Compiler<'a> {
             return Ok(format! {"{:#?}", tac});
         }
 
-        let translator = AsmGenerator::new();
+        let mut translator = AsmGenerator::new();
         let asm_ast = translator.generate(tac);
 
         if stage == PipelineStage::AssemblyGeneration {

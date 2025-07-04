@@ -1,6 +1,6 @@
 use crate::asm::*;
 use super::emit::ToAsm;
-use asm_macro::emit_instruction;
+use match_format::emit_instruction;
 
 pub struct CodeEmitter;
 

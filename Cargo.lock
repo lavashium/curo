@@ -12,21 +12,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "asm_macro"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "backend"
 version = "0.1.0"
 dependencies = [
- "asm_macro",
  "common",
  "language",
+ "match_format",
 ]
 
 [[package]]
@@ -67,6 +58,15 @@ dependencies = [
 [[package]]
 name = "language"
 version = "0.1.0"
+
+[[package]]
+name = "match_format"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "middleend"

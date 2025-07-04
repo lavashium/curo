@@ -11,7 +11,7 @@ pub use expression::*;
 use super::TacGenerator;
 
 pub struct GeneratorTransforms<'a> {
-    generator: &'a mut TacGenerator
+    generator: &'a mut TacGenerator,
 }
 
 impl<'a> GeneratorTransforms<'a> {
