@@ -1,4 +1,3 @@
-use crate::{BinaryKind, UnaryKind};
 use accessors::accessors;
 use constructors::constructors;
 
@@ -24,16 +23,32 @@ pub enum TacInstruction {
         val: TacVal,
     },
     Unary {
-        operator: UnaryKind,
+        operator: TacUnaryKind,
         source: TacVal,
         destination: TacVal,
     },
     Binary {
-        operator: BinaryKind,
+        operator: TacBinaryKind,
         source1: TacVal,
         source2: TacVal,
         destination: TacVal,
     },
+    Copy {
+        src: TacVal,
+        dst: TacVal,
+    },
+    Jump {
+        target: String,
+    },
+    JumpIfZero {
+        condition: TacVal,
+        target: String,
+    },
+    JumpIfNotZero {
+        condition: TacVal,
+        target: String,
+    },
+    Label(String)
 }
 
 #[constructors]
@@ -41,4 +56,28 @@ pub enum TacInstruction {
 pub enum TacVal {
     Constant(String),
     Var(String),
+}
+
+#[constructors]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TacUnaryKind {
+    Complement,
+    Negate,
+    Not
+}
+
+#[constructors]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TacBinaryKind {
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Remainder,
+    Equal,
+    NotEqual,
+    LessThan,
+    LessOrEqual,
+    GreaterThan,
+    GreaterOrEqual,
 }

@@ -50,7 +50,7 @@ impl TokenProducer for CommentProducer {
             }
             diagnostics.push(Diagnostic::error(
                 Span::default(),
-                DiagnosticKind::Custom("Unterminated multi-line comment".to_string())
+                DiagnosticKind::Custom("Unterminated multi-line comment".to_string()),
             ));
             return Some(Token::new(
                 TokenKind::Irrelevant,

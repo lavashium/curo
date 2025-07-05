@@ -1,12 +1,12 @@
-mod program;
-mod function;
-mod statement;
 mod expression;
+mod function;
+mod program;
+mod statement;
 
-pub use program::*;
-pub use function::*;
-pub use statement::*;
 pub use expression::*;
+pub use function::*;
+pub use program::*;
+pub use statement::*;
 
 use super::TacGenerator;
 
@@ -16,8 +16,6 @@ pub struct GeneratorTransforms<'a> {
 
 impl<'a> GeneratorTransforms<'a> {
     pub fn new(generator: &'a mut TacGenerator) -> Self {
-        Self {
-            generator,
-        }
-    }    
+        Self { generator }
+    }
 }

@@ -6,21 +6,10 @@ pub struct MovLegalizer;
 impl Legalizer for MovLegalizer {
     fn legalize(instr: &AsmInstruction) -> Option<Vec<AsmInstruction>> {
         match instr {
-            AsmInstruction::Mov {
-                src,
-                dst
-            } if both_stack_operands(&src, &dst) => {
-                Some(vec![
-                    AsmInstruction::Mov {
-                        src: src.clone(),
-                        dst: AsmOperand::Reg(AsmReg::R10),
-                    },
-                    AsmInstruction::Mov {
-                        src: AsmOperand::Reg(AsmReg::R10),
-                        dst: dst.clone(),
-                    },
-                ])
-            },
+            AsmInstruction::Mov { src, dst } if both_stack_operands(&src, &dst) => Some(vec![
+                AsmInstruction::new_mov(src.clone(), AsmOperand::Reg(AsmReg::R10)),
+                AsmInstruction::new_mov(AsmOperand::Reg(AsmReg::R10), dst.clone()),
+            ]),
 
             _ => None,
         }

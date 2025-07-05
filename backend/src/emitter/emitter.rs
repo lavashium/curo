@@ -1,14 +1,14 @@
-use crate::asm::*;
 use super::emit::ToAsm;
-use match_format::emit_instruction;
+use crate::{asm::*, emitter::emit::set_c_c_adjuster};
 use constructors::constructors;
+use match_format::emit_instruction;
 
 #[constructors]
 pub struct CodeEmitter;
 
 impl CodeEmitter {
     pub fn emit(&self, program: AsmProgram) -> String {
-        let mut output = self.emit_function(&program.function_definition());
+        let mut output = self.emit_function(program.function_definition());
         output.push_str("\n.section .note.GNU-stack,\"\",@progbits\n");
         output
     }
@@ -41,6 +41,11 @@ impl CodeEmitter {
                 "popq %rbp", [],
                 "ret", [],
             },
+            AsmInstruction::Cmp {operand1, operand2} => "cmpl {}, {}", [operand1, operand2],
+            AsmInstruction::Jmp(label) => "jmp .L{}", [label],
+            AsmInstruction::JmpCC {cond, label} => "j{} .L{}", [cond, label],
+            AsmInstruction::SetCC {cond, operand} => "set{} {}", [cond, set_c_c_adjuster(operand)]
+            AsmInstruction::Label(label) => ".L{}:", [label],
         })
     }
 }

@@ -1,9 +1,9 @@
-use std::rc::Rc;
 use crate::lexer::producer::*;
-use common::error::manager::DiagnosticsManager;
-use language::token::*;
 use accessors::accessors;
+use common::error::manager::DiagnosticsManager;
 use common::*;
+use language::token::*;
+use std::rc::Rc;
 
 #[accessors]
 #[derive(Debug)]
@@ -54,12 +54,7 @@ impl<'a> Lexer<'a> {
     }
 
     pub fn span_from(&self, start: (usize, usize)) -> Span {
-        Span::new(
-            start.0,
-            start.1,
-            self.line,
-            self.column,
-        )
+        Span::new(start.0, start.1, self.line, self.column)
     }
 
     pub fn parse(&mut self, diagnostics: &mut DiagnosticsManager) -> TokenStream {
@@ -73,30 +68,18 @@ impl<'a> Lexer<'a> {
             } else {
                 let ch = self.advance().unwrap();
 
-                let span = Span::new(
-                    self.line,
-                    self.column,
-                    self.line,
-                    self.column,
-                );
+                let span = Span::new(self.line, self.column, self.line, self.column);
 
                 let token = Token::new(TokenKind::Unknown(ch.to_string()), ch.to_string(), span);
 
-                diagnostics.push(
-                    Diagnostic::error(
-                        span,
-                        DiagnosticKind::new_unknown_token(token),
-                    )
-                );
+                diagnostics.push(Diagnostic::error(
+                    span,
+                    DiagnosticKind::new_unknown_token(token),
+                ));
             }
         }
 
-        let eof_span = Span::new(
-            self.line,
-            self.column,
-            self.line,
-            self.column,
-        );
+        let eof_span = Span::new(self.line, self.column, self.line, self.column);
 
         tokens.push(Token::new(TokenKind::EOF, String::new(), eof_span));
 

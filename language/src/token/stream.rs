@@ -1,6 +1,6 @@
-use std::rc::Rc;
 use crate::token::{Token, TokenKind};
 use accessors::accessors;
+use std::rc::Rc;
 
 #[accessors]
 #[derive(Debug, Clone)]
@@ -11,10 +11,7 @@ pub struct TokenStream {
 
 impl TokenStream {
     pub fn new(tokens: Rc<[Token]>) -> Self {
-        Self {
-            tokens,
-            pointer: 0,
-        }
+        Self { tokens, pointer: 0 }
     }
 
     pub fn consume(&mut self) -> Option<Token> {
@@ -26,7 +23,6 @@ impl TokenStream {
             None
         }
     }
-
 
     pub fn peek(&self) -> Option<&Token> {
         self.tokens.get(self.pointer)

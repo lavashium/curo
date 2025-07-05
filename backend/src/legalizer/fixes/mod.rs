@@ -1,10 +1,12 @@
 mod binop;
 mod mov;
 mod unary;
+mod compare;
 
 use binop::*;
 use mov::*;
 use unary::*;
+use compare::*;
 
 use crate::asm::*;
 
@@ -35,8 +37,9 @@ impl<Head: Legalizer, Tail: LegalizerChain> LegalizerChain for (Head, Tail) {
 
 pub type FIXES = auto_nest!(
     MovLegalizer,
-    UnaryLegalizer,
+    UnaryLegalizer, 
     BinopLegalizer,
+    CompareLegalizer,
 );
 
 pub trait Legalizer {

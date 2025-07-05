@@ -28,8 +28,18 @@ pub enum OperatorKind {
     Minus,
     Plus,
     Asterisk,
-    ForwardSlash,
-    PercentSign,
+    Slash,
+    Percent,
+    Exclamation,
+    LessThan,
+    GreaterThan,
+
+    LogicalAnd,
+    LogicalOr,
+    EqualEqual,
+    NotEqual,
+    LessEqual,
+    GreaterEqual
 }
 
 #[constructors]

@@ -1,63 +1,61 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, Data, DeriveInput, Fields};
+use syn::{Data, DeriveInput, Fields, parse_macro_input};
 
 #[proc_macro_attribute]
 pub fn constructors(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
     let name = &input.ident;
-    
+
     let generics = &input.generics;
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let generated = match &input.data {
-        Data::Struct(data_struct) => {
-            match &data_struct.fields {
-                Fields::Named(fields_named) => {
-                    let args = fields_named.named.iter().map(|f| {
-                        let name = &f.ident;
-                        let ty = &f.ty;
-                        quote! { #name: #ty }
-                    });
-                    let init = fields_named.named.iter().map(|f| {
-                        let name = &f.ident;
-                        quote! { #name }
-                    });
-                    quote! {
-                        impl #impl_generics #name #ty_generics #where_clause {
-                            pub fn new(#(#args),*) -> Self {
-                                Self { #(#init),* }
-                            }
-                        }
-                    }
-                }
-                Fields::Unnamed(fields) => {
-                    let args = fields.unnamed.iter().enumerate().map(|(i, f)| {
-                        let arg = format_ident!("arg{}", i);
-                        let ty = &f.ty;
-                        quote! { #arg: #ty }
-                    });
-                    let init = (0..fields.unnamed.len()).map(|i| {
-                        let arg = format_ident!("arg{}", i);
-                        quote! { #arg }
-                    });
-                    quote! {
-                        impl #impl_generics #name #ty_generics #where_clause {
-                            pub fn new(#(#args),*) -> Self {
-                                Self(#(#init),*)
-                            }
-                        }
-                    }
-                }
-                Fields::Unit => quote! {
+        Data::Struct(data_struct) => match &data_struct.fields {
+            Fields::Named(fields_named) => {
+                let args = fields_named.named.iter().map(|f| {
+                    let name = &f.ident;
+                    let ty = &f.ty;
+                    quote! { #name: #ty }
+                });
+                let init = fields_named.named.iter().map(|f| {
+                    let name = &f.ident;
+                    quote! { #name }
+                });
+                quote! {
                     impl #impl_generics #name #ty_generics #where_clause {
-                        pub fn new() -> Self {
-                            Self
+                        pub fn new(#(#args),*) -> Self {
+                            Self { #(#init),* }
                         }
                     }
-                },
+                }
             }
-        }
+            Fields::Unnamed(fields) => {
+                let args = fields.unnamed.iter().enumerate().map(|(i, f)| {
+                    let arg = format_ident!("arg{}", i);
+                    let ty = &f.ty;
+                    quote! { #arg: #ty }
+                });
+                let init = (0..fields.unnamed.len()).map(|i| {
+                    let arg = format_ident!("arg{}", i);
+                    quote! { #arg }
+                });
+                quote! {
+                    impl #impl_generics #name #ty_generics #where_clause {
+                        pub fn new(#(#args),*) -> Self {
+                            Self(#(#init),*)
+                        }
+                    }
+                }
+            }
+            Fields::Unit => quote! {
+                impl #impl_generics #name #ty_generics #where_clause {
+                    pub fn new() -> Self {
+                        Self
+                    }
+                }
+            },
+        },
 
         Data::Enum(data_enum) => {
             let constructors = data_enum.variants.iter().map(|v| {

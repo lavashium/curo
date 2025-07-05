@@ -20,10 +20,12 @@ impl<'a> StatementParser for ParserRules<'a> {
                 self.diagnostics.push(
                     Diagnostic::error(
                         token.get_span(),
-                        DiagnosticKind::new_unknown_token(token.clone())
-                    ).with(
-                        Diagnostic::note(token.get_span(), "expected a statement here")
-                    ),
+                        DiagnosticKind::new_unknown_token(token.clone()),
+                    )
+                    .with(Diagnostic::note(
+                        token.get_span(),
+                        "expected a statement here",
+                    )),
                 );
                 None
             }

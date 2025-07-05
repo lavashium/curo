@@ -1,5 +1,5 @@
-use language::*;
 use crate::asm::*;
+use language::*;
 
 pub fn convert_operand(val: &TacVal) -> AsmOperand {
     match val {
@@ -11,19 +11,38 @@ pub fn convert_operand(val: &TacVal) -> AsmOperand {
     }
 }
 
-pub fn convert_unary_operator(op: &UnaryKind) -> AsmUnaryOperator {
+pub fn convert_unary_operator(op: &TacUnaryKind) -> AsmUnaryOperator {
     match op {
-        UnaryKind::Negate => AsmUnaryOperator::Neg,
-        UnaryKind::Complement => AsmUnaryOperator::Not,
+        TacUnaryKind::Negate => AsmUnaryOperator::Neg,
+        TacUnaryKind::Complement => AsmUnaryOperator::Not,
+        TacUnaryKind::Not => todo!(),
     }
 }
 
-pub fn convert_binary_operator(op: &BinaryKind) -> AsmBinaryOperator {
+pub fn convert_binary_operator(op: &TacBinaryKind) -> AsmBinaryOperator {
     match op {
-        BinaryKind::Add => AsmBinaryOperator::Add,
-        BinaryKind::Subtract => AsmBinaryOperator::Sub,
-        BinaryKind::Multiply => AsmBinaryOperator::Mult,
-        BinaryKind::Remainder => unreachable!(),
-        BinaryKind::Divide => unreachable!(),
+        TacBinaryKind::Add => AsmBinaryOperator::Add,
+        TacBinaryKind::Subtract => AsmBinaryOperator::Sub,
+        TacBinaryKind::Multiply => AsmBinaryOperator::Mult,
+        TacBinaryKind::Remainder => unreachable!(),
+        TacBinaryKind::Divide => unreachable!(),
+        TacBinaryKind::Equal => todo!(),
+        TacBinaryKind::NotEqual => todo!(),
+        TacBinaryKind::LessThan => todo!(),
+        TacBinaryKind::LessOrEqual => todo!(),
+        TacBinaryKind::GreaterThan => todo!(),
+        TacBinaryKind::GreaterOrEqual => todo!(),
+    }
+}
+
+pub fn convert_to_cond_code(op: &TacBinaryKind) -> AsmCondCode {
+    match op {
+        TacBinaryKind::Equal          => AsmCondCode::E,
+        TacBinaryKind::NotEqual       => AsmCondCode::NE,
+        TacBinaryKind::LessThan       => AsmCondCode::L,
+        TacBinaryKind::LessOrEqual    => AsmCondCode::LE,
+        TacBinaryKind::GreaterThan    => AsmCondCode::G,
+        TacBinaryKind::GreaterOrEqual => AsmCondCode::GE,
+        _ => unreachable!()
     }
 }

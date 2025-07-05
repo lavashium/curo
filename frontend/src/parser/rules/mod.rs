@@ -9,14 +9,17 @@ pub use program::*;
 pub use statement::*;
 
 use crate::Parser;
-use common::*;
-use language::*;
-use constructors::constructors;
 use accessors::accessors;
+use common::*;
+use constructors::constructors;
+use language::*;
 
 macro_rules! push_eof_error {
     ($diagnostics:expr) => {
-        $diagnostics.push(Diagnostic::error(Span::default(), DiagnosticKind::UnexpectedEof));
+        $diagnostics.push(Diagnostic::error(
+            Span::default(),
+            DiagnosticKind::UnexpectedEof,
+        ));
     };
 }
 
@@ -27,7 +30,7 @@ macro_rules! error_expect {
             Some(found) => {
                 $self.diagnostics.push(Diagnostic::error(
                     found.get_span(),
-                    DiagnosticKind::new_expected_token($kind, found.clone())
+                    DiagnosticKind::new_expected_token($kind, found.clone()),
                 ));
                 None
             }
@@ -48,7 +51,7 @@ macro_rules! error_consume_unwrap {
                     let expected_kind = GenericKind::$kind;
                     $self.diagnostics.push(Diagnostic::error(
                         token.get_span(),
-                        DiagnosticKind::new_unexpected_generic(token.clone(), vec![expected_kind])
+                        DiagnosticKind::new_unexpected_generic(token.clone(), vec![expected_kind]),
                     ));
                     None
                 }

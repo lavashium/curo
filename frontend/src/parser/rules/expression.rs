@@ -7,18 +7,26 @@ macro_rules! precedence {
             $(
                 OperatorKind::$op => $val,
             )*
-            _ => 0,
+            _ => 0
         }
     }
 }
 
 fn get_precedence(operator: &OperatorKind) -> u8 {
     precedence!(operator;
-        Asterisk     => 50,
-        ForwardSlash => 50,
-        PercentSign  => 50,
-        Plus         => 45,
-        Minus        => 45,
+        Asterisk      => 50,
+        Slash         => 50,
+        Percent       => 50,
+        Plus          => 45,
+        Minus         => 45,
+        LessThan      => 35,
+        LessEqual     => 35,
+        GreaterThan   => 35,
+        GreaterEqual  => 35,
+        EqualEqual    => 30,
+        NotEqual      => 30,
+        LogicalAnd    => 10,
+        LogicalOr     => 5,
     )
 }
 
@@ -41,12 +49,13 @@ impl<'a> ExpressionParser for ParserRules<'a> {
                 }
 
                 TokenKind::Operator(op @ OperatorKind::Tilde) |
+                TokenKind::Operator(op @ OperatorKind::Exclamation) |
                 TokenKind::Operator(op @ OperatorKind::Minus) => {
                     let operator = op.to_unary()?.clone();
-                    
+
                     self.parser.source_tokens.consume();
 
-                    let operand = self.parse_binary_expression(50)?;
+                    let operand = self.parse_binary_expression(100)?;
                     AstExpression::Unary {
                         operator,
                         operand: Box::new(operand),
@@ -64,11 +73,13 @@ impl<'a> ExpressionParser for ParserRules<'a> {
                     let token = self.parser.source_tokens.peek()?;
                     self.diagnostics.push(
                         Diagnostic::error(
-                            token.get_span(), 
-                            DiagnosticKind::UnknownToken(token.clone())
-                        ).with(
-                            Diagnostic::note(token.get_span(), "expected an expression here")
-                        ),
+                            token.get_span(),
+                            DiagnosticKind::UnknownToken(token.clone()),
+                        )
+                        .with(Diagnostic::note(
+                            token.get_span(),
+                            "expected an expression here",
+                        )),
                     );
                     return None;
                 }
@@ -93,7 +104,7 @@ impl<'a> ExpressionParser for ParserRules<'a> {
 
             self.parser.source_tokens.consume()?;
 
-            let rhs = self.parse_binary_expression(prec + 1)?;
+            let rhs = self.parse_binary_expression(prec+1)?;
 
             let op_kind = op_kind.to_binary()?;
 

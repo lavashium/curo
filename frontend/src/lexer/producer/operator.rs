@@ -19,7 +19,7 @@ impl TokenProducer for OperatorProducer {
                     let span = lexer.span_from(start_pos);
                     diagnostics.push(Diagnostic::error(
                         span,
-                        DiagnosticKind::Custom("Decrement operator is NOT supported".to_string())
+                        DiagnosticKind::Custom("Decrement operator is NOT supported".to_string()),
                     ));
                     return None;
                 }
@@ -30,9 +30,63 @@ impl TokenProducer for OperatorProducer {
                     let span = lexer.span_from(start_pos);
                     diagnostics.push(Diagnostic::error(
                         span,
-                        DiagnosticKind::Custom("Increment operator is NOT supported".to_string())
+                        DiagnosticKind::Custom("Increment operator is NOT supported".to_string()),
                     ));
                     return None;
+                }
+                "&&" => {
+                    lexer.advance();
+                    lexer.advance();
+
+                    let span = lexer.span_from(start_pos);
+                    let lexeme = "&&".to_string();
+                    let kind = token_operator!(LogicalAnd);
+                    return Some(Token::new(kind, lexeme, span));
+                }
+                "||" => {
+                    lexer.advance();
+                    lexer.advance();
+
+                    let span = lexer.span_from(start_pos);
+                    let lexeme = "||".to_string();
+                    let kind = token_operator!(LogicalOr);
+                    return Some(Token::new(kind, lexeme, span));
+                }
+                "==" => {
+                    lexer.advance();
+                    lexer.advance();
+
+                    let span = lexer.span_from(start_pos);
+                    let lexeme = "==".to_string();
+                    let kind = token_operator!(EqualEqual);
+                    return Some(Token::new(kind, lexeme, span));
+                }
+                "!=" => {
+                    lexer.advance();
+                    lexer.advance();
+
+                    let span = lexer.span_from(start_pos);
+                    let lexeme = "!=".to_string();
+                    let kind = token_operator!(NotEqual);
+                    return Some(Token::new(kind, lexeme, span));
+                }
+                "<=" => {
+                    lexer.advance();
+                    lexer.advance();
+
+                    let span = lexer.span_from(start_pos);
+                    let lexeme = "<=".to_string();
+                    let kind = token_operator!(LessEqual);
+                    return Some(Token::new(kind, lexeme, span));
+                }
+                ">=" => {
+                    lexer.advance();
+                    lexer.advance();
+
+                    let span = lexer.span_from(start_pos);
+                    let lexeme = ">=".to_string();
+                    let kind = token_operator!(GreaterEqual);
+                    return Some(Token::new(kind, lexeme, span));
                 }
                 _ => {}
             }
@@ -44,15 +98,18 @@ impl TokenProducer for OperatorProducer {
             '~' => token_operator!(Tilde),
             '+' => token_operator!(Plus),
             '*' => token_operator!(Asterisk),
-            '/' => token_operator!(ForwardSlash),
-            '%' => token_operator!(PercentSign),
+            '/' => token_operator!(Slash),
+            '%' => token_operator!(Percent),
+            '!' => token_operator!(Exclamation),
+            '<' => token_operator!(LessThan),
+            '>' => token_operator!(GreaterThan),
             _ => return None,
         };
 
+        let lexeme = ch.to_string();
         lexer.advance();
 
         let span = lexer.span_from(start_pos);
-        let lexeme = ch.to_string();
 
         Some(Token::new(kind, lexeme, span))
     }

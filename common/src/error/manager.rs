@@ -1,6 +1,6 @@
 use super::diagnostic::Diagnostic;
-use std::io::{self, Write};
 use accessors::accessors;
+use std::io::{self, Write};
 
 #[accessors]
 #[derive(Debug, Default)]
@@ -92,7 +92,8 @@ impl<'a, W: Write> DiagnosticWriter<'a, W> {
         }
 
         let underline_len = if diag.span().start_line() == diag.span().end_line() {
-            (diag.span().end_col() - diag.span().start_col()).min(line_len - diag.span().start_col())
+            (diag.span().end_col() - diag.span().start_col())
+                .min(line_len - diag.span().start_col())
         } else {
             line_len - diag.span().start_col()
         };

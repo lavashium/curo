@@ -1,9 +1,9 @@
 use super::rules::*;
+use accessors::accessors;
 use common::error::manager::DiagnosticsManager;
+use constructors::constructors;
 use language::ast::*;
 use language::token::*;
-use accessors::accessors;
-use constructors::constructors;
 
 #[accessors]
 #[constructors]

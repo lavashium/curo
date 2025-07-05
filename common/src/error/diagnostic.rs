@@ -1,7 +1,7 @@
 use super::convert::*;
-use language::*;
 use accessors::accessors;
 use constructors::constructors;
+use language::*;
 
 #[constructors]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,7 +55,11 @@ impl DiagnosticKind {
     pub fn message(&self) -> String {
         match self {
             DiagnosticKind::UnknownToken(token) => {
-                format!("unknown {} '{}'", token.kind().to_user_string(), token.lexeme())
+                format!(
+                    "unknown {} '{}'",
+                    token.kind().to_user_string(),
+                    token.lexeme()
+                )
             }
 
             DiagnosticKind::UnexpectedToken { found, expected } => {

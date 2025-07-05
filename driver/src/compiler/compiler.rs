@@ -1,8 +1,8 @@
 use backend::*;
 use common::DiagnosticsManager;
 use frontend::*;
-use middleend::*;
 use language::*;
+use middleend::*;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ErrCode {

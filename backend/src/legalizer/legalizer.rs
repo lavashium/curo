@@ -1,5 +1,5 @@
-use crate::asm::*;
 use super::fixes::*;
+use crate::asm::*;
 use accessors::accessors;
 use constructors::constructors;
 
@@ -22,9 +22,7 @@ impl AsmLegalizer {
 
         function.set_instructions(instructions);
 
-        AsmProgram::new(
-            function,
-        )
+        AsmProgram::new(function)
     }
 
     fn fix_instruction(&self, instr: AsmInstruction) -> Vec<AsmInstruction> {

@@ -1,7 +1,7 @@
-use crate::asm::*;
-use language::*;
 use super::casts::*;
+use crate::asm::*;
 use constructors::constructors;
+use language::*;
 
 #[constructors]
 pub struct AsmGenerator;

@@ -29,31 +29,40 @@ pub enum AstExpression {
         constant: String,
     },
     Unary {
-        operator: UnaryKind,
+        operator: AstUnaryKind,
         operand: Box<AstExpression>,
     },
     Binary {
-        operator: BinaryKind,
+        operator: AstBinaryKind,
         left: Box<AstExpression>,
         right: Box<AstExpression>,
     },
 }
 
 #[constructors]
-#[derive(Debug, Copy, Clone, PartialEq, Eq,)]
-pub enum UnaryKind {
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum AstUnaryKind {
     Complement,
     Negate,
+    Not
 }
 
 #[constructors]
-#[derive(Debug, Copy, Clone, PartialEq, Eq,)]
-pub enum BinaryKind {
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum AstBinaryKind {
     Add,
     Subtract,
     Multiply,
     Divide,
     Remainder,
+    And,
+    Or,
+    Equal,
+    NotEqual,
+    LessThan,
+    LessOrEqual,
+    GreaterThan,
+    GreaterOrEqual
 }
 
 #[macro_export]

@@ -1,5 +1,5 @@
-pub mod instruction;
 pub mod convert;
+pub mod instruction;
 
-pub use instruction::*;
 pub use convert::*;
+pub use instruction::*;

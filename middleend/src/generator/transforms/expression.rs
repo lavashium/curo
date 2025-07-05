@@ -2,7 +2,8 @@ use super::*;
 use language::*;
 
 pub trait ExpressionTransform {
-    fn transform_expression(&mut self, expression: &AstExpression) -> (Vec<TacInstruction>, TacVal);
+    fn transform_expression(&mut self, expression: &AstExpression)
+        -> (Vec<TacInstruction>, TacVal);
 }
 
 impl<'a> ExpressionTransform for GeneratorTransforms<'a> {
@@ -16,10 +17,10 @@ impl<'a> ExpressionTransform for GeneratorTransforms<'a> {
             AstExpression::Unary { operator, operand } => {
                 let (mut instructions, source) = self.transform_expression(operand);
 
-                let destination = self.generator.tempgen.next();
+                let destination = TacVal::new_var(self.generator.tempgen.temp());
 
-                instructions.push(TacInstruction::new_unary (
-                    *operator,
+                instructions.push(TacInstruction::new_unary(
+                    operator.to_tac().unwrap(),
                     source,
                     destination.clone(),
                 ));
@@ -27,29 +28,113 @@ impl<'a> ExpressionTransform for GeneratorTransforms<'a> {
                 (instructions, destination)
             }
 
-            AstExpression::Binary {
-                operator,
-                left,
-                right,
-            } => {
-                let mut instructions = Vec::new();
+            AstExpression::Binary { operator, left, right } => {
+                if *operator == AstBinaryKind::And || *operator == AstBinaryKind::Or {
+                    let mut instructions = vec![];
 
-                let (mut instructions_left, dest_left) = self.transform_expression(left);
-                let (mut instructions_right, dest_right) = self.transform_expression(right);
+                    let result = TacVal::new_var(self.generator.tempgen.temp());
 
-                let destination = self.generator.tempgen.next();
+                    let short_circuit_label = self.generator.tempgen.label(match operator {
+                        AstBinaryKind::And => "and_false",
+                        AstBinaryKind::Or => "or_true",
+                        _ => unreachable!(),
+                    });
 
-                instructions.append(&mut instructions_left);
-                instructions.append(&mut instructions_right);
+                    let end_label = self.generator.tempgen.label("end");
 
-                instructions.push(TacInstruction::new_binary (
-                    *operator,
-                    dest_left,
-                    dest_right,
-                    destination.clone(),
-                ));
+                    let (mut instr_left, val_left) = self.transform_expression(left);
+                    instructions.append(&mut instr_left);
 
-                (instructions, destination)
+                    match operator {
+                        AstBinaryKind::And => {
+                            instructions.push(TacInstruction::JumpIfZero {
+                                condition: val_left.clone(),
+                                target: short_circuit_label.clone(),
+                            });
+                        }
+                        AstBinaryKind::Or => {
+                            instructions.push(TacInstruction::JumpIfNotZero {
+                                condition: val_left.clone(),
+                                target: short_circuit_label.clone(),
+                            });
+                        }
+                        _ => unreachable!(),
+                    }
+
+                    let (mut instr_right, val_right) = self.transform_expression(right);
+                    instructions.append(&mut instr_right);
+
+                    match operator {
+                        AstBinaryKind::And => {
+                            instructions.push(TacInstruction::JumpIfZero {
+                                condition: val_right.clone(),
+                                target: short_circuit_label.clone(),
+                            });
+
+                            instructions.push(TacInstruction::Copy {
+                                src: TacVal::Constant("1".to_string()),
+                                dst: result.clone(),
+                            });
+                        }
+                        AstBinaryKind::Or => {
+                            instructions.push(TacInstruction::JumpIfNotZero {
+                                condition: val_right.clone(),
+                                target: short_circuit_label.clone(),
+                            });
+
+                            instructions.push(TacInstruction::Copy {
+                                src: TacVal::Constant("0".to_string()),
+                                dst: result.clone(),
+                            });
+                        }
+                        _ => unreachable!(),
+                    }
+
+                    instructions.push(TacInstruction::Jump {
+                        target: end_label.clone(),
+                    });
+
+                    instructions.push(TacInstruction::Label(short_circuit_label.clone()));
+
+                    match operator {
+                        AstBinaryKind::And => {
+                            instructions.push(TacInstruction::Copy {
+                                src: TacVal::Constant("0".to_string()),
+                                dst: result.clone(),
+                            });
+                        }
+                        AstBinaryKind::Or => {
+                            instructions.push(TacInstruction::Copy {
+                                src: TacVal::Constant("1".to_string()),
+                                dst: result.clone(),
+                            });
+                        }
+                        _ => unreachable!(),
+                    }
+
+                    instructions.push(TacInstruction::Label(end_label));
+
+                    (instructions, result)
+                } else {
+                    let mut instructions = Vec::new();
+
+                    let (mut instructions_left, dest_left) = self.transform_expression(left);
+                    let (mut instructions_right, dest_right) = self.transform_expression(right);
+
+                    let destination = TacVal::new_var(self.generator.tempgen.temp());
+
+                    instructions.append(&mut instructions_left);
+                    instructions.append(&mut instructions_right);
+
+                    instructions.push(TacInstruction::Binary {
+                        operator: operator.to_tac().unwrap(),
+                        source1: dest_left,
+                        source2: dest_right,
+                        destination: destination.clone(),
+                    });
+
+                    (instructions, destination)
+                }
             }
         }
     }

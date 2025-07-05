@@ -40,8 +40,8 @@ impl TokenProducer for ConstantProducer {
                 let invalid_token =
                     Token::new(TokenKind::Unknown(lexeme.clone()), lexeme.clone(), span);
                 diagnostics.push(Diagnostic::error(
-                    span, 
-                    DiagnosticKind::UnknownToken(invalid_token.clone())
+                    span,
+                    DiagnosticKind::UnknownToken(invalid_token.clone()),
                 ));
 
                 return Some(invalid_token);

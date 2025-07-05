@@ -10,9 +10,6 @@ impl<'a> FunctionTransform for GeneratorTransforms<'a> {
         let identifier = function.name.clone();
         let statement = &function.body;
         let instructions = self.transform_statement(statement);
-        TacFunction::new(
-            identifier,
-            instructions,
-        )
+        TacFunction::new(identifier, instructions)
     }
 }

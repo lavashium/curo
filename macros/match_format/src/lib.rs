@@ -1,10 +1,9 @@
-
 use proc_macro::TokenStream;
-use quote::{quote};
+use quote::quote;
 use syn::{
-    braced,
+    Expr, LitStr, Pat, Token, braced,
     parse::{Parse, ParseStream, Result},
-    parse_macro_input, Expr, LitStr, Pat, Token,
+    parse_macro_input,
 };
 
 struct Input {
@@ -68,7 +67,6 @@ impl Parse for Arm {
     }
 }
 
-
 #[proc_macro]
 pub fn emit_instruction(input: TokenStream) -> TokenStream {
     let Input { expr, arms } = parse_macro_input!(input as Input);
@@ -95,7 +93,6 @@ pub fn emit_instruction(input: TokenStream) -> TokenStream {
     let expanded = quote! {
         match #expr {
             #(#arms_tokens),*,
-            _ => String::new(),
         }
     };
 
