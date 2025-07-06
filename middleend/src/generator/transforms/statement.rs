@@ -10,10 +10,12 @@ impl<'a> StatementTransform for GeneratorTransforms<'a> {
         let mut instructions: Vec<TacInstruction> = Vec::new();
         match statement {
             AstStatement::Return { expression } => {
-                let (mut expression, value) = self.transform_expression(expression);
-                instructions.append(&mut expression);
-                instructions.push(TacInstruction::new_return(value));
-            }
+                        let (mut expression, value) = self.transform_expression(expression);
+                        instructions.append(&mut expression);
+                        instructions.push(TacInstruction::new_return(value));
+                    }
+            AstStatement::Expression { expression } => todo!(),
+            AstStatement::Null => todo!(),
         }
         return instructions;
     }

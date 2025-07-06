@@ -10,70 +10,46 @@ impl<'a> GeneratorCasts<'a> {
             source2,
             destination,
         } = instruction {
+            let src1 = convert_operand(source1);
+            let src2 = convert_operand(source2);
+            let dst  = convert_operand(destination);
+
             match operator {
                 TacBinaryKind::Divide => vec![
-                    AsmInstruction::Mov {
-                        src: convert_operand(source1),
-                        dst: AsmOperand::Reg(AsmReg::AX),
-                    },
-                    AsmInstruction::Cdq,
-                    AsmInstruction::Idiv {
-                        operand: convert_operand(source2),
-                    },
-                    AsmInstruction::Mov {
-                        src: AsmOperand::Reg(AsmReg::AX),
-                        dst: convert_operand(destination),
-                    },
+                    AsmInstruction::new_mov(src1.clone(), AsmOperand::Reg(AsmReg::AX)),
+                    AsmInstruction::new_cdq(),
+                    AsmInstruction::new_idiv(src2),
+                    AsmInstruction::new_mov(AsmOperand::Reg(AsmReg::AX), dst),
                 ],
+
                 TacBinaryKind::Remainder => vec![
-                    AsmInstruction::Mov {
-                        src: convert_operand(source1),
-                        dst: AsmOperand::Reg(AsmReg::AX),
-                    },
-                    AsmInstruction::Cdq,
-                    AsmInstruction::Idiv {
-                        operand: convert_operand(source2),
-                    },
-                    AsmInstruction::Mov {
-                        src: AsmOperand::Reg(AsmReg::DX),
-                        dst: convert_operand(destination),
-                    },
+                    AsmInstruction::new_mov(src1.clone(), AsmOperand::Reg(AsmReg::AX)),
+                    AsmInstruction::new_cdq(),
+                    AsmInstruction::new_idiv(src2),
+                    AsmInstruction::new_mov(AsmOperand::Reg(AsmReg::DX), dst),
                 ],
-                |TacBinaryKind::Equal
+
+                TacBinaryKind::Equal
                 | TacBinaryKind::NotEqual
                 | TacBinaryKind::LessThan
                 | TacBinaryKind::LessOrEqual
                 | TacBinaryKind::GreaterThan
                 | TacBinaryKind::GreaterOrEqual => vec![
-                    AsmInstruction::Cmp {
-                        operand1: convert_operand(source2),
-                        operand2: convert_operand(source1),
-                    },
-                    AsmInstruction::Mov {
-                        src: AsmOperand::Imm(0),
-                        dst: convert_operand(destination),
-                    },
-                    AsmInstruction::SetCC {
-                        cond: convert_to_cond_code(operator),
-                        operand: convert_operand(destination),
-                    },
+                    AsmInstruction::new_cmp(src2.clone(), src1.clone()),
+                    AsmInstruction::new_mov(AsmOperand::Imm(0), dst.clone()),
+                    AsmInstruction::new_set_c_c(convert_to_cond_code(operator), dst),
                 ],
+
                 _ => {
                     let tmp = AsmOperand::Reg(AsmReg::R10);
                     vec![
-                        AsmInstruction::Mov {
-                            src: convert_operand(source1),
-                            dst: tmp.clone(),
-                        },
-                        AsmInstruction::Binary {
-                            binary_operator: convert_binary_operator(operator),
-                            src: convert_operand(source2),
-                            dst: tmp.clone(),
-                        },
-                        AsmInstruction::Mov {
-                            src: tmp,
-                            dst: convert_operand(destination),
-                        },
+                        AsmInstruction::new_mov(src1, tmp.clone()),
+                        AsmInstruction::new_binary(
+                            convert_binary_operator(operator),
+                            src2,
+                            tmp.clone(),
+                        ),
+                        AsmInstruction::new_mov(tmp, dst),
                     ]
                 }
             }

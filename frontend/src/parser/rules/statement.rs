@@ -15,19 +15,15 @@ impl<'a> StatementParser for ParserRules<'a> {
                 Some(AstStatement::Return { expression })
             }
 
+            TokenKind::Punctuation(PunctuationKind::Semicolon) => {
+                self.expect(token_punctuation!(Semicolon))?;
+                Some(AstStatement::Null)
+            }
+
             _ => {
-                let token = self.parser.source_tokens.peek()?;
-                self.diagnostics.push(
-                    Diagnostic::error(
-                        token.get_span(),
-                        DiagnosticKind::new_unknown_token(token.clone()),
-                    )
-                    .with(Diagnostic::note(
-                        token.get_span(),
-                        "expected a statement here",
-                    )),
-                );
-                None
+                let expr = self.parse_expression()?;
+                self.expect(token_punctuation!(Semicolon))?;
+                Some(AstStatement::Expression { expression: expr })
             }
         }
     }

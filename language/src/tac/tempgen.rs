@@ -22,8 +22,14 @@ impl TempGen {
     }
 
     pub fn label(&mut self, label: impl ToString) -> String {
-        let temp = format!("{}{}", label.to_string(), self.label_counter);
+        let temp = format!("_{}_{}", label.to_string(), self.label_counter);
         self.label_counter += 1;
+        temp
+    }
+
+    pub fn temp_from(&mut self, prefix: String) -> String {
+        let temp = format!("%{}{}", prefix, self.temp_counter);
+        self.temp_counter += 1;
         temp
     }
 }

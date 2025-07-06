@@ -5,21 +5,38 @@ use constructors::constructors;
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AstProgram {
-    pub function_definition: AstFunction,
+    function_definition: AstFunction,
 }
 
 #[accessors]
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AstFunction {
-    pub name: String,
-    pub body: AstStatement,
+    name: String,
+    body: Vec<AstBlockItem>,
+}
+
+#[constructors]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AstBlockItem {
+    Statement(AstStatement),
+    Declaration(AstDeclaration),
+}
+
+#[accessors]
+#[constructors]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AstDeclaration {
+    name: String,
+    init: Option<AstExpression>,
 }
 
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AstStatement {
     Return { expression: AstExpression },
+    Expression { expression: AstExpression },
+    Null,
 }
 
 #[constructors]
@@ -27,6 +44,9 @@ pub enum AstStatement {
 pub enum AstExpression {
     Constant {
         constant: String,
+    },
+    Var {
+        identifier: String,
     },
     Unary {
         operator: AstUnaryKind,
@@ -37,6 +57,10 @@ pub enum AstExpression {
         left: Box<AstExpression>,
         right: Box<AstExpression>,
     },
+    Assignment {
+        left: Box<AstExpression>,
+        right: Box<AstExpression>,
+    },
 }
 
 #[constructors]
@@ -44,7 +68,7 @@ pub enum AstExpression {
 pub enum AstUnaryKind {
     Complement,
     Negate,
-    Not
+    Not,
 }
 
 #[constructors]
@@ -62,40 +86,5 @@ pub enum AstBinaryKind {
     LessThan,
     LessOrEqual,
     GreaterThan,
-    GreaterOrEqual
-}
-
-#[macro_export]
-macro_rules! ast_expression_constant {
-    ($value:expr) => {
-        AstExpression::Constant {
-            constant: $value.to_string(),
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! ast_statement_return {
-    ($expr:expr) => {
-        AstStatement::Return { expression: $expr }
-    };
-}
-
-#[macro_export]
-macro_rules! ast_function {
-    ($name:expr, $stmt:expr) => {
-        AstFunction {
-            name: $name.to_string(),
-            body: $stmt,
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! ast_program {
-    ($func:expr) => {
-        AstProgram {
-            function_definition: $func,
-        }
-    };
+    GreaterOrEqual,
 }

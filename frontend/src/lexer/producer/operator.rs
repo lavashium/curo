@@ -103,6 +103,7 @@ impl TokenProducer for OperatorProducer {
             '!' => token_operator!(Exclamation),
             '<' => token_operator!(LessThan),
             '>' => token_operator!(GreaterThan),
+            '=' => token_operator!(Equal),
             _ => return None,
         };
 

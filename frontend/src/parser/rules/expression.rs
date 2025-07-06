@@ -27,6 +27,7 @@ fn get_precedence(operator: &OperatorKind) -> u8 {
         NotEqual      => 30,
         LogicalAnd    => 10,
         LogicalOr     => 5,
+        Equal         => 1,
     )
 }
 
@@ -41,50 +42,48 @@ impl<'a> ExpressionParser for ParserRules<'a> {
     }
 
     fn parse_binary_expression(&mut self, min_prec: u8) -> ParseResult<AstExpression> {
-        let mut lhs = {
-            match self.parser.source_tokens.peek()?.kind() {
-                TokenKind::Constant(_) => {
-                    let constant = self.unwrap_constant()?;
-                    AstExpression::Constant { constant }
-                }
-
-                TokenKind::Operator(op @ OperatorKind::Tilde) |
-                TokenKind::Operator(op @ OperatorKind::Exclamation) |
-                TokenKind::Operator(op @ OperatorKind::Minus) => {
-                    let operator = op.to_unary()?.clone();
-
-                    self.parser.source_tokens.consume();
-
-                    let operand = self.parse_binary_expression(100)?;
-                    AstExpression::Unary {
-                        operator,
-                        operand: Box::new(operand),
-                    }
-                }
-
-                TokenKind::Punctuation(PunctuationKind::OpenParen) => {
-                    self.expect(token_punctuation!(OpenParen))?;
-                    let inner = self.parse_expression()?;
-                    self.expect(token_punctuation!(CloseParen))?;
-                    inner
-                }
-
-                _ => {
-                    let token = self.parser.source_tokens.peek()?;
-                    self.diagnostics.push(
-                        Diagnostic::error(
-                            token.get_span(),
-                            DiagnosticKind::UnknownToken(token.clone()),
-                        )
-                        .with(Diagnostic::note(
-                            token.get_span(),
-                            "expected an expression here",
-                        )),
-                    );
-                    return None;
+        let mut lhs = match self.parser.source_tokens.peek()?.kind() {
+            TokenKind::Constant(_) => {
+                let constant = self.unwrap_constant()?;
+                AstExpression::Constant { constant }
+            }
+            TokenKind::Identifier(_) => {
+                let identifier = self.unwrap_identifier()?;
+                AstExpression::Var { identifier }
+            }
+            TokenKind::Operator(op @ OperatorKind::Tilde) |
+            TokenKind::Operator(op @ OperatorKind::Exclamation) |
+            TokenKind::Operator(op @ OperatorKind::Minus) => {
+                let operator = op.to_unary()?.clone();
+                self.parser.source_tokens.consume();
+                let operand = self.parse_binary_expression(100)?;
+                AstExpression::Unary {
+                    operator,
+                    operand: Box::new(operand),
                 }
             }
+            TokenKind::Punctuation(PunctuationKind::OpenParen) => {
+                self.expect(token_punctuation!(OpenParen))?;
+                let inner = self.parse_expression()?;
+                self.expect(token_punctuation!(CloseParen))?;
+                inner
+            }
+            _ => {
+                let token = self.parser.source_tokens.peek()?;
+                self.diagnostics.push(
+                    Diagnostic::error(
+                        token.get_span(),
+                        DiagnosticKind::UnknownToken(token.clone()),
+                    )
+                    .with(Diagnostic::note(
+                        token.get_span(),
+                        "expected an expression here",
+                    )),
+                );
+                return None;
+            }
         };
+
 
         loop {
             let next_token = match self.parser.source_tokens.peek() {
@@ -106,13 +105,25 @@ impl<'a> ExpressionParser for ParserRules<'a> {
 
             let rhs = self.parse_binary_expression(prec+1)?;
 
-            let op_kind = op_kind.to_binary()?;
+            if op_kind == OperatorKind::Equal {
+                lhs = AstExpression::Assignment {
+                    left: Box::new(lhs),
+                    right: Box::new(rhs),
+                };
+                continue;
+            }
+
+            let bin_op = match op_kind.to_binary() {
+                Some(b) => b,
+                None => break,
+            };
 
             lhs = AstExpression::Binary {
-                operator: op_kind,
+                operator: bin_op,
                 left: Box::new(lhs),
                 right: Box::new(rhs),
             };
+
         }
 
         Some(lhs)

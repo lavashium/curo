@@ -8,12 +8,14 @@ use middleend::*;
 pub enum ErrCode {
     LexerError = 1,
     ParserError = 2,
+    SemanticError = 3,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum PipelineStage {
     Lexer,
     Parser,
+    Analysis,
     TacGeneration,
     AssemblyGeneration,
     AssemblyAllocation,
@@ -60,8 +62,19 @@ impl<'a> Compiler<'a> {
         if stage == PipelineStage::Parser {
             return Ok(format! {"{:#?}", program});
         }
+        
+        let tempgen = TempGen::new();
+        
+        if !self.diagnostics.is_empty() {
+            let _ = self.diagnostics.report();
+            return Err(ErrCode::SemanticError)
+        }
 
-        let mut generator = TacGenerator::new(TempGen::new());
+        if stage == PipelineStage::Analysis {
+            return Ok(format! {"{:#?}", program})
+        }
+
+        let mut generator = TacGenerator::new(tempgen);
         let tac = generator.parse(program);
 
         if stage == PipelineStage::TacGeneration {

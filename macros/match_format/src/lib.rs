@@ -71,12 +71,26 @@ impl Parse for Arm {
 pub fn emit_instruction(input: TokenStream) -> TokenStream {
     let Input { expr, arms } = parse_macro_input!(input as Input);
 
-    let arms_tokens = arms.into_iter().map(|Arm { pattern, lines }| {
+    let arms_tokens = arms.into_iter().map(|Arm { pattern, lines, .. }| {
         let format_lines = lines.into_iter().map(|(fmt, args)| {
-            quote! {
-                {
-                    let formatted = format!(#fmt, #(#args.to_asm()),*);
-                    instr_lines.push(format!("    {}", formatted));
+            let fmt_str = fmt.value();
+
+            if fmt_str.starts_with('\t') {
+                let stripped = &fmt_str[1..];
+                let new_fmt = LitStr::new(stripped, fmt.span());
+
+                quote! {
+                    {
+                        let formatted = format!(#new_fmt, #(#args.to_asm()),*);
+                        instr_lines.push(formatted);
+                    }
+                }
+            } else {
+                quote! {
+                    {
+                        let formatted = format!(#fmt, #(#args.to_asm()),*);
+                        instr_lines.push(format!("    {}", formatted));
+                    }
                 }
             }
         });

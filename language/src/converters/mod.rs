@@ -41,7 +41,8 @@ impl OperatorKind {
             OperatorKind::GreaterEqual => Some(AstBinaryKind::GreaterOrEqual),
             OperatorKind::LogicalOr => Some(AstBinaryKind::Or),
             OperatorKind::Tilde |
-            OperatorKind::Exclamation => None
+            OperatorKind::Exclamation => None,
+            OperatorKind::Equal => todo!(),
         }
     }
 }

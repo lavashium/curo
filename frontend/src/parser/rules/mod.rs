@@ -2,11 +2,15 @@ mod expression;
 mod function;
 mod program;
 mod statement;
+mod block_item;
+mod declaration;
 
 pub use expression::*;
 pub use function::*;
 pub use program::*;
 pub use statement::*;
+pub use block_item::*;
+pub use declaration::*;
 
 use crate::Parser;
 use accessors::accessors;

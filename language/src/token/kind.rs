@@ -33,7 +33,7 @@ pub enum OperatorKind {
     Exclamation,
     LessThan,
     GreaterThan,
-
+    Equal,
     LogicalAnd,
     LogicalOr,
     EqualEqual,

@@ -11,8 +11,8 @@ impl<'a> ProgramParser for ParserRules<'a> {
 
         self.expect(token_eof!());
 
-        Some(AstProgram {
-            function_definition: function,
-        })
+        Some(AstProgram::new(
+            function,
+        ))
     }
 }

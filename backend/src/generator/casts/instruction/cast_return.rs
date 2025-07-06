@@ -8,7 +8,7 @@ impl<'a> GeneratorCasts<'a> {
             vec![
                 AsmInstruction::Mov {
                     src: convert_operand(val),
-                    dst: AsmOperand::Reg(AsmReg::AX),
+                    dst: AsmOperand::new_reg(AsmReg::AX),
                 },
                 AsmInstruction::Ret,
             ]

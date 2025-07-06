@@ -44,8 +44,8 @@ impl CodeEmitter {
             AsmInstruction::Cmp {operand1, operand2} => "cmpl {}, {}", [operand1, operand2],
             AsmInstruction::Jmp(label) => "jmp .L{}", [label],
             AsmInstruction::JmpCC {cond, label} => "j{} .L{}", [cond, label],
-            AsmInstruction::SetCC {cond, operand} => "set{} {}", [cond, set_c_c_adjuster(operand)]
-            AsmInstruction::Label(label) => ".L{}:", [label],
+            AsmInstruction::SetCC {cond, operand} => "set{} {}", [cond, set_c_c_adjuster(operand)],
+            AsmInstruction::Label(label) => "\t.L{}:", [label],
         })
     }
 }

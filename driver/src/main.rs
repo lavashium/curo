@@ -21,6 +21,7 @@ fn main() {
         match arg.as_str() {
             "--lex" => stage = PipelineStage::Lexer,
             "--parse" => stage = PipelineStage::Parser,
+            "--validate" => stage = PipelineStage::Analysis,
             "--tacky" => stage = PipelineStage::TacGeneration,
             "--codegen" => stage = PipelineStage::AssemblyGeneration,
             "--allocation" => stage = PipelineStage::AssemblyAllocation,
