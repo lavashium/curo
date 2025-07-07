@@ -4,7 +4,6 @@ use std::path::PathBuf;
 use std::process::exit;
 
 use driver::*;
-
 fn main() {
     let mut args = env::args().skip(1).collect::<Vec<_>>();
 

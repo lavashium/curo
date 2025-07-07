@@ -41,11 +41,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "debug_macro"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "driver"
 version = "0.1.0"
 dependencies = [
  "backend",
  "common",
+ "debug_macro",
  "frontend",
  "language",
  "middleend",

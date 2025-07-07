@@ -1,6 +1,8 @@
 use accessors::accessors;
 use constructors::constructors;
 
+use crate::Span;
+
 #[accessors]
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -29,6 +31,7 @@ pub enum AstBlockItem {
 pub struct AstDeclaration {
     name: String,
     init: Option<AstExpression>,
+    span: Span,
 }
 
 #[constructors]
@@ -44,22 +47,27 @@ pub enum AstStatement {
 pub enum AstExpression {
     Constant {
         constant: String,
+        span: Span
     },
     Var {
         identifier: String,
+        span: Span
     },
     Unary {
         operator: AstUnaryKind,
         operand: Box<AstExpression>,
+        span: Span
     },
     Binary {
         operator: AstBinaryKind,
         left: Box<AstExpression>,
         right: Box<AstExpression>,
+        span: Span
     },
     Assignment {
         left: Box<AstExpression>,
         right: Box<AstExpression>,
+        span: Span
     },
 }
 
@@ -87,4 +95,16 @@ pub enum AstBinaryKind {
     LessOrEqual,
     GreaterThan,
     GreaterOrEqual,
+}
+
+impl AstExpression {
+    pub fn get_span(&self) -> Span {
+        match self {
+            AstExpression::Constant { span, .. } => *span,
+            AstExpression::Var { span, .. } => *span,
+            AstExpression::Unary { span, .. } => *span,
+            AstExpression::Binary { span, .. } => *span,
+            AstExpression::Assignment { span, .. } => *span,
+        }
+    }
 }

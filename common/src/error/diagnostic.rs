@@ -45,6 +45,13 @@ pub enum DiagnosticKind {
         found: Token,
     },
 
+    DuplicateVariableDeclaration {
+        name: String,
+    },
+    UseOfUndeclaredVariable {
+        name: String,
+    },
+
     UnexpectedEof,
     InvalidType(String),
     InvalidGenericType(GenericKind),
@@ -91,6 +98,13 @@ impl DiagnosticKind {
                 expected.to_user_string(),
                 found.lexeme()
             ),
+            
+            DiagnosticKind::DuplicateVariableDeclaration { name } => {
+                format!("duplicate variable declaration '{}'", name)
+            }
+            DiagnosticKind::UseOfUndeclaredVariable { name } => {
+                format!("use of undeclared variable '{}'", name)
+            }
 
             DiagnosticKind::UnexpectedEof => "unexpected end of file".to_string(),
 

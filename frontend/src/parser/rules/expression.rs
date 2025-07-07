@@ -42,24 +42,36 @@ impl<'a> ExpressionParser for ParserRules<'a> {
     }
 
     fn parse_binary_expression(&mut self, min_prec: u8) -> ParseResult<AstExpression> {
+        let start_span = self.parser.source_tokens.peek()?.get_span();
+
         let mut lhs = match self.parser.source_tokens.peek()?.kind() {
             TokenKind::Constant(_) => {
+                let span = self.parser.source_tokens.peek()?.get_span();
                 let constant = self.unwrap_constant()?;
-                AstExpression::Constant { constant }
+                AstExpression::Constant {
+                    constant,
+                    span,
+                }
             }
             TokenKind::Identifier(_) => {
+                let span = self.parser.source_tokens.peek()?.get_span();
                 let identifier = self.unwrap_identifier()?;
-                AstExpression::Var { identifier }
+                AstExpression::Var {
+                    identifier,
+                    span,
+                }
             }
             TokenKind::Operator(op @ OperatorKind::Tilde) |
             TokenKind::Operator(op @ OperatorKind::Exclamation) |
             TokenKind::Operator(op @ OperatorKind::Minus) => {
+                let span = self.parser.source_tokens.peek()?.get_span();
                 let operator = op.to_unary()?.clone();
                 self.parser.source_tokens.consume();
                 let operand = self.parse_binary_expression(100)?;
                 AstExpression::Unary {
                     operator,
                     operand: Box::new(operand),
+                    span,
                 }
             }
             TokenKind::Punctuation(PunctuationKind::OpenParen) => {
@@ -103,12 +115,22 @@ impl<'a> ExpressionParser for ParserRules<'a> {
 
             self.parser.source_tokens.consume()?;
 
-            let rhs = self.parse_binary_expression(prec+1)?;
+            let next_min_prec = if op_kind == OperatorKind::Equal {
+                prec
+            } else {
+                prec + 1
+            };
+
+            let rhs = self.parse_binary_expression(next_min_prec)?;
+
+            let end_span = self.parser.source_tokens.peek()?.get_span();
+            let span = combine_spans!(start_span, end_span);
 
             if op_kind == OperatorKind::Equal {
                 lhs = AstExpression::Assignment {
                     left: Box::new(lhs),
                     right: Box::new(rhs),
+                    span,
                 };
                 continue;
             }
@@ -122,6 +144,7 @@ impl<'a> ExpressionParser for ParserRules<'a> {
                 operator: bin_op,
                 left: Box::new(lhs),
                 right: Box::new(rhs),
+                span,
             };
 
         }

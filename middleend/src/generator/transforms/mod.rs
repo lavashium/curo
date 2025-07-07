@@ -1,10 +1,14 @@
 mod expression;
 mod function;
+mod block_item;
+mod declaration;
 mod program;
 mod statement;
 
 pub use expression::*;
 pub use function::*;
+pub use block_item::*;
+pub use declaration::*;
 pub use program::*;
 pub use statement::*;
 

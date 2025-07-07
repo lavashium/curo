@@ -47,7 +47,7 @@ pub trait Visitor {
                 left.accept(self);
                 right.accept(self);
             }
-            AstExpression::Assignment { left, right } => {
+            AstExpression::Assignment { left, right, .. } => {
                 left.accept(self);
                 right.accept(self);
             }

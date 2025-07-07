@@ -3,7 +3,7 @@ use accessors::accessors;
 use std::io::{self, Write};
 
 #[accessors]
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct DiagnosticsManager {
     diagnostics: Vec<Diagnostic>,
     source_code: String,

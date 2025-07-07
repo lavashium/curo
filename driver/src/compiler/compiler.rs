@@ -3,6 +3,8 @@ use common::DiagnosticsManager;
 use frontend::*;
 use language::*;
 use middleend::*;
+use debug_macro::debug;
+
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ErrCode {
@@ -36,6 +38,7 @@ impl<'a> Compiler<'a> {
         }
     }
 
+    #[debug(label="main")]
     pub fn compile(&mut self, stage: PipelineStage) -> Result<String, ErrCode> {
         let mut lexer = Lexer::new(self.source_code);
         let tokens = lexer.parse(&mut self.diagnostics);
@@ -57,13 +60,17 @@ impl<'a> Compiler<'a> {
             return Err(ErrCode::ParserError);
         }
 
-        let program = program.expect("Parser returned None despite no diagnostics errors");
+        let mut program = program.expect("Parser returned None despite no diagnostics errors");
 
         if stage == PipelineStage::Parser {
             return Ok(format! {"{:#?}", program});
         }
         
-        let tempgen = TempGen::new();
+        let mut temp_gen = TempGen::new();
+        let semantic_ctx = SemanticContext::new(&mut self.diagnostics, &mut temp_gen);
+
+        let mut analyzer = Analyzer::new(&mut program, semantic_ctx);
+        analyzer.analyze();
         
         if !self.diagnostics.is_empty() {
             let _ = self.diagnostics.report();
@@ -74,7 +81,7 @@ impl<'a> Compiler<'a> {
             return Ok(format! {"{:#?}", program})
         }
 
-        let mut generator = TacGenerator::new(tempgen);
+        let mut generator = TacGenerator::new(temp_gen);
         let tac = generator.parse(program);
 
         if stage == PipelineStage::TacGeneration {
