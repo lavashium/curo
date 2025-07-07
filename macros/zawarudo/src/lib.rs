@@ -3,7 +3,7 @@ use quote::quote;
 use syn::{parse_macro_input, ItemFn, Meta, MetaNameValue, Expr, ExprLit, Lit};
 
 #[proc_macro_attribute]
-pub fn debug(attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn zawarudo(attr: TokenStream, item: TokenStream) -> TokenStream {
     let input_fn = parse_macro_input!(item as ItemFn);
 
     let label = if attr.is_empty() {
@@ -30,12 +30,36 @@ pub fn debug(attr: TokenStream, item: TokenStream) -> TokenStream {
     let attrs = &input_fn.attrs;
     let block = &input_fn.block;
 
-let debug_block = quote! {
-        println!("[DEBUG] entering  `{}`", #label);
-        let start = std::time::Instant::now();
+    let zawarudo_block = quote! {
+        const YELLOW_BOLD: &str = "\x1b[1;33m";
+        const BLUE_BOLD:   &str = "\x1b[1;34m";
+        const RESET:       &str = "\x1b[0m";
+
+        eprintln!(
+            "{}[ZA WARUDO!]{} TOKI WO TOMARE!    {}{:<18}{} froze time!",
+            YELLOW_BOLD,
+            RESET,
+            BLUE_BOLD,
+            #label,
+            RESET
+        );
+
+        let timer_start = std::time::Instant::now();
         let result = (|| #block)();
-        let duration = start.elapsed();
-        println!("[DEBUG] executing `{}` took {:?}", #label, duration);
+        let elapsed = timer_start.elapsed();
+
+        eprintln!(
+            "{}[ZA WARUDO!]{} TOKI WA UGOKIDASU! {}{:<18}{} executed in {}{:?}{}",
+            YELLOW_BOLD,
+            RESET,
+            BLUE_BOLD,
+            #label,
+            RESET,
+            BLUE_BOLD,
+            elapsed,
+            RESET
+        );
+
         result
     };
 
@@ -45,7 +69,7 @@ let debug_block = quote! {
         #vis #sig {
             #[cfg(debug_assertions)]
             {
-                #debug_block
+                #zawarudo_block
             }
             #[cfg(not(debug_assertions))]
             {

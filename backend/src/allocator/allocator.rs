@@ -1,6 +1,7 @@
 use crate::asm::*;
 use accessors::accessors;
 use std::collections::HashMap;
+use zawarudo::zawarudo;
 
 #[accessors]
 pub struct AsmAllocator {
@@ -15,7 +16,8 @@ impl AsmAllocator {
             stack_map: HashMap::new(),
         }
     }
-
+    
+    #[zawarudo(label = "Register Allocator")]
     pub fn allocate(mut self, program: AsmProgram) -> (AsmProgram, i32) {
         let function = self.visit_function(program.get_function_definition());
         let final_offset = self.next_offset;

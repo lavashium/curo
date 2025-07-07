@@ -8,3 +8,4 @@ language = { path = "../language" }
 common = { path = "../common" }
 accessors = { path = "../macros/accessors"}
 constructors = { path = "../macros/constructors"}
+zawarudo = { path = "../macros/zawarudo" }

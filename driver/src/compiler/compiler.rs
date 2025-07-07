@@ -3,7 +3,7 @@ use common::DiagnosticsManager;
 use frontend::*;
 use language::*;
 use middleend::*;
-use debug_macro::debug;
+use zawarudo::zawarudo;
 
 
 #[derive(Debug, PartialEq, Eq)]
@@ -38,7 +38,7 @@ impl<'a> Compiler<'a> {
         }
     }
 
-    #[debug(label="main")]
+    #[zawarudo(label="main")]
     pub fn compile(&mut self, stage: PipelineStage) -> Result<String, ErrCode> {
         let mut lexer = Lexer::new(self.source_code);
         let tokens = lexer.parse(&mut self.diagnostics);

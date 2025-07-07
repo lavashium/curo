@@ -9,3 +9,4 @@ common = { path = "../common" }
 match_format = { path = "../macros/match_format" }
 accessors = { path = "../macros/accessors"}
 constructors = { path = "../macros/constructors"}
+zawarudo = { path = "../macros/zawarudo" }

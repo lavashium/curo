@@ -4,6 +4,7 @@ use common::error::manager::DiagnosticsManager;
 use common::*;
 use language::token::*;
 use std::rc::Rc;
+use zawarudo::zawarudo;
 
 #[accessors]
 #[derive(Debug)]
@@ -57,6 +58,7 @@ impl<'a> Lexer<'a> {
         Span::new(start.0, start.1, self.line, self.column)
     }
 
+    #[zawarudo(label = "Lexer")]
     pub fn parse(&mut self, diagnostics: &mut DiagnosticsManager) -> TokenStream {
         let mut tokens = Vec::new();
 

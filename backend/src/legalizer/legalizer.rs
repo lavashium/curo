@@ -2,6 +2,7 @@ use super::fixes::*;
 use crate::asm::*;
 use accessors::accessors;
 use constructors::constructors;
+use zawarudo::zawarudo;
 
 #[accessors]
 #[constructors]
@@ -10,6 +11,7 @@ pub struct AsmLegalizer {
 }
 
 impl AsmLegalizer {
+    #[zawarudo(label = "Assembly Legalizer")]
     pub fn legalize(&self, program: AsmProgram) -> AsmProgram {
         let mut function = program.get_function_definition();
 

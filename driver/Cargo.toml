@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-debug_macro = { path = "../macros/debug_macro" }
+zawarudo = { path = "../macros/zawarudo" }
 language = { path = "../language" }
 common = { path = "../common" }
 frontend = { path = "../frontend" }

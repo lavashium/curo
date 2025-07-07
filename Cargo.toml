@@ -11,3 +11,7 @@ members = [
   "macros/*",
 ]
 
+[profile.logging]
+debug-assertions = true
+inherits = "release"
+

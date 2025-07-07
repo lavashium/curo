@@ -2,11 +2,13 @@ use super::emit::ToAsm;
 use crate::{asm::*, emitter::emit::set_c_c_adjuster};
 use constructors::constructors;
 use match_format::emit_instruction;
+use zawarudo::zawarudo;
 
 #[constructors]
 pub struct CodeEmitter;
 
 impl CodeEmitter {
+    #[zawarudo(label = "Code Emitter")]
     pub fn emit(&self, program: AsmProgram) -> String {
         let mut output = self.emit_function(program.function_definition());
         output.push_str("\n.section .note.GNU-stack,\"\",@progbits\n");
