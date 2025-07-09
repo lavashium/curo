@@ -104,6 +104,7 @@ impl TokenProducer for OperatorProducer {
             '<' => token_operator!(LessThan),
             '>' => token_operator!(GreaterThan),
             '=' => token_operator!(Equal),
+            '?' => token_operator!(Question),
             _ => return None,
         };
 

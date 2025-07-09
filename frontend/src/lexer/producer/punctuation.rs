@@ -15,6 +15,7 @@ impl TokenProducer for PunctuationProducer {
             ')' => token_punctuation!(CloseParen),
             '{' => token_punctuation!(OpenBrace),
             '}' => token_punctuation!(CloseBrace),
+            ':' => token_punctuation!(Colon),
             _ => return None,
         };
 

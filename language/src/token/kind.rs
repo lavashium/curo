@@ -19,6 +19,8 @@ pub enum KeywordKind {
     Int,
     Return,
     Void,
+    If,
+    Else,
 }
 
 #[constructors]
@@ -39,7 +41,8 @@ pub enum OperatorKind {
     EqualEqual,
     NotEqual,
     LessEqual,
-    GreaterEqual
+    GreaterEqual,
+    Question,
 }
 
 #[constructors]
@@ -50,6 +53,7 @@ pub enum PunctuationKind {
     CloseParen,
     OpenBrace,
     CloseBrace,
+    Colon
 }
 
 #[macro_export]

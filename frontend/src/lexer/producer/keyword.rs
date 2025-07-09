@@ -47,7 +47,9 @@ macro_rules! keyword_table {
 const KEYWORDS: &[(&str, TokenKind)] = keyword_table!(
     "int" => Int,
     "void" => Void,
-    "return" => Return
+    "return" => Return,
+    "if" => If,
+    "else" => Else,
 );
 
 fn lookup_keyword(candidate: &str) -> TokenKind {

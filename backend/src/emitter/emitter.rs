@@ -1,5 +1,6 @@
 use super::emit::ToAsm;
-use crate::{asm::*, emitter::emit::set_c_c_adjuster};
+use crate::asm::*;
+use super::emit::*;
 use constructors::constructors;
 use match_format::emit_instruction;
 use zawarudo::zawarudo;
@@ -46,7 +47,7 @@ impl CodeEmitter {
             AsmInstruction::Cmp {operand1, operand2} => "cmpl {}, {}", [operand1, operand2],
             AsmInstruction::Jmp(label) => "jmp .L{}", [label],
             AsmInstruction::JmpCC {cond, label} => "j{} .L{}", [cond, label],
-            AsmInstruction::SetCC {cond, operand} => "set{} {}", [cond, set_c_c_adjuster(operand)],
+            AsmInstruction::SetCC {cond, operand} => "set{} {}", [cond, reg_to_1byte(operand)],
             AsmInstruction::Label(label) => "\t.L{}:", [label],
         })
     }

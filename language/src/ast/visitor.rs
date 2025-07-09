@@ -26,11 +26,18 @@ pub trait Visitor {
 
     fn visit_statement(&mut self, statement: &AstStatement) {
         match statement {
-            AstStatement::Return { expression } => {
+            AstStatement::Return { expression, .. } => {
                 expression.accept(self);
             }
-            AstStatement::Expression { expression } => {
+            AstStatement::Expression { expression, .. } => {
                 expression.accept(self);
+            }
+            AstStatement::If { condition, then_branch, else_branch, .. } => {
+                condition.accept(self);
+                then_branch.accept(self);
+                if let Some(else_expression) = else_branch {
+                    else_expression.accept(self);
+                }
             }
             AstStatement::Null => {}
         }
@@ -50,6 +57,11 @@ pub trait Visitor {
             AstExpression::Assignment { left, right, .. } => {
                 left.accept(self);
                 right.accept(self);
+            }
+            AstExpression::Conditional { condition, then_branch, else_branch, .. } => {
+                condition.accept(self);
+                then_branch.accept(self);
+                else_branch.accept(self);
             }
         }
     }

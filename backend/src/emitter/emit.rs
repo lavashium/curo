@@ -21,7 +21,7 @@ impl ToAsm for AsmOperand {
     }
 }
 
-pub fn set_c_c_adjuster(op: &AsmOperand) -> String {
+pub fn reg_to_1byte(op: &AsmOperand) -> String {
     match op {
         AsmOperand::Reg(reg) => reg.to_asm_1byte(),
         some => some.to_asm(),
@@ -31,20 +31,22 @@ pub fn set_c_c_adjuster(op: &AsmOperand) -> String {
 impl AsmReg {
     pub fn to_asm_4byte(&self) -> String {
         match self {
-            AsmReg::AX => "%eax".to_string(),
-            AsmReg::DX => "%edx".to_string(),
-            AsmReg::R10 => "%r10d".to_string(),
-            AsmReg::R11 => "%r11d".to_string(),
+            AsmReg::AX => "%eax",
+            AsmReg::DX => "%edx",
+            AsmReg::R10 => "%r10d",
+            AsmReg::R11 => "%r11d",
         }
+        .to_string()
     }
     
     pub fn to_asm_1byte(&self) -> String {
         match self {
-            AsmReg::AX => "%al".to_string(),
-            AsmReg::DX => "%dl".to_string(),
-            AsmReg::R10 => "%r10b".to_string(),
-            AsmReg::R11 => "%r11b".to_string(),
+            AsmReg::AX => "%al",
+            AsmReg::DX => "%dl",
+            AsmReg::R10 => "%r10b",
+            AsmReg::R11 => "%r11b",
         }
+        .to_string()
     }
 }
 

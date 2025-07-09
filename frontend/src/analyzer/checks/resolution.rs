@@ -60,7 +60,13 @@ fn resolve_statement(
         AstStatement::Expression { expression } => AstStatement::Expression {
             expression: resolve_expression(expression, ctx, variable_map),
         },
+        AstStatement::If { condition, then_branch, else_branch } => AstStatement::If {
+            condition: resolve_expression(condition, ctx, variable_map),
+            then_branch: Box::new(resolve_statement(*then_branch, ctx, variable_map)),
+            else_branch: else_branch.map(|branch| Box::new(resolve_statement(*branch, ctx, variable_map))),
+        },
         AstStatement::Null => AstStatement::Null,
+        
     }
 }
 
@@ -81,7 +87,6 @@ fn resolve_expression(
                 AstExpression::Var { identifier, span }
             }
         }
-
         AstExpression::Assignment { left, right, span } => {
             let resolved_left = resolve_expression(*left, ctx, variable_map);
             if let AstExpression::Var { .. } = resolved_left {
@@ -104,20 +109,23 @@ fn resolve_expression(
                 }
             }
         }
-
         AstExpression::Unary { operator, operand, span } => AstExpression::Unary {
             operator,
             operand: Box::new(resolve_expression(*operand, ctx, variable_map)),
             span,
         },
-
         AstExpression::Binary { operator, left, right, span } => AstExpression::Binary {
             operator,
             left: Box::new(resolve_expression(*left, ctx, variable_map)),
             right: Box::new(resolve_expression(*right, ctx, variable_map)),
             span,
         },
-
         AstExpression::Constant { .. } => expr,
+        AstExpression::Conditional { condition, then_branch, else_branch, span } => AstExpression::Conditional {
+            condition: Box::new(resolve_expression(*condition, ctx, variable_map)),
+            then_branch: Box::new(resolve_expression(*then_branch, ctx, variable_map)),
+            else_branch: Box::new(resolve_expression(*else_branch, ctx, variable_map)),
+            span,
+        },
     }
 }

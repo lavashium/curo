@@ -37,8 +37,17 @@ pub struct AstDeclaration {
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AstStatement {
-    Return { expression: AstExpression },
-    Expression { expression: AstExpression },
+    Return { 
+        expression: AstExpression,
+    },
+    Expression {
+        expression: AstExpression,
+    },
+    If {
+        condition: AstExpression,
+        then_branch: Box<AstStatement>,
+        else_branch: Option<Box<AstStatement>>,
+    },
     Null,
 }
 
@@ -69,6 +78,12 @@ pub enum AstExpression {
         right: Box<AstExpression>,
         span: Span
     },
+    Conditional {
+        condition: Box<AstExpression>,
+        then_branch: Box<AstExpression>,
+        else_branch: Box<AstExpression>,
+        span: Span
+    }
 }
 
 #[constructors]
@@ -105,6 +120,7 @@ impl AstExpression {
             AstExpression::Unary { span, .. } => *span,
             AstExpression::Binary { span, .. } => *span,
             AstExpression::Assignment { span, .. } => *span,
+            AstExpression::Conditional { span, .. } => *span,
         }
     }
 }

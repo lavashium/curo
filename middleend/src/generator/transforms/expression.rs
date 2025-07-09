@@ -154,6 +154,48 @@ impl<'a> ExpressionTransform for GeneratorTransforms<'a> {
                     panic!("Invalid assignment target; only simple variables supported");
                 }
             }
+            AstExpression::Conditional { condition, then_branch, else_branch, .. } => {
+                let else_label = self.generator.tempgen.label("cond_else");
+                let end_label = self.generator.tempgen.label("cond_end");
+
+                let (mut cond_instrs, cond_val) = self.transform_expression(condition);
+
+                let result = TacVal::new_var(self.generator.tempgen.temp());
+
+                let mut instructions = Vec::new();
+                instructions.append(&mut cond_instrs);
+
+                instructions.push(TacInstruction::JumpIfZero {
+                    condition: cond_val.clone(),
+                    target: else_label.clone(),
+                });
+
+                let (mut then_instrs, then_val) = self.transform_expression(then_branch);
+                instructions.append(&mut then_instrs);
+
+                instructions.push(TacInstruction::Copy {
+                    src: then_val,
+                    dst: result.clone(),
+                });
+
+                instructions.push(TacInstruction::Jump {
+                    target: end_label.clone(),
+                });
+
+                instructions.push(TacInstruction::Label(else_label));
+
+                let (mut else_instrs, else_val) = self.transform_expression(else_branch);
+                instructions.append(&mut else_instrs);
+
+                instructions.push(TacInstruction::Copy {
+                    src: else_val,
+                    dst: result.clone(),
+                });
+
+                instructions.push(TacInstruction::Label(end_label));
+
+                (instructions, result)
+            }
         }
     }
 }

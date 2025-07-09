@@ -41,6 +41,8 @@ impl UserFriendlyDisplay for KeywordKind {
             KeywordKind::Int => "int",
             KeywordKind::Return => "return",
             KeywordKind::Void => "void",
+            KeywordKind::If => "if",
+            KeywordKind::Else => "else",
         }
     }
 }
@@ -53,6 +55,7 @@ impl UserFriendlyDisplay for PunctuationKind {
             PunctuationKind::CloseParen => ")",
             PunctuationKind::OpenBrace => "{",
             PunctuationKind::CloseBrace => "}",
+            PunctuationKind::Colon => ":",
         }
     }
 }

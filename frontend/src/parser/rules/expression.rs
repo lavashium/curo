@@ -27,6 +27,7 @@ fn get_precedence(operator: &OperatorKind) -> u8 {
         NotEqual      => 30,
         LogicalAnd    => 10,
         LogicalOr     => 5,
+        Question      => 3,
         Equal         => 1,
     )
 }
@@ -103,6 +104,29 @@ impl<'a> ExpressionParser for ParserRules<'a> {
                 None => break,
             };
 
+            if let TokenKind::Operator(OperatorKind::Question) = next_token.kind() {
+                if 3 < min_prec {
+                    break;
+                }
+
+                self.parser.source_tokens.consume()?;
+                let then_expr = self.parse_expression()?;
+                self.expect(token_punctuation!(Colon))?;
+                let else_expr = self.parse_binary_expression(3)?;
+
+                let end_span = self.parser.source_tokens.peek()?.get_span();
+                let span = combine_spans!(start_span, end_span);
+
+                lhs = AstExpression::Conditional {
+                    condition: Box::new(lhs),
+                    then_branch: Box::new(then_expr),
+                    else_branch: Box::new(else_expr),
+                    span,
+                };
+
+                continue;
+            }
+    
             let op_kind = match next_token.kind() {
                 TokenKind::Operator(op) => op.clone(),
                 _ => break,
