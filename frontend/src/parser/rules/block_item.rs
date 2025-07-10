@@ -1,6 +1,5 @@
 use super::*;
 
-
 pub trait BlockItemParser {
     fn parse_block_item(&mut self) -> ParseResult<AstBlockItem>;
 }

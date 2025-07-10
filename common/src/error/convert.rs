@@ -43,6 +43,11 @@ impl UserFriendlyDisplay for KeywordKind {
             KeywordKind::Void => "void",
             KeywordKind::If => "if",
             KeywordKind::Else => "else",
+            KeywordKind::Do => "do",
+            KeywordKind::While => "while",
+            KeywordKind::For => "for",
+            KeywordKind::Break => "break",
+            KeywordKind::Continue => "continue",
         }
     }
 }

@@ -43,6 +43,13 @@ pub struct AstDeclaration {
 
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AstForInit {
+    InitDeclaration(AstDeclaration),
+    InitExpression(Option<AstExpression>),
+}
+
+#[constructors]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AstStatement {
     Return { 
         expression: AstExpression,
@@ -57,6 +64,29 @@ pub enum AstStatement {
     },
     Compound {
         block: AstBlock,
+    },
+    Break {
+        label: String,
+    },
+    Continue {
+        label: String,
+    },
+    While {
+        condition: AstExpression,
+        body: Box<AstStatement>,
+        label: String,
+    },
+    DoWhile {
+        condition: AstExpression,
+        body: Box<AstStatement>,
+        label: String,
+    },
+    For {
+        for_init: AstForInit,
+        condition: Option<AstExpression>,
+        post: Option<AstExpression>,
+        body: Box<AstStatement>,
+        label: String,
     },
     Null,
 }

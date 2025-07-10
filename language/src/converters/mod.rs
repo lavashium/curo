@@ -43,7 +43,7 @@ impl OperatorKind {
             OperatorKind::Tilde |
             OperatorKind::Question |
             OperatorKind::Exclamation => None,
-            OperatorKind::Equal => todo!(),
+            OperatorKind::Equal => Some(AstBinaryKind::Equal),
         }
     }
 }

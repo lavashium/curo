@@ -84,28 +84,33 @@ fn resolve_statement(
 ) -> AstStatement {
     match stmt {
         AstStatement::Return { expression } => AstStatement::Return {
-            expression: resolve_expression(expression, ctx, variable_map),
-        },
+                        expression: resolve_expression(expression, ctx, variable_map),
+            },
         AstStatement::Expression { expression } => AstStatement::Expression {
-            expression: resolve_expression(expression, ctx, variable_map),
-        },
+                expression: resolve_expression(expression, ctx, variable_map),
+            },
         AstStatement::If {
-            condition,
-            then_branch,
-            else_branch,
-        } => AstStatement::If {
-            condition: resolve_expression(condition, ctx, variable_map),
-            then_branch: Box::new(resolve_statement(*then_branch, ctx, variable_map)),
-            else_branch: else_branch
-                .map(|branch| Box::new(resolve_statement(*branch, ctx, variable_map))),
-        },
+                condition,
+                then_branch,
+                else_branch,
+            } => AstStatement::If {
+                condition: resolve_expression(condition, ctx, variable_map),
+                then_branch: Box::new(resolve_statement(*then_branch, ctx, variable_map)),
+                else_branch: else_branch
+                    .map(|branch| Box::new(resolve_statement(*branch, ctx, variable_map))),
+            },
         AstStatement::Compound { block } => {
-            let mut new_map = copy_variable_map(variable_map);
-            AstStatement::Compound {
-                block: resolve_block(block, ctx, &mut new_map),
+                let mut new_map = copy_variable_map(variable_map);
+                AstStatement::Compound {
+                    block: resolve_block(block, ctx, &mut new_map),
+                }
             }
-        }
         AstStatement::Null => AstStatement::Null,
+        AstStatement::Break { label } => todo!(),
+        AstStatement::Continue { label } => todo!(),
+        AstStatement::While { condition, body, label } => todo!(),
+        AstStatement::DoWhile { condition, body, label } => todo!(),
+        AstStatement::For { for_init, condition, post, body, label } => todo!(),
     }
 }
 

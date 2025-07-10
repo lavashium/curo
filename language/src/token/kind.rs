@@ -21,6 +21,11 @@ pub enum KeywordKind {
     Void,
     If,
     Else,
+    Do,
+    While,
+    For,
+    Break,
+    Continue,
 }
 
 #[constructors]

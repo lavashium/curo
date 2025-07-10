@@ -50,6 +50,10 @@ const KEYWORDS: &[(&str, TokenKind)] = keyword_table!(
     "return" => Return,
     "if" => If,
     "else" => Else,
+    "do" => Do,
+    "while" => While,
+    "for" => For,
+    "break" => Continue,
 );
 
 fn lookup_keyword(candidate: &str) -> TokenKind {

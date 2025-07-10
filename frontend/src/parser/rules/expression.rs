@@ -35,6 +35,7 @@ fn get_precedence(operator: &OperatorKind) -> u8 {
 pub trait ExpressionParser {
     fn parse_expression(&mut self) -> ParseResult<AstExpression>;
     fn parse_binary_expression(&mut self, min_prec: u8) -> ParseResult<AstExpression>;
+    fn parse_primary_expression(&mut self) -> ParseResult<AstExpression>;
 }
 
 impl<'a> ExpressionParser for ParserRules<'a> {
@@ -42,26 +43,20 @@ impl<'a> ExpressionParser for ParserRules<'a> {
         self.parse_binary_expression(0)
     }
 
-    fn parse_binary_expression(&mut self, min_prec: u8) -> ParseResult<AstExpression> {
-        let start_span = self.parser.source_tokens.peek()?.get_span();
-
-        let mut lhs = match self.parser.source_tokens.peek()?.kind() {
+    fn parse_primary_expression(&mut self) -> ParseResult<AstExpression> {
+        match self.parser.source_tokens.peek()?.kind() {
             TokenKind::Constant(_) => {
                 let span = self.parser.source_tokens.peek()?.get_span();
                 let constant = self.unwrap_constant()?;
-                AstExpression::Constant {
-                    constant,
-                    span,
-                }
+                Some(AstExpression::Constant { constant, span })
             }
+
             TokenKind::Identifier(_) => {
                 let span = self.parser.source_tokens.peek()?.get_span();
                 let identifier = self.unwrap_identifier()?;
-                AstExpression::Var {
-                    identifier,
-                    span,
-                }
+                Some(AstExpression::Var { identifier, span })
             }
+
             TokenKind::Operator(op @ OperatorKind::Tilde) |
             TokenKind::Operator(op @ OperatorKind::Exclamation) |
             TokenKind::Operator(op @ OperatorKind::Minus) => {
@@ -69,18 +64,20 @@ impl<'a> ExpressionParser for ParserRules<'a> {
                 let operator = op.to_unary()?.clone();
                 self.parser.source_tokens.consume();
                 let operand = self.parse_binary_expression(100)?;
-                AstExpression::Unary {
+                Some(AstExpression::Unary {
                     operator,
                     operand: Box::new(operand),
                     span,
-                }
+                })
             }
+
             TokenKind::Punctuation(PunctuationKind::OpenParen) => {
                 self.expect(token_punctuation!(OpenParen))?;
-                let inner = self.parse_expression()?;
+                let expr = self.parse_expression()?;
                 self.expect(token_punctuation!(CloseParen))?;
-                inner
+                Some(expr)
             }
+
             _ => {
                 let token = self.parser.source_tokens.peek()?;
                 self.diagnostics.push(
@@ -88,15 +85,16 @@ impl<'a> ExpressionParser for ParserRules<'a> {
                         token.get_span(),
                         DiagnosticKind::UnknownToken(token.clone()),
                     )
-                    .with(Diagnostic::note(
-                        token.get_span(),
-                        "expected an expression here",
-                    )),
+                    .with(Diagnostic::note(token.get_span(), "expected an expression here")),
                 );
-                return None;
+                None
             }
-        };
+        }
+    }
 
+    fn parse_binary_expression(&mut self, min_prec: u8) -> ParseResult<AstExpression> {
+        let start_span = self.parser.source_tokens.peek()?.get_span();
+        let mut lhs = self.parse_primary_expression()?;
 
         loop {
             let next_token = match self.parser.source_tokens.peek() {
@@ -126,7 +124,7 @@ impl<'a> ExpressionParser for ParserRules<'a> {
 
                 continue;
             }
-    
+
             let op_kind = match next_token.kind() {
                 TokenKind::Operator(op) => op.clone(),
                 _ => break,
@@ -140,7 +138,7 @@ impl<'a> ExpressionParser for ParserRules<'a> {
             self.parser.source_tokens.consume()?;
 
             let next_min_prec = if op_kind == OperatorKind::Equal {
-                prec
+                prec // right-associative
             } else {
                 prec + 1
             };
@@ -170,7 +168,6 @@ impl<'a> ExpressionParser for ParserRules<'a> {
                 right: Box::new(rhs),
                 span,
             };
-
         }
 
         Some(lhs)

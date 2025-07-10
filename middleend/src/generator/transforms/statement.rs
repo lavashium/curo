@@ -50,7 +50,8 @@ impl<'a> StatementTransform for GeneratorTransforms<'a> {
             AstStatement::Compound { block } => {
                 instructions.append(&mut self.transform_block(block));
             },
-            AstStatement::Null => {}
+            AstStatement::Null => {},
+            _ => {}
         }
         return instructions;
     }

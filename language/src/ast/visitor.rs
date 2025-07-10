@@ -44,7 +44,8 @@ pub trait Visitor {
                     block.accept(self);
                 }
             }
-            AstStatement::Null => {}
+            AstStatement::Null => {},
+            _ => {}
         }
     }
 
