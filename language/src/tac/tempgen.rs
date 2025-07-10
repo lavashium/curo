@@ -28,7 +28,7 @@ impl TempGen {
     }
 
     pub fn temp_from(&mut self, prefix: String) -> String {
-        let temp = format!("%{}{}", prefix, self.temp_counter);
+        let temp = format!("{}.{}", prefix, self.temp_counter);
         self.temp_counter += 1;
         temp
     }

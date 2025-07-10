@@ -1,21 +1,24 @@
-# C99 Compiler Project
+# Curo
 
-> This repo documents my journey of writing a C compiler from scratch.
+> A C compiler. From scratch. By someone who knew exactly what they were doing. Probably
 
-### For help, check:  
-- Commits  
-- Code (duh)  
-- Comments (if any)  
-- `cargo doc`
+Welcome to **Curo** - a lovingly hand-crafted C compiler that walks the fine line between systems programming and psychological horror. If the name rings a bell... seek help
 
-### For help, don't check:  
-- Bug reports (no bugs, my code is perfect)
+I know what kind of man you are, you filthy animal *(I’m not better)*
 
 ### How to use?
 
 I wish I knew myself
 
-## Fun Facts (Totally Serious)
+### For help, check:  
+- Commits  
+- Code 
+- Comments
+- `cargo doc`
 
-> My Google Chrome homepage is the “621 website”, but no one will know that since no one reads `README.md`'s :3
-> *This isn’t a joke. It’s a flex. /j*
+### For help, don't check:  
+- Bug reports (no bugs, my code is perfect)
+
+### Why "Curo"?
+
+Stay innocent, sweet child o' mine :)

@@ -6,7 +6,7 @@ pub trait Visitor {
     }
 
     fn visit_function(&mut self, function: &AstFunction) {
-        for item in function.body() {
+        for item in function.body().block_items() {
             item.accept(self);
         }
     }
@@ -37,6 +37,11 @@ pub trait Visitor {
                 then_branch.accept(self);
                 if let Some(else_expression) = else_branch {
                     else_expression.accept(self);
+                }
+            }
+            AstStatement::Compound { block } => {
+                for block in block.block_items() {
+                    block.accept(self);
                 }
             }
             AstStatement::Null => {}

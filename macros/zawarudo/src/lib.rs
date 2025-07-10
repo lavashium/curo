@@ -67,11 +67,11 @@ pub fn zawarudo(attr: TokenStream, item: TokenStream) -> TokenStream {
     let output = quote! {
         #(#attrs)*
         #vis #sig {
-            #[cfg(debug_assertions)]
+            #[cfg(feature = "zawarudo")]
             {
                 #zawarudo_block
             }
-            #[cfg(not(debug_assertions))]
+            #[cfg(not(feature = "zawarudo"))]
             {
                 #block
             }

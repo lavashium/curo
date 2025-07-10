@@ -3,6 +3,9 @@ name = "driver"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+zawarudo = []
+
 [dependencies]
 zawarudo = { path = "../macros/zawarudo" }
 language = { path = "../language" }

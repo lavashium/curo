@@ -8,13 +8,9 @@ pub trait FunctionTransform {
 impl<'a> FunctionTransform for GeneratorTransforms<'a> {
     fn transform_function(&mut self, function: &AstFunction) -> TacFunction {
         let identifier = function.get_name();
-        let body_items = function.body();
+        let block = function.body();
 
-        let mut instructions = vec![];
-
-        for item in body_items {
-            instructions.append(&mut self.transform_block_item(item));
-        }
+        let mut instructions = self.transform_block(block);
 
         match instructions.last() {
             Some(TacInstruction::Return { .. }) => {}

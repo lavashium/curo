@@ -15,7 +15,7 @@ pub struct AstProgram {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AstFunction {
     name: String,
-    body: Vec<AstBlockItem>,
+    body: AstBlock,
 }
 
 #[constructors]
@@ -23,6 +23,13 @@ pub struct AstFunction {
 pub enum AstBlockItem {
     Statement(AstStatement),
     Declaration(AstDeclaration),
+}
+
+#[accessors]
+#[constructors]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AstBlock {
+    block_items: Vec<AstBlockItem>,
 }
 
 #[accessors]
@@ -47,6 +54,9 @@ pub enum AstStatement {
         condition: AstExpression,
         then_branch: Box<AstStatement>,
         else_branch: Option<Box<AstStatement>>,
+    },
+    Compound {
+        block: AstBlock,
     },
     Null,
 }

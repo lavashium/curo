@@ -39,7 +39,11 @@ impl<'a> StatementParser for ParserRules<'a> {
                     then_branch: Box::new(then_branch),
                     else_branch: else_branch,
                 })
+            }
 
+            TokenKind::Punctuation(PunctuationKind::OpenBrace) => {
+                let block = self.parse_block()?;
+                Some(AstStatement::Compound { block })
             }
 
             _ => {

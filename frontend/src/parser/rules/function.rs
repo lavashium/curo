@@ -12,19 +12,8 @@ impl<'a> FunctionParser for ParserRules<'a> {
         self.expect(token_punctuation!(OpenParen))?;
         self.expect(token_keyword!(Void))?;
         self.expect(token_punctuation!(CloseParen))?;
-        self.expect(token_punctuation!(OpenBrace))?;
 
-        let mut body = Vec::new();
-        loop {
-            let next = self.parser.source_tokens().peek()?;
-            if matches!(next.kind(), token_punctuation!(CloseBrace)) {
-                break;
-            }
-            let item = self.parse_block_item()?;
-            body.push(item);
-        }
-
-        self.expect(token_punctuation!(CloseBrace))?;
+        let body = self.parse_block()?;
 
         Some(AstFunction::new(identifier, body))
     }

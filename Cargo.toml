@@ -10,8 +10,3 @@ members = [
   "backend", 
   "macros/*",
 ]
-
-[profile.logging]
-debug-assertions = true
-inherits = "release"
-

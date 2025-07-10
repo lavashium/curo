@@ -4,6 +4,7 @@ mod program;
 mod statement;
 mod block_item;
 mod declaration;
+mod block;
 
 pub use expression::*;
 pub use function::*;
@@ -11,6 +12,7 @@ pub use program::*;
 pub use statement::*;
 pub use block_item::*;
 pub use declaration::*;
+pub use block::*;
 
 use crate::Parser;
 use accessors::accessors;

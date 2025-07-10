@@ -47,6 +47,9 @@ impl<'a> StatementTransform for GeneratorTransforms<'a> {
 
                 instructions.push(TacInstruction::new_label(end_label));
             }
+            AstStatement::Compound { block } => {
+                instructions.append(&mut self.transform_block(block));
+            },
             AstStatement::Null => {}
         }
         return instructions;
