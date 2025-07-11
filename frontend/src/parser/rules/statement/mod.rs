@@ -35,13 +35,25 @@ impl<'a> StatementParser for ParserRules<'a> {
                 Some(AstStatement::new_null())
             }
             TokenKind::Punctuation(PunctuationKind::OpenBrace) => {
+                let start_span = &self.parser.source_tokens.peek()?.get_span();
                 let block = self.parse_block()?;
-                Some(AstStatement::new_compound(block))
+                let end_span = &self.parser.source_tokens.peek()?.get_span();
+                let span = combine_spans!(start_span, end_span);
+                Some(AstStatement::new_compound(
+                    block,
+                    span
+                ))
             }
             _ => {
+                let start_span = &self.parser.source_tokens.peek()?.get_span();
                 let expr = self.parse_expression()?;
                 self.expect(token_punctuation!(Semicolon))?;
-                Some(AstStatement::new_expression(expr))
+                let end_span = &self.parser.source_tokens.peek()?.get_span();
+                let span = combine_spans!(start_span, end_span);
+                Some(AstStatement::new_expression(
+                    expr,
+                    span
+                ))
             }
         }
     }

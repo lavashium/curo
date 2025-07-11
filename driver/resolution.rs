@@ -83,34 +83,126 @@ fn resolve_statement(
     variable_map: &mut VariableMap,
 ) -> AstStatement {
     match stmt {
-        AstStatement::Return { expression } => AstStatement::Return {
-                        expression: resolve_expression(expression, ctx, variable_map),
-            },
-        AstStatement::Expression { expression } => AstStatement::Expression {
-                expression: resolve_expression(expression, ctx, variable_map),
-            },
+        AstStatement::Return { expression, span } => AstStatement::Return {
+            expression: resolve_expression(expression, ctx, variable_map),
+            span
+        },
+        AstStatement::Expression { expression, span } => AstStatement::Expression {
+            expression: resolve_expression(expression, ctx, variable_map),
+            span
+        },
         AstStatement::If {
-                condition,
-                then_branch,
-                else_branch,
-            } => AstStatement::If {
-                condition: resolve_expression(condition, ctx, variable_map),
-                then_branch: Box::new(resolve_statement(*then_branch, ctx, variable_map)),
-                else_branch: else_branch
-                    .map(|branch| Box::new(resolve_statement(*branch, ctx, variable_map))),
-            },
-        AstStatement::Compound { block } => {
-                let mut new_map = copy_variable_map(variable_map);
-                AstStatement::Compound {
-                    block: resolve_block(block, ctx, &mut new_map),
-                }
+            condition,
+            then_branch,
+            else_branch,
+            span
+        } => AstStatement::If {
+            condition: resolve_expression(condition, ctx, variable_map),
+            then_branch: Box::new(resolve_statement(*then_branch, ctx, variable_map)),
+            else_branch: else_branch.map(|branch| Box::new(resolve_statement(*branch, ctx, variable_map))),
+            span
+        },
+        AstStatement::Compound { block, span } => {
+            let mut new_map = copy_variable_map(variable_map);
+            AstStatement::Compound {
+                block: resolve_block(block, ctx, &mut new_map),
+                span
             }
+        }
+        AstStatement::Break { label, span } => {
+            if ctx.loop_depth == 0 {
+                ctx.diagnostics.push(Diagnostic::error(
+                    span,
+                    DiagnosticKind::new_custom("break used outside of the loop".to_string()),
+                ));
+            }
+            AstStatement::Break { label, span }
+        }
+
+        AstStatement::Continue { label, span }  => {
+            if ctx.loop_depth == 0 {
+                ctx.diagnostics.push(Diagnostic::error(
+                    span,
+                    DiagnosticKind::new_custom("continue used outside of the loop".to_string()),
+                ));
+            }
+            AstStatement::Continue { label, span }
+        }
+
+        AstStatement::While { condition, body, label, span } => {
+            let new_condition = resolve_expression(condition, ctx, variable_map);
+            ctx.loop_depth += 1;
+            let new_body = Box::new(resolve_statement(*body, ctx, variable_map));
+            ctx.loop_depth -= 1;
+            AstStatement::While {
+                condition: new_condition,
+                body: new_body,
+                label,
+                span
+            }
+        }
+        AstStatement::DoWhile { condition, body, label, span } => {
+            ctx.loop_depth += 1;
+            let new_body = Box::new(resolve_statement(*body, ctx, variable_map));
+            ctx.loop_depth -= 1;
+            let new_condition = resolve_expression(condition, ctx, variable_map);
+            AstStatement::DoWhile {
+                condition: new_condition,
+                body: new_body,
+                label,
+                span,
+            }
+        }
+        AstStatement::For {
+            for_init,
+            condition,
+            post,
+            body,
+            label,
+            span,
+        } => {
+            let mut new_map = copy_variable_map(variable_map);
+            let new_init = resolve_for_init(for_init, ctx, &mut new_map);
+            let new_condition = resolve_optional_expression(condition, ctx, &new_map);
+            let new_post = resolve_optional_expression(post, ctx, &new_map);
+
+            ctx.loop_depth += 1;
+            let new_body = Box::new(resolve_statement(*body, ctx, &mut new_map));
+            ctx.loop_depth -= 1;
+
+            AstStatement::For {
+                for_init: new_init,
+                condition: new_condition,
+                post: new_post,
+                body: new_body,
+                label,
+                span,
+            }
+        }
         AstStatement::Null => AstStatement::Null,
-        AstStatement::Break { label } => todo!(),
-        AstStatement::Continue { label } => todo!(),
-        AstStatement::While { condition, body, label } => todo!(),
-        AstStatement::DoWhile { condition, body, label } => todo!(),
-        AstStatement::For { for_init, condition, post, body, label } => todo!(),
+    }
+}
+
+fn resolve_optional_expression(
+    expr: Option<AstExpression>,
+    ctx: &mut SemanticContext,
+    variable_map: &VariableMap,
+) -> Option<AstExpression> {
+    expr.map(|e| resolve_expression(e, ctx, variable_map))
+}
+
+fn resolve_for_init(
+    init: AstForInit,
+    ctx: &mut SemanticContext,
+    variable_map: &mut VariableMap,
+) -> AstForInit {
+    match init {
+        AstForInit::InitExpression(expr_opt) => {
+            AstForInit::InitExpression(resolve_optional_expression(expr_opt, ctx, variable_map))
+        }
+        AstForInit::InitDeclaration(decl) => {
+            AstForInit::InitDeclaration(resolve_declaration(decl, ctx, variable_map))
+        }
     }
 }
 

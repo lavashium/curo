@@ -6,10 +6,20 @@ use accessors::accessors;
 use zawarudo::zawarudo;
 
 #[accessors]
-#[constructors]
 pub struct SemanticContext<'a> {
     pub diagnostics: &'a mut DiagnosticsManager,
     pub temp_gen: &'a mut TempGen,
+    pub loop_depth: usize
+}
+
+impl<'a> SemanticContext<'a> {
+    pub fn new(diagnostics: &'a mut DiagnosticsManager, temp_gen: &'a mut TempGen) -> Self {
+        Self { 
+            diagnostics, 
+            temp_gen,
+            loop_depth: 0
+        }
+    }
 }
 
 #[accessors]

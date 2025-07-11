@@ -2,10 +2,10 @@ use crate::parser::rules::*;
 use language::*;
 
 pub fn parse_for(parser: &mut ParserRules) -> ParseResult<AstStatement> {
+    let start_span = parser.parser.source_tokens.peek()?.get_span();
     parser.expect(token_keyword!(For))?;
     parser.expect(token_punctuation!(OpenParen))?;
     let for_init = parser.parse_for_init()?;
-    eprintln!("{:?}", for_init);
 
     let condition = match parser.parser.source_tokens.peek()?.kind() {
         TokenKind::Punctuation(PunctuationKind::Semicolon) => {
@@ -32,6 +32,8 @@ pub fn parse_for(parser: &mut ParserRules) -> ParseResult<AstStatement> {
     };
 
     let body = parser.parse_statement()?;
+    let end_span = parser.parser.source_tokens.peek()?.get_span();
+    let span = combine_spans!(start_span, end_span);
 
     Some(AstStatement::new_for(
         for_init,
@@ -39,5 +41,6 @@ pub fn parse_for(parser: &mut ParserRules) -> ParseResult<AstStatement> {
         post,
         Box::new(body),
         String::new(),
+        span
     ))
 }
