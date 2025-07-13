@@ -4,7 +4,7 @@ use super::*;
 pub fn resolve_statement(
     stmt: &mut AstStatement,
     ctx: &mut SemanticContext,
-    map: &mut VariableMap,
+    map: &mut IdentifierMap,
 ) {
     match stmt {
         AstStatement::Return { expression, .. } => {
@@ -13,7 +13,12 @@ pub fn resolve_statement(
         AstStatement::Expression { expression, .. } => {
             resolve_expression(expression, ctx, map);
         }
-        AstStatement::If { condition, then_branch, else_branch, .. } => {
+        AstStatement::If {
+            condition,
+            then_branch,
+            else_branch,
+            ..
+        } => {
             resolve_expression(condition, ctx, map);
             resolve_statement(then_branch, ctx, map);
             if let Some(else_branch) = else_branch {
@@ -21,54 +26,59 @@ pub fn resolve_statement(
             }
         }
         AstStatement::Compound { block, .. } => {
-            let mut child_map = copy_variable_map(map);
-            resolve_block(block, ctx, &mut child_map);
-        }
-        AstStatement::Break { .. } | AstStatement::Continue { .. } => {
-            if ctx.loop_depth == 0 {
-                ctx.diagnostics_mut().push(Diagnostic::error(
-                    Span::default(),
-                    DiagnosticKind::new_custom("break/continue outside loop".into()),
-                ));
-            }
+            resolve_block(block, ctx, map);
         }
         AstStatement::While { condition, body, .. } => {
-            resolve_expression(condition, ctx, map);
             ctx.loop_depth += 1;
+            resolve_expression(condition, ctx, map);
             resolve_statement(body, ctx, map);
             ctx.loop_depth -= 1;
         }
         AstStatement::DoWhile { condition, body, .. } => {
             ctx.loop_depth += 1;
             resolve_statement(body, ctx, map);
-            ctx.loop_depth -= 1;
             resolve_expression(condition, ctx, map);
+            ctx.loop_depth -= 1;
         }
-        AstStatement::For { for_init, condition, post, body, .. } => {
-            let mut child_map = copy_variable_map(map);
+        AstStatement::For {
+            for_init,
+            condition,
+            post,
+            body,
+            ..
+        } => {
+            ctx.loop_depth += 1;
+            let mut loop_map = copy_identifier_map(map);
 
             match for_init {
-                AstForInit::InitDeclaration(decl) => {
-                    resolve_declaration(decl, ctx, &mut child_map);
+                AstForInit::InitDeclaration(var_decl) => {
+                    resolve_variable_declaration(var_decl, ctx, &mut loop_map)
                 }
-                AstForInit::InitExpression(opt_expr) => {
-                    if let Some(expr) = opt_expr {
-                        resolve_expression(expr, ctx, &mut child_map);
+                AstForInit::InitExpression(opt) => {
+                    if let Some(expr) = opt {
+                        resolve_expression(expr, ctx, &loop_map);
                     }
                 }
             }
-
-            if let Some(cond_expr) = condition {
-                resolve_expression(cond_expr, ctx, &child_map);
+            if let Some(cond) = condition {
+                resolve_expression(cond, ctx, &loop_map);
             }
-            if let Some(post_expr) = post {
-                resolve_expression(post_expr, ctx, &child_map);
+            if let Some(p) = post {
+                resolve_expression(p, ctx, &loop_map);
             }
-
-            ctx.loop_depth += 1;
-            resolve_statement(body, ctx, &mut child_map);
+            resolve_statement(body, ctx, &mut loop_map);
             ctx.loop_depth -= 1;
         }
-        AstStatement::Null => {}
+        AstStatement::Break { span, .. } => {
+            if ctx.loop_depth == 0 {
+                push_error(ctx, *span, DiagnosticKind::Custom("break not in loop".into()));
+            }
+        }
+        AstStatement::Continue { span, .. } => {
+            if ctx.loop_depth == 0 {
+                push_error(ctx, *span, DiagnosticKind::Custom("continue not in loop".into()));
+            }
+        }
+        _ => ()
     }
 }

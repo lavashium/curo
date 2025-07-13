@@ -7,7 +7,7 @@ pub fn label_block_item(
     current_loop: Option<String>,
 ) {
     match item {
-        AstBlockItem::Statement(stmt) => label_statement(stmt, ctx, current_loop),
-        AstBlockItem::Declaration(_) => {}
+        AstBlockItem::Statement(stmt) => label_statement(stmt, ctx, &current_loop),
+        AstBlockItem::Declaration(_) => {},
     }
 }

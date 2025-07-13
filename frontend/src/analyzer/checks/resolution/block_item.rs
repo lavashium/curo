@@ -4,10 +4,15 @@ use super::*;
 pub fn resolve_block_item(
     item: &mut AstBlockItem,
     ctx: &mut SemanticContext,
-    map: &mut VariableMap,
+    map: &mut IdentifierMap,
 ) {
     match item {
-        AstBlockItem::Declaration(decl) => resolve_declaration(decl, ctx, map),
         AstBlockItem::Statement(stmt) => resolve_statement(stmt, ctx, map),
+        AstBlockItem::Declaration(decl) => match decl {
+            AstDeclaration::VarDecl(v) => resolve_variable_declaration(v, ctx, map),
+            AstDeclaration::FunDecl(f) => {
+                resolve_function_declaration(f, ctx, map)
+            }
+        },
     }
 }

@@ -8,12 +8,13 @@ fn main() {
     let mut args = env::args().skip(1).collect::<Vec<_>>();
 
     if args.is_empty() {
-        eprintln!("Usage: compiler_driver [--lex|--parse|--codegen|-S] <file.c>");
+        eprintln!("Usage: compiler_driver [--lex|--parse|--codegen|-S|-c] <file.c>");
         exit(1);
     }
 
     let mut stage = PipelineStage::CodeEmission;
     let mut emit_assembly_only = false;
+    let mut compile_to_object = false;
 
     while !args.is_empty() && args[0].starts_with('-') {
         let arg = args.remove(0);
@@ -28,6 +29,10 @@ fn main() {
             "-S" => {
                 stage = PipelineStage::CodeEmission;
                 emit_assembly_only = true;
+            }
+            "-c" => {
+                stage = PipelineStage::CodeEmission;
+                compile_to_object = true;
             }
             _ => {
                 eprintln!("Unknown option: {}", arg);
@@ -97,6 +102,30 @@ fn main() {
                 exit(0);
             }
 
+            if compile_to_object {
+                let object_file = input_file.with_extension("o");
+                let status = std::process::Command::new("gcc")
+                    .arg("-c")
+                    .arg(&asm_file)
+                    .arg("-o")
+                    .arg(&object_file)
+                    .status();
+
+                let _ = std::fs::remove_file(&asm_file);
+
+                match status {
+                    Err(e) => {
+                        eprintln!("Failed to compile to object file: {}", e);
+                        exit(1);
+                    }
+                    Ok(s) if !s.success() => {
+                        eprintln!("Compilation to object file failed");
+                        exit(1);
+                    }
+                    Ok(_) => exit(0),
+                }
+            }
+
             if let Err(e) = Compiler::assemble_and_link(&asm_file, &input_file) {
                 eprintln!("{}", e);
                 exit(1);
@@ -106,3 +135,4 @@ fn main() {
         }
     }
 }
+

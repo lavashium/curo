@@ -4,8 +4,9 @@ use super::*;
 pub fn resolve_program(
     program: &mut AstProgram,
     ctx: &mut SemanticContext,
-    map: &mut VariableMap,
+    map: &mut IdentifierMap,
 ) {
-    resolve_function(program.function_definition_mut(), ctx, map);
+    for func in program.functions_mut() {
+        resolve_function_declaration(func, ctx, map);
+    }
 }
-

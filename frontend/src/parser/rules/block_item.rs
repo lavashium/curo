@@ -6,15 +6,10 @@ pub trait BlockItemParser {
 
 impl<'a> BlockItemParser for ParserRules<'a> {
     fn parse_block_item(&mut self) -> ParseResult<AstBlockItem> {
-        match self.parser.source_tokens.peek()?.kind() {
-            TokenKind::Keyword(KeywordKind::Int) => {
-                let decl = self.parse_declaration()?;
-                Some(AstBlockItem::Declaration(decl))
-            }
-            _ => {
-                let stmt = self.parse_statement()?;
-                Some(AstBlockItem::Statement(stmt))
-            }
+        if self.parser.source_tokens.peek()?.kind() == &TokenKind::Keyword(KeywordKind::Int) {
+            Some(AstBlockItem::Declaration(self.parse_declaration()?))
+        } else {
+            Some(AstBlockItem::Statement(self.parse_statement()?))
         }
     }
 }

@@ -5,6 +5,7 @@ use std::collections::HashMap;
 #[derive(Clone)]
 pub struct TempGen {
     temp_counter: usize,
+    temp_prefix_counter: HashMap<String, usize>,
     label_counter: usize,
     loop_label_counters: HashMap<String, usize>,
 }
@@ -13,6 +14,7 @@ impl TempGen {
     pub fn new() -> Self {
         Self { 
             temp_counter:        0,
+            temp_prefix_counter: HashMap::new(),
             label_counter:       0,
             loop_label_counters: HashMap::new(),
         }
@@ -25,27 +27,22 @@ impl TempGen {
     }
 
     pub fn temp_from(&mut self, prefix: String) -> String {
-        let temp = format!("{}.{}", prefix, self.temp_counter);
-        self.temp_counter += 1;
+        let count = self.temp_prefix_counter.entry(prefix.clone()).or_insert(0);
+        let temp = format!("{}.{}", prefix, count);
+        *count += 1;
         temp
     }
 
     pub fn label(&mut self, label: impl ToString) -> String {
-        let temp = format!("_{}_{}", label.to_string(), self.label_counter);
+        let temp = format!("_lbl_{}_{}", label.to_string(), self.label_counter);
         self.label_counter += 1;
         temp
     }
 
     pub fn loop_label(&mut self, user_label: &str, kind: &str) -> String {
-        let count = self
-            .loop_label_counters
-            .entry(user_label.to_string())
-            .or_insert_with(|| {
-                let c = self.label_counter;
-                self.label_counter += 1;
-                c
-            });
-
-        format!(".L{}_{}_{}", kind, user_label, count)
+        let count = self.loop_label_counters.entry(user_label.to_string()).or_insert(0);
+        let label = format!("_{}_{}_{}", kind, user_label, count);
+        *count += 1;
+        label
     }
 }

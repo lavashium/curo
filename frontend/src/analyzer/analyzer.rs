@@ -9,7 +9,9 @@ use zawarudo::zawarudo;
 pub struct SemanticContext<'a> {
     pub diagnostics: &'a mut DiagnosticsManager,
     pub temp_gen: &'a mut TempGen,
-    pub loop_depth: usize
+    pub scopes: Vec<IdentifierMap>,
+    pub loop_depth: usize,
+    pub inside_function: bool
 }
 
 impl<'a> SemanticContext<'a> {
@@ -17,8 +19,27 @@ impl<'a> SemanticContext<'a> {
         Self { 
             diagnostics, 
             temp_gen,
-            loop_depth: 0
+            scopes: vec![],
+            loop_depth: 0,
+            inside_function: false,
         }
+    }
+
+    pub fn push_scope(&mut self) {
+        self.scopes.push(IdentifierMap::new());
+    }
+
+    pub fn pop_scope(&mut self) {
+        self.scopes.pop();
+    }
+
+    pub fn lookup_identifier(&self, identifier: &str) -> Option<&IdentifierInfo> {
+        for scope in self.scopes.iter().rev() {
+            if let Some(info) = scope.get(identifier) {
+                return Some(info);
+            }
+        }
+        None
     }
 }
 

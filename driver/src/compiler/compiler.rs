@@ -67,6 +67,7 @@ impl<'a> Compiler<'a> {
         }
         
         let mut temp_gen = TempGen::new();
+
         let semantic_ctx = SemanticContext::new(&mut self.diagnostics, &mut temp_gen);
 
         let mut analyzer = Analyzer::new(&mut program, semantic_ctx);
@@ -80,39 +81,40 @@ impl<'a> Compiler<'a> {
         if stage == PipelineStage::Analysis {
             return Ok(format! {"{:#?}", program})
         }
+        return Ok(" ".to_string());
+        todo!()
+        // let mut generator = TacGenerator::new(temp_gen);
+        // let tac = generator.parse(program);
 
-        let mut generator = TacGenerator::new(temp_gen);
-        let tac = generator.parse(program);
+        // if stage == PipelineStage::TacGeneration {
+        //     return Ok(format! {"{:#?}", tac});
+        // }
 
-        if stage == PipelineStage::TacGeneration {
-            return Ok(format! {"{:#?}", tac});
-        }
+        // let mut translator = AsmGenerator::new();
+        // let asm_ast = translator.generate(tac);
 
-        let mut translator = AsmGenerator::new();
-        let asm_ast = translator.generate(tac);
+        // if stage == PipelineStage::AssemblyGeneration {
+        //     return Ok(format! {"{:#?}", asm_ast});
+        // }
 
-        if stage == PipelineStage::AssemblyGeneration {
-            return Ok(format! {"{:#?}", asm_ast});
-        }
+        // let allocator = AsmAllocator::new();
+        // let (asm_allocated, stack_size) = allocator.allocate(asm_ast);
 
-        let allocator = AsmAllocator::new();
-        let (asm_allocated, stack_size) = allocator.allocate(asm_ast);
+        // if stage == PipelineStage::AssemblyAllocation {
+        //     return Ok(format! {"{:#?}", asm_allocated});
+        // }
 
-        if stage == PipelineStage::AssemblyAllocation {
-            return Ok(format! {"{:#?}", asm_allocated});
-        }
+        // let legalizer = AsmLegalizer::new(stack_size);
+        // let asm_legal = legalizer.legalize(asm_allocated);
 
-        let legalizer = AsmLegalizer::new(stack_size);
-        let asm_legal = legalizer.legalize(asm_allocated);
+        // if stage == PipelineStage::AssemblyLegalization {
+        //     return Ok(format! {"{:#?}", asm_legal});
+        // }
 
-        if stage == PipelineStage::AssemblyLegalization {
-            return Ok(format! {"{:#?}", asm_legal});
-        }
+        // let emitter = CodeEmitter::new();
+        // let asm = emitter.emit(asm_legal);
 
-        let emitter = CodeEmitter::new();
-        let asm = emitter.emit(asm_legal);
-
-        Ok(asm)
+        // Ok(asm)
     }
 
     pub fn preprocess(input_file: &std::path::Path) -> Result<std::path::PathBuf, String> {

@@ -1,4 +1,5 @@
 use super::*;
+use language::*;
 
 pub trait DeclarationParser {
     fn parse_declaration(&mut self) -> ParseResult<AstDeclaration>;
@@ -6,26 +7,34 @@ pub trait DeclarationParser {
 
 impl<'a> DeclarationParser for ParserRules<'a> {
     fn parse_declaration(&mut self) -> ParseResult<AstDeclaration> {
-        let start_span = self.parser.source_tokens.peek()?.get_span();
-
-        self.expect(token_keyword!(Int))?;
+        self.expect(TokenKind::Keyword(KeywordKind::Int))?;
         let name = self.unwrap_identifier()?;
 
-        let init = if self.parser.source_tokens().peek()?.kind() == &token_operator!(Equal) {
-            self.expect(token_operator!(Equal))?;
-            Some(self.parse_expression()?)
+        if self.parser.source_tokens.peek()?.kind() == &TokenKind::Punctuation(PunctuationKind::OpenParen) {
+            self.parser.source_tokens.consume()?;
+            let params = self.parse_param_list()?;
+            self.expect(TokenKind::Punctuation(PunctuationKind::CloseParen))?;
+
+            let body = if self.parser.source_tokens.peek()?.kind() == &TokenKind::Punctuation(PunctuationKind::Semicolon) {
+                self.parser.source_tokens.consume()?;
+                None
+            } else if self.parser.source_tokens.peek()?.kind() == &TokenKind::Punctuation(PunctuationKind::OpenBrace) {
+                Some(self.parse_block()?)
+            } else {
+                return None;
+            };
+
+            Some(AstDeclaration::FunDecl(AstFunctionDeclaration::new(name, params, body)))
         } else {
-            None
-        };
+            let init = if self.parser.source_tokens.peek()?.kind() == &TokenKind::Operator(OperatorKind::Equal) {
+                self.parser.source_tokens.consume()?;
+                Some(self.parse_expression()?)
+            } else {
+                None
+            };
 
-        self.expect(token_punctuation!(Semicolon))?;
-
-        let end_span = self.parser.source_tokens.peek()?.get_span();
-
-        Some(AstDeclaration::new(
-            name, 
-            init,
-            combine_spans!(start_span, end_span),
-        ))
+            self.expect(TokenKind::Punctuation(PunctuationKind::Semicolon))?;
+            Some(AstDeclaration::VarDecl(AstVariableDeclaration::new(name, init)))
+        }
     }
 }

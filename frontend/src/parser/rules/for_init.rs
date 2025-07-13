@@ -7,20 +7,18 @@ pub trait ForInitParser {
 
 impl<'a> ForInitParser for ParserRules<'a> {
     fn parse_for_init(&mut self) -> ParseResult<AstForInit> {
-        let next = self.parser.source_tokens.peek()?.get_kind();
-
-        if let TokenKind::Keyword(KeywordKind::Int) = next {
-            let decl = self.parse_declaration()?;
-            return Some(AstForInit::InitDeclaration(decl));
+        if self.parser.source_tokens.peek()?.kind() == &TokenKind::Keyword(KeywordKind::Int) {
+            let var_decl = self.parse_variable_declaration()?;
+            self.expect(TokenKind::Punctuation(PunctuationKind::Semicolon))?;
+            Some(AstForInit::InitDeclaration(var_decl))
+        } else {
+            let expr = if self.parser.source_tokens.peek()?.kind() != &TokenKind::Punctuation(PunctuationKind::Semicolon) {
+                Some(self.parse_expression()?)
+            } else {
+                None
+            };
+            self.expect(TokenKind::Punctuation(PunctuationKind::Semicolon))?;
+            Some(AstForInit::InitExpression(expr))
         }
-
-        if let TokenKind::Punctuation(PunctuationKind::Semicolon) = next {
-            self.expect(token_punctuation!(Semicolon))?;
-            return Some(AstForInit::InitExpression(None));
-        }
-
-        let expr = self.parse_expression()?;
-        self.expect(token_punctuation!(Semicolon))?;
-        Some(AstForInit::InitExpression(Some(expr)))
     }
 }

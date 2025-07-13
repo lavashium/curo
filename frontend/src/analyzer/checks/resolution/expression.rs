@@ -1,45 +1,76 @@
 use language::*;
 use super::*;
 
+
 pub fn resolve_expression(
     expr: &mut AstExpression,
     ctx: &mut SemanticContext,
-    map: &VariableMap,
+    map: &IdentifierMap,
 ) {
     match expr {
         AstExpression::Var { identifier, span } => {
-            if let Some(info) = map.get(identifier) {
-                *identifier = info.unique_name.clone();
-            } else {
-                ctx.diagnostics_mut().push(Diagnostic::error(
+            if !map.contains_key(identifier) {
+                ctx.diagnostics.push(Diagnostic::error(
                     *span,
-                    DiagnosticKind::UseOfUndeclaredVariable { name: identifier.clone() },
+                    DiagnosticKind::UseOfUndeclared {
+                        name: identifier.clone(),
+                    },
                 ));
             }
         }
-        AstExpression::Assignment { left, right, .. } => {
-            resolve_expression(left, ctx, map);
-            resolve_expression(right, ctx, map);
-
-            if !matches!(**left, AstExpression::Var { .. }) {
-                ctx.diagnostics_mut().push(Diagnostic::error(
-                    left.get_span(),
-                    DiagnosticKind::Custom("invalid lvalue in assignment".to_string()),
-                ));
-            }
-        }
+        AstExpression::Constant { .. } => (),
         AstExpression::Unary { operand, .. } => {
             resolve_expression(operand, ctx, map);
         }
-        AstExpression::Binary { left, right, .. } => {
-            resolve_expression(left, ctx, map);
+        AstExpression::Binary { operator, left, right, span } => {
+            resolve_expression(left,  ctx, map);
             resolve_expression(right, ctx, map);
+
+            let is_cmp = matches!(operator,
+                AstBinaryKind::LessThan
+                | AstBinaryKind::LessOrEqual 
+                | AstBinaryKind::GreaterThan 
+                | AstBinaryKind::GreaterOrEqual 
+                | AstBinaryKind::Equal 
+                | AstBinaryKind::NotEqual
+            );
+            if is_cmp && matches!(**right, AstExpression::Assignment { .. }) {
+                push_error(ctx, *span, DiagnosticKind::Custom("mixed precedence assignment".into()));
+            }
         }
-        AstExpression::Conditional { condition, then_branch, else_branch, .. } => {
+
+        AstExpression::Assignment { left, right, span } => {
+            resolve_expression(left,  ctx, map);
+            resolve_expression(right, ctx, map);
+
+            if !matches!(**left, AstExpression::Var { .. }) {
+                push_error(ctx, *span, DiagnosticKind::Custom("invalid lvalue".into()));
+            }
+        }
+        AstExpression::Conditional {
+            condition,
+            then_branch,
+            else_branch,
+            span,
+        } => {
             resolve_expression(condition, ctx, map);
             resolve_expression(then_branch, ctx, map);
             resolve_expression(else_branch, ctx, map);
+
         }
-        AstExpression::Constant { .. } => {}
+        AstExpression::FunctionCall { identifier, args, span } => {
+            if !map.contains_key(identifier) {
+                push_error(
+                    ctx,
+                    *span,
+                    DiagnosticKind::UseOfUndeclared {
+                        name: identifier.clone(),
+                    },
+                );
+            }
+            for arg in args {
+                resolve_expression(arg, ctx, map);
+            }
+        }
     }
 }

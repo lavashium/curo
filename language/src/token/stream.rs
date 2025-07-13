@@ -28,6 +28,10 @@ impl TokenStream {
         self.tokens.get(self.pointer)
     }
 
+    pub fn peekn(&self, offset: usize) -> Option<&Token> {
+        self.tokens.get(self.pointer + offset)
+    }
+
     pub fn consume_expected(&mut self, expected: &TokenKind) -> Option<Token> {
         match self.peek() {
             Some(actual) if actual.kind() == expected => self.consume(),

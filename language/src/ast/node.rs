@@ -7,15 +7,7 @@ use crate::Span;
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AstProgram {
-    function_definition: AstFunction,
-}
-
-#[accessors]
-#[constructors]
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AstFunction {
-    name: String,
-    body: AstBlock,
+    functions: Vec<AstFunctionDeclaration>,
 }
 
 #[constructors]
@@ -32,19 +24,34 @@ pub struct AstBlock {
     block_items: Vec<AstBlockItem>,
 }
 
+#[constructors]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AstDeclaration {
+    FunDecl(AstFunctionDeclaration),
+    VarDecl(AstVariableDeclaration),
+}
+
 #[accessors]
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AstDeclaration {
-    name: String,
+pub struct AstVariableDeclaration {
+    identifier: String,
     init: Option<AstExpression>,
-    span: Span,
+}
+
+#[accessors]
+#[constructors]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AstFunctionDeclaration {
+    identifier: String,
+    params: Vec<String>,
+    body: Option<AstBlock>,
 }
 
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AstForInit {
-    InitDeclaration(AstDeclaration),
+    InitDeclaration(AstVariableDeclaration),
     InitExpression(Option<AstExpression>),
 }
 
@@ -132,6 +139,11 @@ pub enum AstExpression {
         then_branch: Box<AstExpression>,
         else_branch: Box<AstExpression>,
         span: Span
+    },
+    FunctionCall {
+        identifier: String,
+        args: Vec<Box<AstExpression>>,
+        span: Span
     }
 }
 
@@ -170,6 +182,7 @@ impl AstExpression {
             AstExpression::Binary { span, .. } => *span,
             AstExpression::Assignment { span, .. } => *span,
             AstExpression::Conditional { span, .. } => *span,
+            AstExpression::FunctionCall { span, ..} => *span,
         }
     }
 }

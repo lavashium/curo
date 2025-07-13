@@ -45,12 +45,14 @@ pub enum DiagnosticKind {
         found: Token,
     },
 
-    DuplicateVariableDeclaration {
+    DuplicateDeclaration {
         name: String,
     },
-    UseOfUndeclaredVariable {
+    UseOfUndeclared {
         name: String,
     },
+
+    NestedFunctionDefinition,
 
     UnexpectedEof,
     InvalidType(String),
@@ -62,58 +64,51 @@ impl DiagnosticKind {
     pub fn message(&self) -> String {
         match self {
             DiagnosticKind::UnknownToken(token) => {
-                format!(
-                    "unknown {} '{}'",
-                    token.kind().to_user_string(),
-                    token.lexeme()
-                )
-            }
-
+                        format!(
+                            "unknown {} '{}'",
+                            token.kind().to_user_string(),
+                            token.lexeme()
+                        )
+                    }
             DiagnosticKind::UnexpectedToken { found, expected } => {
-                let expected_str = expected
-                    .iter()
-                    .map(|k| k.to_user_string())
-                    .collect::<Vec<_>>()
-                    .join(" or ");
-                format!("expected {}, found '{}'", expected_str, found.lexeme())
-            }
-
+                        let expected_str = expected
+                            .iter()
+                            .map(|k| k.to_user_string())
+                            .collect::<Vec<_>>()
+                            .join(" or ");
+                        format!("expected {}, found '{}'", expected_str, found.lexeme())
+                    }
             DiagnosticKind::ExpectedToken { expected, found } => format!(
-                "expected '{}', found '{}'",
-                expected.to_user_string(),
-                found.lexeme()
-            ),
-
+                        "expected '{}', found '{}'",
+                        expected.to_user_string(),
+                        found.lexeme()
+                    ),
             DiagnosticKind::UnexpectedGeneric { found, expected } => {
-                let expected_str = expected
-                    .iter()
-                    .map(|k| k.to_user_string())
-                    .collect::<Vec<_>>()
-                    .join(" or ");
-                format!("expected {}, found '{}'", expected_str, found.lexeme())
-            }
-
+                        let expected_str = expected
+                            .iter()
+                            .map(|k| k.to_user_string())
+                            .collect::<Vec<_>>()
+                            .join(" or ");
+                        format!("expected {}, found '{}'", expected_str, found.lexeme())
+                    }
             DiagnosticKind::ExpectedGeneric { expected, found } => format!(
-                "expected {}, found '{}'",
-                expected.to_user_string(),
-                found.lexeme()
-            ),
-            
-            DiagnosticKind::DuplicateVariableDeclaration { name } => {
-                format!("duplicate variable declaration '{}'", name)
-            }
-            DiagnosticKind::UseOfUndeclaredVariable { name } => {
-                format!("use of undeclared variable '{}'", name)
-            }
-
+                        "expected {}, found '{}'",
+                        expected.to_user_string(),
+                        found.lexeme()
+                    ),
+            DiagnosticKind::DuplicateDeclaration { name } => {
+                        format!("duplicate variable declaration '{}'", name)
+                    }
+            DiagnosticKind::UseOfUndeclared { name } => {
+                        format!("use of undeclared variable '{}'", name)
+                    }
             DiagnosticKind::UnexpectedEof => "unexpected end of file".to_string(),
-
             DiagnosticKind::InvalidType(ty) => format!("invalid type '{}'", ty),
             DiagnosticKind::InvalidGenericType(ty) => {
-                format!("invalid type {}", ty.to_user_string())
-            }
-
+                        format!("invalid type {}", ty.to_user_string())
+                    }
             DiagnosticKind::Custom(msg) => msg.clone(),
+            DiagnosticKind::NestedFunctionDefinition => "nested function definition".to_string(),
         }
     }
 }

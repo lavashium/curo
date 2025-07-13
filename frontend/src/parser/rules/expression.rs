@@ -53,10 +53,25 @@ impl<'a> ExpressionParser for ParserRules<'a> {
 
             TokenKind::Identifier(_) => {
                 let span = self.parser.source_tokens.peek()?.get_span();
-                let identifier = self.unwrap_identifier()?;
-                Some(AstExpression::Var { identifier, span })
-            }
+                let name = self.unwrap_identifier()?;
 
+                if self.parser.source_tokens.peek()?.kind() == &token_punctuation!(OpenParen) {
+                    self.parser.source_tokens.consume_expected(&token_punctuation!(OpenParen))?;
+                    let args = if self.parser.source_tokens.peek()?.kind() != &token_punctuation!(CloseParen) {
+                        self.parse_argument_list()?
+                    } else {
+                        Vec::new()
+                    };
+                    self.expect(token_punctuation!(CloseParen))?;
+                    Some(AstExpression::FunctionCall {
+                        identifier: name,
+                        args,
+                        span,
+                    })
+                } else {
+                    Some(AstExpression::Var { identifier: name, span })
+                }
+            }
             TokenKind::Operator(op @ OperatorKind::Tilde) |
             TokenKind::Operator(op @ OperatorKind::Exclamation) |
             TokenKind::Operator(op @ OperatorKind::Minus) => {
@@ -138,7 +153,7 @@ impl<'a> ExpressionParser for ParserRules<'a> {
             self.parser.source_tokens.consume()?;
 
             let next_min_prec = if op_kind == OperatorKind::Equal {
-                prec // right-associative
+                prec
             } else {
                 prec + 1
             };

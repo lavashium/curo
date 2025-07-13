@@ -61,6 +61,7 @@ impl UserFriendlyDisplay for PunctuationKind {
             PunctuationKind::OpenBrace => "{",
             PunctuationKind::CloseBrace => "}",
             PunctuationKind::Colon => ":",
+            PunctuationKind::Comma => ",",
         }
     }
 }

@@ -58,7 +58,8 @@ pub enum PunctuationKind {
     CloseParen,
     OpenBrace,
     CloseBrace,
-    Colon
+    Colon,
+    Comma,
 }
 
 #[macro_export]
