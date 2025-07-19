@@ -1,14 +1,15 @@
-use crate::lexer::Lexer;
-use crate::lexer::producer::TokenProducer;
+use crate::lexer::*;
 use common::*;
 use language::*;
 
 pub struct OperatorProducer;
 
-impl TokenProducer for OperatorProducer {
-    fn try_match(lexer: &mut Lexer, diagnostics: &mut DiagnosticsManager) -> Option<Token> {
+impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for OperatorProducer {
+    fn run(lexer: &mut Lexer, ctx: &mut LexerContext) -> Option<Token> {
         let start_pos = lexer.current_position();
         let start_ptr = lexer.get_pointer();
+
+        let diagnostics = ctx.ctx.diagnostics_mut();
 
         if let Some(slice) = lexer.peek_slice((start_ptr, start_ptr + 2)) {
             match slice {

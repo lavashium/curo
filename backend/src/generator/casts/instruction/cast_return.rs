@@ -1,4 +1,4 @@
-use super::super::GeneratorCasts;
+use super::GeneratorCasts;
 use crate::asm::*;
 use language::*;
 

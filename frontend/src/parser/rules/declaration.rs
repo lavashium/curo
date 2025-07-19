@@ -1,40 +1,60 @@
+use crate::*;
 use super::*;
+use common::*;
 use language::*;
 
-pub trait DeclarationParser {
-    fn parse_declaration(&mut self) -> ParseResult<AstDeclaration>;
+impl<'a> ParserRules<'a> {
+    pub fn parse_declaration(&mut self, ctx: &mut ParserContext) -> Option<AstDeclaration> {
+        <Self as Factory<Option<AstDeclaration>, Self, ParserContext>>::run(self, ctx)
+    }
 }
 
-impl<'a> DeclarationParser for ParserRules<'a> {
-    fn parse_declaration(&mut self) -> ParseResult<AstDeclaration> {
-        self.expect(TokenKind::Keyword(KeywordKind::Int))?;
-        let name = self.unwrap_identifier()?;
+impl<'a> Factory<Option<AstDeclaration>, Self, ParserContext<'_, '_>> for ParserRules<'a> {
+    fn run(rules: &mut Self, ctx: &mut ParserContext) -> Option<AstDeclaration> {
+        let start_span = rules.parser.source_tokens.peek()?.get_span();
 
-        if self.parser.source_tokens.peek()?.kind() == &TokenKind::Punctuation(PunctuationKind::OpenParen) {
-            self.parser.source_tokens.consume()?;
-            let params = self.parse_param_list()?;
-            self.expect(TokenKind::Punctuation(PunctuationKind::CloseParen))?;
+        rules.expect(ctx, TokenKind::Keyword(KeywordKind::Int))?;
+        let name = rules.unwrap_identifier(ctx)?;
 
-            let body = if self.parser.source_tokens.peek()?.kind() == &TokenKind::Punctuation(PunctuationKind::Semicolon) {
-                self.parser.source_tokens.consume()?;
+        if rules.parser.source_tokens.peek()?.kind() == &TokenKind::Punctuation(PunctuationKind::OpenParen) {
+            rules.parser.source_tokens.consume()?;
+            let params = rules.parse_param_list(ctx)?;
+            rules.expect(ctx, TokenKind::Punctuation(PunctuationKind::CloseParen))?;
+
+            let body = if rules.parser.source_tokens.peek()?.kind() == &TokenKind::Punctuation(PunctuationKind::Semicolon) {
+                rules.parser.source_tokens.consume()?;
                 None
-            } else if self.parser.source_tokens.peek()?.kind() == &TokenKind::Punctuation(PunctuationKind::OpenBrace) {
-                Some(self.parse_block()?)
+            } else if rules.parser.source_tokens.peek()?.kind() == &TokenKind::Punctuation(PunctuationKind::OpenBrace) {
+                Some(rules.parse_block(ctx)?)
             } else {
                 return None;
             };
 
-            Some(AstDeclaration::FunDecl(AstFunctionDeclaration::new(name, params, body)))
+            let end_span = rules.parser.source_tokens.peek()?.get_span();
+            let span = combine_spans!(start_span, end_span);
+            Some(AstDeclaration::FunDecl(AstFunctionDeclaration::new(
+                name, 
+                params, 
+                body,
+                span
+            )))
         } else {
-            let init = if self.parser.source_tokens.peek()?.kind() == &TokenKind::Operator(OperatorKind::Equal) {
-                self.parser.source_tokens.consume()?;
-                Some(self.parse_expression()?)
+            let init = if rules.parser.source_tokens.peek()?.kind() == &TokenKind::Operator(OperatorKind::Equal) {
+                rules.parser.source_tokens.consume()?;
+                Some(rules.parse_expression(ctx)?)
             } else {
                 None
             };
 
-            self.expect(TokenKind::Punctuation(PunctuationKind::Semicolon))?;
-            Some(AstDeclaration::VarDecl(AstVariableDeclaration::new(name, init)))
+            rules.expect(ctx, TokenKind::Punctuation(PunctuationKind::Semicolon))?;
+            let end_span = rules.parser.source_tokens.peek()?.get_span();
+            let span = combine_spans!(start_span, end_span);
+            
+            Some(AstDeclaration::VarDecl(AstVariableDeclaration::new(
+                name,
+                init,
+                span
+            )))
         }
     }
 }

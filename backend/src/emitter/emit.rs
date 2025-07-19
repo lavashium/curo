@@ -21,18 +21,54 @@ impl ToAsm for AsmOperand {
     }
 }
 
-pub fn reg_to_1byte(op: &AsmOperand) -> String {
-    match op {
-        AsmOperand::Reg(reg) => reg.to_asm_1byte(),
-        some => some.to_asm(),
+impl AsmOperand {
+    pub fn to_8byte(&self) -> String {
+        match &self {
+            AsmOperand::Reg(reg) => reg.to_asm_8byte(),
+            _ => self.to_asm(),
+        }
+    }
+
+    pub fn to_4byte(&self) -> String {
+        match &self {
+            AsmOperand::Reg(reg) => reg.to_asm_4byte(),
+            _ => self.to_asm(),
+        }
+    }
+
+    pub fn to_1byte(&self) -> String {
+        match &self {
+            AsmOperand::Reg(reg) => reg.to_asm_1byte(),
+            _ => self.to_asm(),
+        }
     }
 }
 
 impl AsmReg {
+    pub fn to_asm_8byte(&self) -> String {
+        match self {
+            AsmReg::AX => "%rax",
+            AsmReg::CX => "%rcx",
+            AsmReg::DX => "%rdx",
+            AsmReg::SI => "%rsi",
+            AsmReg::DI => "%rdi",
+            AsmReg::R8  => "%r8",
+            AsmReg::R9  => "%r9",
+            AsmReg::R10 => "%r10",
+            AsmReg::R11 => "%r11",
+        }
+        .to_string()
+    }
+    
     pub fn to_asm_4byte(&self) -> String {
         match self {
             AsmReg::AX => "%eax",
+            AsmReg::CX => "%ecx",
             AsmReg::DX => "%edx",
+            AsmReg::SI => "%esi",
+            AsmReg::DI => "%edi",
+            AsmReg::R8  => "%r8d",
+            AsmReg::R9  => "%r9d",
             AsmReg::R10 => "%r10d",
             AsmReg::R11 => "%r11d",
         }
@@ -42,7 +78,12 @@ impl AsmReg {
     pub fn to_asm_1byte(&self) -> String {
         match self {
             AsmReg::AX => "%al",
+            AsmReg::CX => "%cl",
             AsmReg::DX => "%dl",
+            AsmReg::SI => "%sil",
+            AsmReg::DI => "%dil",
+            AsmReg::R8  => "%r8b",
+            AsmReg::R9  => "%r9b",
             AsmReg::R10 => "%r10b",
             AsmReg::R11 => "%r11b",
         }

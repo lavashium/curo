@@ -1,12 +1,11 @@
-use crate::lexer::Lexer;
-use crate::lexer::producer::TokenProducer;
+use crate::lexer::*;
 use common::*;
 use language::*;
 
 pub struct PunctuationProducer;
 
-impl TokenProducer for PunctuationProducer {
-    fn try_match(lexer: &mut Lexer, _diagnostics: &mut DiagnosticsManager) -> Option<Token> {
+impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for PunctuationProducer {
+    fn run(lexer: &mut Lexer, _ctx: &mut LexerContext) -> Option<Token> {
         let ch = lexer.peek()?;
 
         let kind = match ch {

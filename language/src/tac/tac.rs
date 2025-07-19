@@ -5,7 +5,7 @@ use constructors::constructors;
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TacProgram {
-    function_definition: TacFunction,
+    function_definitions: Vec<TacFunction>,
 }
 
 #[accessors]
@@ -13,6 +13,7 @@ pub struct TacProgram {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TacFunction {
     identifier: String,
+    params: Vec<String>,
     instructions: Vec<TacInstruction>,
 }
 
@@ -48,7 +49,12 @@ pub enum TacInstruction {
         condition: TacVal,
         target: String,
     },
-    Label(String)
+    Label(String),
+    FunCall {
+        fun_name: String,
+        args: Vec<TacVal>,
+        dst: TacVal,
+    }
 }
 
 #[constructors]

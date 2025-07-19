@@ -1,12 +1,11 @@
-use crate::lexer::Lexer;
-use crate::lexer::producer::TokenProducer;
+use crate::lexer::*;
 use common::*;
 use language::*;
 
 pub struct KeywordProducer;
 
-impl TokenProducer for KeywordProducer {
-    fn try_match(lexer: &mut Lexer, _diagnostics: &mut DiagnosticsManager) -> Option<Token> {
+impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for KeywordProducer {
+    fn run(lexer: &mut Lexer, _ctx: &mut LexerContext) -> Option<Token> {
         let start_pos = lexer.current_position();
         let start_ptr = lexer.get_pointer();
 

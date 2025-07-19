@@ -4,15 +4,17 @@ use constructors::constructors;
 use language::*;
 use zawarudo::zawarudo;
 
+use crate::*;
+
 #[accessors]
 #[constructors]
-pub struct TacGenerator {
-    pub tempgen: TempGen,
+pub struct TacGenerator<'scp> {
+    pub source_ast: &'scp mut AstProgram,
 }
 
-impl TacGenerator {
+impl<'scp> TacGenerator<'scp> {
     #[zawarudo(label = "Tac Generator")]
-    pub fn parse(&mut self, program: AstProgram) -> TacProgram {
-        GeneratorTransforms::new(self).transform_program(&program)
+    pub fn generate(&mut self, ctx: &'scp mut TacGenContext<'scp, '_>) -> TacProgram {
+        GeneratorTransforms::new(ctx).transform_program(self.source_ast)
     }
 }

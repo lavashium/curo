@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use std::process::exit;
 
 use driver::*;
+
 fn main() {
     let mut args = env::args().skip(1).collect::<Vec<_>>();
 
@@ -52,7 +53,7 @@ fn main() {
         exit(1);
     }
 
-    let preprocessed_file = match Compiler::preprocess(&input_file) {
+    let preprocessed_file = match CompilerDriver::preprocess(&input_file) {
         Ok(f) => f,
         Err(e) => {
             eprintln!("{}", e);
@@ -75,7 +76,7 @@ fn main() {
         .to_string_lossy()
         .to_string();
 
-    let mut compiler = Compiler::new(&source_code, filename);
+    let mut compiler = CompilerDriver::new(&source_code, &filename);
 
     let result = compiler.compile(stage.clone());
 
@@ -126,7 +127,7 @@ fn main() {
                 }
             }
 
-            if let Err(e) = Compiler::assemble_and_link(&asm_file, &input_file) {
+            if let Err(e) = CompilerDriver::assemble_and_link(&asm_file, &input_file) {
                 eprintln!("{}", e);
                 exit(1);
             }
@@ -135,4 +136,3 @@ fn main() {
         }
     }
 }
-

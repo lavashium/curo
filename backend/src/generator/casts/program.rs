@@ -8,8 +8,10 @@ pub trait ProgramCast {
 
 impl<'a> ProgramCast for GeneratorCasts<'a> {
     fn cast_program(&self, program: &TacProgram) -> AsmProgram {
-        let function = program.function_definition();
-        let function_definition = self.cast_function(function);
-        AsmProgram::new(function_definition)
+        let function_definitions = program.function_definitions()
+            .iter()
+            .map(|f| self.cast_function(f))
+            .collect();
+        AsmProgram::new(function_definitions)
     }
 }

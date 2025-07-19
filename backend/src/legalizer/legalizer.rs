@@ -13,18 +13,21 @@ pub struct AsmLegalizer {
 impl AsmLegalizer {
     #[zawarudo(label = "Assembly Legalizer")]
     pub fn legalize(&self, program: AsmProgram) -> AsmProgram {
-        let mut function = program.get_function_definition();
+        let mut program_instructions = Vec::new();
 
-        let mut instructions = Vec::with_capacity(function.instructions().len() + 3);
-        instructions.push(AsmInstruction::AllocateStack(self.stack_size));
+        for mut function in program.get_function_definitions() {
+            let mut instructions = Vec::with_capacity(function.instructions().len() + 3);
+            instructions.push(AsmInstruction::AllocateStack(self.stack_size));
 
-        for instr in function.get_instructions() {
-            instructions.extend(self.fix_instruction(instr));
+            for instr in function.get_instructions() {
+                instructions.extend(self.fix_instruction(instr));
+            }
+
+            function.set_instructions(instructions);
+            program_instructions.push(function)
         }
 
-        function.set_instructions(instructions);
-
-        AsmProgram::new(function)
+        AsmProgram::new(program_instructions)
     }
 
     fn fix_instruction(&self, instr: AsmInstruction) -> Vec<AsmInstruction> {

@@ -1,24 +1,39 @@
+use crate::*;
 use super::*;
+use common::*;
 use language::*;
 
-pub trait ForInitParser {
-    fn parse_for_init(&mut self) -> ParseResult<AstForInit>;
+impl<'a> ParserRules<'a> {
+    pub fn parse_for_init(&mut self, ctx: &mut ParserContext) -> Option<AstForInit> {
+        <Self as Factory<Option<AstForInit>, Self, ParserContext>>::run(self, ctx)
+    }
 }
 
-impl<'a> ForInitParser for ParserRules<'a> {
-    fn parse_for_init(&mut self) -> ParseResult<AstForInit> {
-        if self.parser.source_tokens.peek()?.kind() == &TokenKind::Keyword(KeywordKind::Int) {
-            let var_decl = self.parse_variable_declaration()?;
-            self.expect(TokenKind::Punctuation(PunctuationKind::Semicolon))?;
-            Some(AstForInit::InitDeclaration(var_decl))
+impl<'a> Factory<Option<AstForInit>, Self, ParserContext<'_, '_>> for ParserRules<'a> {
+    fn run(rules: &mut Self, ctx: &mut ParserContext) -> Option<AstForInit> {
+        let start_span = rules.parser.source_tokens.peek()?.get_span();
+        if rules.parser.source_tokens.peek()?.kind() == &TokenKind::Keyword(KeywordKind::Int) {
+            let var_decl = rules.parse_variable_declaration(ctx)?;
+            rules.expect(ctx, TokenKind::Punctuation(PunctuationKind::Semicolon))?;
+            let end_span = rules.parser.source_tokens.peek()?.get_span();
+            let span = combine_spans!(start_span, end_span);
+            Some(AstForInit::new_init_declaration(
+                var_decl,
+                span
+            ))
         } else {
-            let expr = if self.parser.source_tokens.peek()?.kind() != &TokenKind::Punctuation(PunctuationKind::Semicolon) {
-                Some(self.parse_expression()?)
+            let expr = if rules.parser.source_tokens.peek()?.kind() != &TokenKind::Punctuation(PunctuationKind::Semicolon) {
+                Some(rules.parse_expression(ctx)?)
             } else {
                 None
             };
-            self.expect(TokenKind::Punctuation(PunctuationKind::Semicolon))?;
-            Some(AstForInit::InitExpression(expr))
+            rules.expect(ctx, TokenKind::Punctuation(PunctuationKind::Semicolon))?;
+            let end_span = rules.parser.source_tokens.peek()?.get_span();
+            let span = combine_spans!(start_span, end_span);
+            Some(AstForInit::new_init_expression(
+                expr,
+                span
+            ))
         }
     }
 }

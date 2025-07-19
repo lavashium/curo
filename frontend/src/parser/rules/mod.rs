@@ -10,27 +10,15 @@ mod for_init;
 mod param_list;
 mod arg_list;
 
-pub use expression::*;
-pub use program::*;
-pub use statement::*;
-pub use block_item::*;
-pub use declaration::*;
-pub use function_declaration::*;
-pub use variable_declaration::*;
-pub use block::*;
-pub use for_init::*;
-pub use param_list::*;
-pub use arg_list::*;
-
-use crate::Parser;
+use crate::*;
 use accessors::accessors;
 use constructors::constructors;
 use common::*;
 use language::*;
 
 macro_rules! push_eof_error {
-    ($diagnostics:expr) => {
-        $diagnostics.push(Diagnostic::error(
+    ($ctx:expr) => {
+        $ctx.ctx.diagnostics.push(Diagnostic::error(
             Span::default(),
             DiagnosticKind::UnexpectedEof,
         ));
@@ -38,18 +26,18 @@ macro_rules! push_eof_error {
 }
 
 macro_rules! error_expect {
-    ($self:expr, $kind:expr) => {{
+    ($self:expr, $ctx:expr, $kind:expr) => {{
         match $self.parser.source_tokens.consume() {
             Some(token) if token.kind() == &$kind => Some(token),
             Some(found) => {
-                $self.diagnostics.push(Diagnostic::error(
+                $ctx.ctx.diagnostics.push(Diagnostic::error(
                     found.get_span(),
                     DiagnosticKind::new_expected_token($kind, found.clone()),
                 ));
                 None
             }
             None => {
-                push_eof_error!($self.diagnostics);
+                push_eof_error!($ctx);
                 None
             }
         }
@@ -57,13 +45,13 @@ macro_rules! error_expect {
 }
 
 macro_rules! error_consume_unwrap {
-    ($self:expr, $kind:ident) => {{
+    ($self:expr, $ctx:expr, $kind:ident) => {{
         match $self.parser.source_tokens.consume() {
             Some(token) => match token.kind() {
                 TokenKind::$kind(inner) => Some(inner.to_owned()),
                 _ => {
                     let expected_kind = GenericKind::$kind;
-                    $self.diagnostics.push(Diagnostic::error(
+                    $ctx.ctx.diagnostics.push(Diagnostic::error(
                         token.get_span(),
                         DiagnosticKind::new_unexpected_generic(token.clone(), vec![expected_kind]),
                     ));
@@ -71,54 +59,52 @@ macro_rules! error_consume_unwrap {
                 }
             },
             None => {
-                push_eof_error!($self.diagnostics);
+                push_eof_error!($ctx);
                 None
             }
         }
     }};
 }
 
-pub type ParseResult<N> = Option<N>;
 
 #[constructors]
 #[accessors]
-pub struct ParserRules<'a> {
-    parser: &'a mut Parser,
-    diagnostics: &'a mut DiagnosticsManager,
+pub struct ParserRules<'scp> {
+    parser: &'scp mut Parser<'scp>,
 }
 
 impl<'a> ParserRules<'a> {
-    pub fn expect(&mut self, kind: TokenKind) -> Option<Token> {
-        error_expect!(self, kind)
+    pub fn expect(&mut self, ctx: &mut ParserContext, kind: TokenKind) -> Option<Token> {
+        error_expect!(self, ctx, kind)
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_identifier(&mut self) -> Option<String> {
-        error_consume_unwrap!(self, Identifier)
+    pub fn unwrap_identifier(&mut self, ctx: &mut ParserContext) -> Option<String> {
+        error_consume_unwrap!(self, ctx, Identifier)
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_constant(&mut self) -> Option<String> {
-        error_consume_unwrap!(self, Constant)
+    pub fn unwrap_constant(&mut self, ctx: &mut ParserContext) -> Option<String> {
+        error_consume_unwrap!(self, ctx, Constant)
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_unknown(&mut self) -> Option<String> {
-        error_consume_unwrap!(self, Unknown)
+    pub fn unwrap_unknown(&mut self, ctx: &mut ParserContext) -> Option<String> {
+        error_consume_unwrap!(self, ctx, Unknown)
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_operator(&mut self) -> Option<OperatorKind> {
-        error_consume_unwrap!(self, Operator)
+    pub fn unwrap_operator(&mut self, ctx: &mut ParserContext) -> Option<OperatorKind> {
+        error_consume_unwrap!(self, ctx, Operator)
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_keyword(&mut self) -> Option<KeywordKind> {
-        error_consume_unwrap!(self, Keyword)
+    pub fn unwrap_keyword(&mut self, ctx: &mut ParserContext) -> Option<KeywordKind> {
+        error_consume_unwrap!(self, ctx, Keyword)
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_punctuation(&mut self) -> Option<PunctuationKind> {
-        error_consume_unwrap!(self, Punctuation)
+    pub fn unwrap_punctuation(&mut self, ctx: &mut ParserContext) -> Option<PunctuationKind> {
+        error_consume_unwrap!(self, ctx, Punctuation)
     }
 }

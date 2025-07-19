@@ -1,27 +1,18 @@
 use super::*;
 use language::*;
+use common::*;
 
-pub trait DeclarationTransform {
-    fn transform_declaration(&mut self, declaration: &AstDeclaration) -> Vec<TacInstruction>;
+impl<'scp, 'ctx> GeneratorTransforms<'scp, 'ctx> {
+    pub fn transform_declaration(&mut self, block: &mut AstDeclaration) -> Vec<TacInstruction> {
+        <Self as Factory<Vec<TacInstruction>, Self, AstDeclaration>>::run(self, block)
+    }
 }
 
-impl<'a> DeclarationTransform for GeneratorTransforms<'a> {
-    fn transform_declaration(&mut self, declaration: &AstDeclaration) -> Vec<TacInstruction> {
-        let mut instructions = vec![];
-
-        let var_name = declaration.name();
-        let tac_var = TacVal::new_var(var_name.clone());
-
-        if let Some(init_expr) = declaration.init() {
-            let (mut expr_instrs, value) = self.transform_expression(init_expr);
-            instructions.append(&mut expr_instrs);
-
-            instructions.push(TacInstruction::Copy {
-                src: value,
-                dst: tac_var,
-            });
+impl<'scp, 'ctx> Factory<Vec<TacInstruction>, Self, AstDeclaration> for GeneratorTransforms<'scp, 'ctx> {
+    fn run(driver: &mut Self, declaration: &mut AstDeclaration) -> Vec<TacInstruction> {
+        match declaration {
+            AstDeclaration::VarDecl(var_decl) => driver.transform_variable_declaration(var_decl),
+            AstDeclaration::FunDecl(_) => vec![]
         }
-
-        instructions
     }
 }

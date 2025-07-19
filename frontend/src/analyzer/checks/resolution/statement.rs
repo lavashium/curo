@@ -51,11 +51,11 @@ pub fn resolve_statement(
             let mut loop_map = copy_identifier_map(map);
 
             match for_init {
-                AstForInit::InitDeclaration(var_decl) => {
-                    resolve_variable_declaration(var_decl, ctx, &mut loop_map)
+                AstForInit::InitDeclaration{decl, ..} => {
+                    resolve_variable_declaration(decl, ctx, &mut loop_map)
                 }
-                AstForInit::InitExpression(opt) => {
-                    if let Some(expr) = opt {
+                AstForInit::InitExpression{expr, ..} => {
+                    if let Some(expr) = expr {
                         resolve_expression(expr, ctx, &loop_map);
                     }
                 }
@@ -79,6 +79,5 @@ pub fn resolve_statement(
                 push_error(ctx, *span, DiagnosticKind::Custom("continue not in loop".into()));
             }
         }
-        _ => ()
     }
 }

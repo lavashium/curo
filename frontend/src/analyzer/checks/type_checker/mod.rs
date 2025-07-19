@@ -18,8 +18,6 @@ use std::collections::HashMap;
 use common::*;
 use language::*;
 use super::*;
-use constructors::constructors;
-use accessors::accessors;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Type {

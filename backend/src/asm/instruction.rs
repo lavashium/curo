@@ -5,7 +5,7 @@ use constructors::constructors;
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AsmProgram {
-    function_definition: AsmFunction,
+    function_definitions: Vec<AsmFunction>,
 }
 
 #[accessors]
@@ -51,6 +51,9 @@ pub enum AsmInstruction {
     },
     Label(String),
     AllocateStack(i32),
+    DeallocateStack(i32),
+    Push(AsmOperand),
+    Call(String),
     Ret,
 }
 
@@ -89,7 +92,12 @@ pub enum AsmCondCode {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AsmReg {
     AX,
-    R10,
+    CX,
     DX,
+    DI,
+    SI,
+    R8,
+    R9,
+    R10,
     R11,
 }

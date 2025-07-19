@@ -1,121 +1,74 @@
-use backend::*;
-use common::DiagnosticsManager;
-use frontend::*;
+use common::*;
 use language::*;
-use middleend::*;
 use zawarudo::zawarudo;
 
+use crate::*;
+use super::stages::*;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ErrCode {
+    Succes = 0,
     LexerError = 1,
     ParserError = 2,
     SemanticError = 3,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub enum PipelineStage {
-    Lexer,
-    Parser,
-    Analysis,
-    TacGeneration,
-    AssemblyGeneration,
-    AssemblyAllocation,
-    AssemblyLegalization,
-    CodeEmission,
-}
-
-pub struct Compiler<'a> {
+pub struct CompilerDriver<'a> {
     source_code: &'a str,
-    diagnostics: DiagnosticsManager,
+    filename: &'a str
 }
 
-impl<'a> Compiler<'a> {
-    pub fn new(source_code: &'a str, filename: impl ToString) -> Self {
+impl<'a> CompilerDriver<'a> {
+    pub fn new(source_code: &'a str, filename: &'a str) -> Self {
         Self {
-            source_code: source_code,
-            diagnostics: DiagnosticsManager::new(source_code, filename.to_string()),
+            source_code,
+            filename
         }
     }
 
-    #[zawarudo(label="main")]
+    #[zawarudo(label = "main")]
     pub fn compile(&mut self, stage: PipelineStage) -> Result<String, ErrCode> {
-        let mut lexer = Lexer::new(self.source_code);
-        let tokens = lexer.parse(&mut self.diagnostics);
 
-        if !self.diagnostics.is_empty() {
-            let _ = self.diagnostics.report();
-            return Err(ErrCode::LexerError);
-        }
+        let mut diagnostics = DiagnosticsManager::new(
+            self.source_code, 
+            self.filename
+        );
 
-        if stage == PipelineStage::Lexer {
-            return Ok(format!("{:#?}", tokens));
-        }
+        let mut tempgen = TempGen::new();
 
-        let mut parser = Parser::new(tokens);
-        let program = parser.parse(&mut self.diagnostics);
+        let mut ctx = CompilerContext::new(
+            &mut diagnostics,
+            &mut tempgen
+        );
 
-        if !self.diagnostics.is_empty() {
-            let _ = self.diagnostics.report();
-            return Err(ErrCode::ParserError);
-        }
+        let mut pipeline_ctx = PipelineContext::new(
+            &mut ctx, 
+            stage, 
+            String::new(), 
+            ErrCode::Succes
+        );
 
-        let mut program = program.expect("Parser returned None despite no diagnostics errors");
+        let mut source = self.source_code;
+        let tokens = match LexerStage::run(&mut source, &mut pipeline_ctx) {
+            PipelineResult::Continue(tokens) => tokens,
+            PipelineResult::Halt(result) => return result,
+        };
 
-        if stage == PipelineStage::Parser {
-            return Ok(format! {"{:#?}", program});
-        }
-        
-        let mut temp_gen = TempGen::new();
+        let mut tokens = tokens;
+        let program = match ParserStage::run(&mut tokens, &mut pipeline_ctx) {
+            PipelineResult::Continue(program) => program,
+            PipelineResult::Halt(result) => return result,
+        };
 
-        let semantic_ctx = SemanticContext::new(&mut self.diagnostics, &mut temp_gen);
+        let mut program = program;
+        let tac = match TacGeneratorStage::run(&mut program, &mut pipeline_ctx) {
+            PipelineResult::Continue(tac) => tac,
+            PipelineResult::Halt(result) => return result,
+        };
 
-        let mut analyzer = Analyzer::new(&mut program, semantic_ctx);
-        analyzer.analyze();
-        
-        if !self.diagnostics.is_empty() {
-            let _ = self.diagnostics.report();
-            return Err(ErrCode::SemanticError)
-        }
-
-        if stage == PipelineStage::Analysis {
-            return Ok(format! {"{:#?}", program})
-        }
-        return Ok(" ".to_string());
-        todo!()
-        // let mut generator = TacGenerator::new(temp_gen);
-        // let tac = generator.parse(program);
-
-        // if stage == PipelineStage::TacGeneration {
-        //     return Ok(format! {"{:#?}", tac});
-        // }
-
-        // let mut translator = AsmGenerator::new();
-        // let asm_ast = translator.generate(tac);
-
-        // if stage == PipelineStage::AssemblyGeneration {
-        //     return Ok(format! {"{:#?}", asm_ast});
-        // }
-
-        // let allocator = AsmAllocator::new();
-        // let (asm_allocated, stack_size) = allocator.allocate(asm_ast);
-
-        // if stage == PipelineStage::AssemblyAllocation {
-        //     return Ok(format! {"{:#?}", asm_allocated});
-        // }
-
-        // let legalizer = AsmLegalizer::new(stack_size);
-        // let asm_legal = legalizer.legalize(asm_allocated);
-
-        // if stage == PipelineStage::AssemblyLegalization {
-        //     return Ok(format! {"{:#?}", asm_legal});
-        // }
-
-        // let emitter = CodeEmitter::new();
-        // let asm = emitter.emit(asm_legal);
-
-        // Ok(asm)
+        Ok(format!("{:#?}", tac))
     }
+
 
     pub fn preprocess(input_file: &std::path::Path) -> Result<std::path::PathBuf, String> {
         let preprocessed_file = input_file.with_extension("i");

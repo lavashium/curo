@@ -45,8 +45,10 @@ dependencies = [
 name = "driver"
 version = "0.1.0"
 dependencies = [
+ "accessors",
  "backend",
  "common",
+ "constructors",
  "frontend",
  "language",
  "middleend",

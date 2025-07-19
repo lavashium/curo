@@ -1,13 +1,12 @@
-use crate::lexer::producer::*;
+use super::producers::*;
+use super::*;
 use accessors::accessors;
-use common::error::manager::DiagnosticsManager;
 use common::*;
 use language::token::*;
 use std::rc::Rc;
 use zawarudo::zawarudo;
 
-#[accessors]
-#[derive(Debug)]
+#[accessors] 
 pub struct Lexer<'a> {
     source_code: &'a str,
     pointer: usize,
@@ -59,11 +58,11 @@ impl<'a> Lexer<'a> {
     }
 
     #[zawarudo(label = "Lexer")]
-    pub fn parse(&mut self, diagnostics: &mut DiagnosticsManager) -> TokenStream {
+    pub fn parse(&mut self, ctx: &mut LexerContext) -> TokenStream {
         let mut tokens = Vec::new();
 
         while self.peek().is_some() {
-            if let Some(token) = PRODUCERS::try_all(self, diagnostics) {
+            if let Some(token) = PRODUCERS::run(self, ctx) {
                 if !matches!(token.kind(), TokenKind::Irrelevant) {
                     tokens.push(token);
                 }
@@ -74,7 +73,7 @@ impl<'a> Lexer<'a> {
 
                 let token = Token::new(TokenKind::Unknown(ch.to_string()), ch.to_string(), span);
 
-                diagnostics.push(Diagnostic::error(
+                ctx.ctx.diagnostics.push(Diagnostic::error(
                     span,
                     DiagnosticKind::new_unknown_token(token),
                 ));

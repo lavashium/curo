@@ -8,6 +8,8 @@ zawarudo = []
 
 [dependencies]
 zawarudo = { path = "../macros/zawarudo" }
+accessors = { path = "../macros/accessors"}
+constructors = { path = "../macros/constructors"}
 language = { path = "../language" }
 common = { path = "../common" }
 frontend = { path = "../frontend" }

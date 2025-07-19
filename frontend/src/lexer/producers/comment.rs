@@ -1,13 +1,14 @@
-use crate::lexer::Lexer;
-use crate::lexer::producer::TokenProducer;
+use crate::lexer::*;
 use common::*;
 use language::*;
 
 pub struct CommentProducer;
 
-impl TokenProducer for CommentProducer {
-    fn try_match(lexer: &mut Lexer, diagnostics: &mut DiagnosticsManager) -> Option<Token> {
+impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for CommentProducer {
+    fn run(lexer: &mut Lexer, ctx: &mut LexerContext) -> Option<Token> {
         let start_pointer = lexer.get_pointer();
+
+        let diagnostics = ctx.ctx.diagnostics_mut();
 
         let next_two = lexer.peek_slice((start_pointer, start_pointer + 2))?;
 

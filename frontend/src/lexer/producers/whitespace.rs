@@ -1,12 +1,11 @@
-use crate::lexer::Lexer;
-use crate::lexer::producer::TokenProducer;
-use common::DiagnosticsManager;
+use crate::lexer::*;
+use common::*;
 use language::*;
 
 pub struct WhitespaceProducer;
 
-impl TokenProducer for WhitespaceProducer {
-    fn try_match(lexer: &mut Lexer, _diagnostics: &mut DiagnosticsManager) -> Option<Token> {
+impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for WhitespaceProducer {
+    fn run(lexer: &mut Lexer, _ctx: &mut LexerContext) -> Option<Token> {
         let ch = lexer.peek()?;
         if !ch.is_whitespace() {
             return None;

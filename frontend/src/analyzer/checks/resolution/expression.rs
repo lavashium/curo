@@ -9,7 +9,9 @@ pub fn resolve_expression(
 ) {
     match expr {
         AstExpression::Var { identifier, span } => {
-            if !map.contains_key(identifier) {
+            if let Some(info) = map.get(identifier) {
+                *identifier = info.unique_name.clone();
+            } else {
                 ctx.diagnostics.push(Diagnostic::error(
                     *span,
                     DiagnosticKind::UseOfUndeclared {
@@ -59,7 +61,9 @@ pub fn resolve_expression(
 
         }
         AstExpression::FunctionCall { identifier, args, span } => {
-            if !map.contains_key(identifier) {
+            if let Some(info) = map.get(identifier) {
+                *identifier = info.unique_name.clone();
+            } else {
                 push_error(
                     ctx,
                     *span,
@@ -68,6 +72,7 @@ pub fn resolve_expression(
                     },
                 );
             }
+
             for arg in args {
                 resolve_expression(arg, ctx, map);
             }

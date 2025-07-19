@@ -1,6 +1,5 @@
-use super::emit::ToAsm;
-use crate::asm::*;
 use super::emit::*;
+use crate::asm::*;
 use constructors::constructors;
 use match_format::emit_instruction;
 use zawarudo::zawarudo;
@@ -11,8 +10,15 @@ pub struct CodeEmitter;
 impl CodeEmitter {
     #[zawarudo(label = "Code Emitter")]
     pub fn emit(&self, program: AsmProgram) -> String {
-        let mut output = self.emit_function(program.function_definition());
-        output.push_str("\n.section .note.GNU-stack,\"\",@progbits\n");
+        let mut output = String::new();
+
+        for function in program.function_definitions() {
+            output.push_str(&self.emit_function(function));
+            output.push('\n');
+        }
+
+        output.push_str(".section .note.GNU-stack,\"\",@progbits\n");
+
         output
     }
 
@@ -21,6 +27,7 @@ impl CodeEmitter {
 
         output.push_str(&format!(".globl {}\n", function.identifier()));
         output.push_str(&format!("{}:\n", function.identifier()));
+
         output.push_str("    pushq %rbp\n");
         output.push_str("    movq %rsp, %rbp\n");
 
@@ -39,15 +46,18 @@ impl CodeEmitter {
             AsmInstruction::Idiv { operand } => "idivl {}", [operand],
             AsmInstruction::Cdq => "cdq", [],
             AsmInstruction::AllocateStack(int) => "subq ${}, %rsp", [int],
+            AsmInstruction::DeallocateStack(int) => "addq ${}, %rsp", [int],
+            AsmInstruction::Push(operand) => "pushq {}", [operand.to_8byte()],
+            AsmInstruction::Call(label) => "call {}@PLT", [label],
             AsmInstruction::Ret => {
                 "movq %rbp, %rsp", [],
                 "popq %rbp", [],
                 "ret", [],
             },
-            AsmInstruction::Cmp {operand1, operand2} => "cmpl {}, {}", [operand1, operand2],
+            AsmInstruction::Cmp { operand1, operand2 } => "cmpl {}, {}", [operand1, operand2],
             AsmInstruction::Jmp(label) => "jmp .L{}", [label],
-            AsmInstruction::JmpCC {cond, label} => "j{} .L{}", [cond, label],
-            AsmInstruction::SetCC {cond, operand} => "set{} {}", [cond, reg_to_1byte(operand)],
+            AsmInstruction::JmpCC { cond, label } => "j{} .L{}", [cond, label],
+            AsmInstruction::SetCC { cond, operand } => "set{} {}", [cond, operand.to_1byte()],
             AsmInstruction::Label(label) => "\t.L{}:", [label],
         })
     }

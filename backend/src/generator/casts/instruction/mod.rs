@@ -2,6 +2,7 @@ mod cast_binary;
 mod cast_return;
 mod cast_unary;
 mod cast_jump;
+mod cast_funcall;
 
 use super::*;
 use crate::asm::*;
@@ -23,6 +24,11 @@ impl<'a> InstructionCast for GeneratorCasts<'a> {
             instr @ TacInstruction::JumpIfZero { .. } => self.cast_jump(instr),
             instr @ TacInstruction::JumpIfNotZero { .. } => self.cast_jump(instr),
             instr @ TacInstruction::Label( name ) => vec![AsmInstruction::new_label(name.clone())],
+                        TacInstruction::FunCall {
+                fun_name,
+                args,
+                dst,
+            } => self.cast_funcall(fun_name, args, dst),
         }
     }
 }

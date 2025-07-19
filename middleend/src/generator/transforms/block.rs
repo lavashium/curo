@@ -1,15 +1,18 @@
 use super::*;
 use language::*;
+use common::*;
 
-pub trait BlockTransform {
-    fn transform_block(&mut self, block: &AstBlock) -> Vec<TacInstruction>;
+impl<'scp, 'ctx> GeneratorTransforms<'scp, 'ctx> {
+    pub fn transform_block(&mut self, block: &mut AstBlock) -> Vec<TacInstruction> {
+        <Self as Factory<Vec<TacInstruction>, Self, AstBlock>>::run(self, block)
+    }
 }
 
-impl<'a> BlockTransform for GeneratorTransforms<'a> {
-    fn transform_block(&mut self, block: &AstBlock) -> Vec<TacInstruction> {
+impl<'scp, 'ctx> Factory<Vec<TacInstruction>, Self, AstBlock> for GeneratorTransforms<'scp, 'ctx> {
+    fn run(driver: &mut Self, block: &mut AstBlock) -> Vec<TacInstruction> {
         let mut instructions = vec![];
-        for item in block.block_items() {
-            instructions.append(&mut self.transform_block_item(item));
+        for item in block.block_items_mut() {
+            instructions.append(&mut driver.transform_block_item(item));
         }
         instructions
     }

@@ -1,4 +1,6 @@
+use crate::*;
 use super::*;
+use common::*;
 use language::*;
 
 macro_rules! precedence {
@@ -32,102 +34,50 @@ fn get_precedence(operator: &OperatorKind) -> u8 {
     )
 }
 
-pub trait ExpressionParser {
-    fn parse_expression(&mut self) -> ParseResult<AstExpression>;
-    fn parse_binary_expression(&mut self, min_prec: u8) -> ParseResult<AstExpression>;
-    fn parse_primary_expression(&mut self) -> ParseResult<AstExpression>;
+impl<'a> ParserRules<'a> {
+    pub fn parse_expression(&mut self, ctx: &mut ParserContext) -> Option<AstExpression> {
+        <Self as Factory<Option<AstExpression>, Self, ParserContext>>::run(self, ctx)
+    }
+
+    pub fn parse_binary_expression(&mut self, ctx: &mut ParserContext, min_prec: u8) -> Option<AstExpression> {
+        ParseBinaryExpression::run(self, ctx)
+    }
+
+    pub fn parse_primary_expression(&mut self, ctx: &mut ParserContext) -> Option<AstExpression> {
+        ParsePrimaryExpression::run(self, ctx)
+    }
 }
 
-impl<'a> ExpressionParser for ParserRules<'a> {
-    fn parse_expression(&mut self) -> ParseResult<AstExpression> {
-        self.parse_binary_expression(0)
+impl<'a> Factory<Option<AstExpression>, ParserRules<'a>, ParserContext<'_, '_>> for ParserRules<'a> {
+    fn run(rules: &mut ParserRules<'a>, ctx: &mut ParserContext) -> Option<AstExpression> {
+        rules.parse_binary_expression(ctx, 0)
     }
+}
 
-    fn parse_primary_expression(&mut self) -> ParseResult<AstExpression> {
-        match self.parser.source_tokens.peek()?.kind() {
-            TokenKind::Constant(_) => {
-                let span = self.parser.source_tokens.peek()?.get_span();
-                let constant = self.unwrap_constant()?;
-                Some(AstExpression::Constant { constant, span })
-            }
+pub struct ParseBinaryExpression;
 
-            TokenKind::Identifier(_) => {
-                let span = self.parser.source_tokens.peek()?.get_span();
-                let name = self.unwrap_identifier()?;
-
-                if self.parser.source_tokens.peek()?.kind() == &token_punctuation!(OpenParen) {
-                    self.parser.source_tokens.consume_expected(&token_punctuation!(OpenParen))?;
-                    let args = if self.parser.source_tokens.peek()?.kind() != &token_punctuation!(CloseParen) {
-                        self.parse_argument_list()?
-                    } else {
-                        Vec::new()
-                    };
-                    self.expect(token_punctuation!(CloseParen))?;
-                    Some(AstExpression::FunctionCall {
-                        identifier: name,
-                        args,
-                        span,
-                    })
-                } else {
-                    Some(AstExpression::Var { identifier: name, span })
-                }
-            }
-            TokenKind::Operator(op @ OperatorKind::Tilde) |
-            TokenKind::Operator(op @ OperatorKind::Exclamation) |
-            TokenKind::Operator(op @ OperatorKind::Minus) => {
-                let span = self.parser.source_tokens.peek()?.get_span();
-                let operator = op.to_unary()?.clone();
-                self.parser.source_tokens.consume();
-                let operand = self.parse_binary_expression(100)?;
-                Some(AstExpression::Unary {
-                    operator,
-                    operand: Box::new(operand),
-                    span,
-                })
-            }
-
-            TokenKind::Punctuation(PunctuationKind::OpenParen) => {
-                self.expect(token_punctuation!(OpenParen))?;
-                let expr = self.parse_expression()?;
-                self.expect(token_punctuation!(CloseParen))?;
-                Some(expr)
-            }
-
-            _ => {
-                let token = self.parser.source_tokens.peek()?;
-                self.diagnostics.push(
-                    Diagnostic::error(
-                        token.get_span(),
-                        DiagnosticKind::UnknownToken(token.clone()),
-                    )
-                    .with(Diagnostic::note(token.get_span(), "expected an expression here")),
-                );
-                None
-            }
-        }
-    }
-
-    fn parse_binary_expression(&mut self, min_prec: u8) -> ParseResult<AstExpression> {
-        let start_span = self.parser.source_tokens.peek()?.get_span();
-        let mut lhs = self.parse_primary_expression()?;
+impl<'a> Factory<Option<AstExpression>, ParserRules<'a>, ParserContext<'_, '_>> for ParseBinaryExpression {
+    fn run(rules: &mut ParserRules<'a>, ctx: &mut ParserContext) -> Option<AstExpression> {
+        let start_span = rules.parser.source_tokens.peek()?.get_span();
+        let mut lhs = rules.parse_primary_expression(ctx)?;
 
         loop {
-            let next_token = match self.parser.source_tokens.peek() {
+            let next_token = match rules.parser.source_tokens.peek() {
                 Some(tok) => tok,
                 None => break,
             };
 
             if let TokenKind::Operator(OperatorKind::Question) = next_token.kind() {
-                if 3 < min_prec {
+                if 3 < ctx.min_prec {
                     break;
                 }
 
-                self.parser.source_tokens.consume()?;
-                let then_expr = self.parse_expression()?;
-                self.expect(token_punctuation!(Colon))?;
-                let else_expr = self.parse_binary_expression(3)?;
+                rules.parser.source_tokens.consume()?;
+                let then_expr = rules.parse_expression(ctx)?;
+                rules.expect(ctx, token_punctuation!(Colon))?;
+                let else_expr = rules.parse_binary_expression(ctx, 3)?;
 
-                let end_span = self.parser.source_tokens.peek()?.get_span();
+                let end_span = rules.parser.source_tokens.peek()?.get_span();
                 let span = combine_spans!(start_span, end_span);
 
                 lhs = AstExpression::Conditional {
@@ -146,11 +96,11 @@ impl<'a> ExpressionParser for ParserRules<'a> {
             };
 
             let prec = get_precedence(&op_kind);
-            if prec < min_prec {
+            if prec < ctx.min_prec {
                 break;
             }
 
-            self.parser.source_tokens.consume()?;
+            rules.parser.source_tokens.consume()?;
 
             let next_min_prec = if op_kind == OperatorKind::Equal {
                 prec
@@ -158,9 +108,9 @@ impl<'a> ExpressionParser for ParserRules<'a> {
                 prec + 1
             };
 
-            let rhs = self.parse_binary_expression(next_min_prec)?;
+            let rhs = rules.parse_binary_expression(ctx, next_min_prec)?;
 
-            let end_span = self.parser.source_tokens.peek()?.get_span();
+            let end_span = rules.parser.source_tokens.peek()?.get_span();
             let span = combine_spans!(start_span, end_span);
 
             if op_kind == OperatorKind::Equal {
@@ -186,5 +136,74 @@ impl<'a> ExpressionParser for ParserRules<'a> {
         }
 
         Some(lhs)
+    }
+}
+
+pub struct ParsePrimaryExpression;
+
+impl<'a> Factory<Option<AstExpression>, ParserRules<'a>, ParserContext<'_, '_>> for ParsePrimaryExpression {
+    fn run(rules: &mut ParserRules<'a>, ctx: &mut ParserContext) -> Option<AstExpression> {
+        match rules.parser.source_tokens.peek()?.kind() {
+            TokenKind::Constant(_) => {
+                let span = rules.parser.source_tokens.peek()?.get_span();
+                let constant = rules.unwrap_constant(ctx)?;
+                Some(AstExpression::Constant { constant, span })
+            }
+
+            TokenKind::Identifier(_) => {
+                let span = rules.parser.source_tokens.peek()?.get_span();
+                let name = rules.unwrap_identifier(ctx)?;
+
+                if rules.parser.source_tokens.peek()?.kind() == &token_punctuation!(OpenParen) {
+                    rules.parser.source_tokens.consume_expected(&token_punctuation!(OpenParen))?;
+                    let args = if rules.parser.source_tokens.peek()?.kind() != &token_punctuation!(CloseParen) {
+                        rules.parse_argument_list(ctx)?
+                    } else {
+                        Vec::new()
+                    };
+                    rules.expect(ctx, token_punctuation!(CloseParen))?;
+                    Some(AstExpression::FunctionCall {
+                        identifier: name,
+                        args,
+                        span,
+                    })
+                } else {
+                    Some(AstExpression::Var { identifier: name, span })
+                }
+            }
+
+            TokenKind::Operator(op @ OperatorKind::Tilde)
+            | TokenKind::Operator(op @ OperatorKind::Exclamation)
+            | TokenKind::Operator(op @ OperatorKind::Minus) => {
+                let span = rules.parser.source_tokens.peek()?.get_span();
+                let operator = op.to_unary()?.clone();
+                rules.parser.source_tokens.consume();
+                let operand = rules.parse_binary_expression(ctx, 100)?;
+                Some(AstExpression::Unary {
+                    operator,
+                    operand: Box::new(operand),
+                    span,
+                })
+            }
+
+            TokenKind::Punctuation(PunctuationKind::OpenParen) => {
+                rules.expect(ctx, token_punctuation!(OpenParen))?;
+                let expr = rules.parse_expression(ctx)?;
+                rules.expect(ctx, token_punctuation!(CloseParen))?;
+                Some(expr)
+            }
+
+            _ => {
+                let token = rules.parser.source_tokens.peek()?;
+                ctx.ctx.diagnostics.push(
+                    Diagnostic::error(
+                        token.get_span(),
+                        DiagnosticKind::UnknownToken(token.clone()),
+                    )
+                    .with(Diagnostic::note(token.get_span(), "expected an expression here")),
+                );
+                None
+            }
+        }
     }
 }

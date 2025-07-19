@@ -32,11 +32,11 @@ pub fn typecheck_statement(
             symbols.push_scope();
 
             match for_init {
-                AstForInit::InitDeclaration(var_decl) => {
-                    symbols.add_variable(var_decl.identifier(), Span::default(), ctx);
+                AstForInit::InitDeclaration{decl, span} => {
+                    symbols.add_variable(decl.identifier(), *span, ctx);
                 }
-                AstForInit::InitExpression(expr_opt) => {
-                    if let Some(expr) = expr_opt {
+                AstForInit::InitExpression{expr, ..} => {
+                    if let Some(expr) = expr {
                         typecheck_expression(expr, symbols, ctx);
                     }
                 }

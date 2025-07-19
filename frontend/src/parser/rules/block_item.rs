@@ -1,15 +1,20 @@
+use crate::*;
 use super::*;
+use common::*;
+use language::*;
 
-pub trait BlockItemParser {
-    fn parse_block_item(&mut self) -> ParseResult<AstBlockItem>;
+impl<'a> ParserRules<'a> {
+    pub fn parse_block_item(&mut self, ctx: &mut ParserContext) -> Option<AstBlockItem> {
+        <Self as Factory<Option<AstBlockItem>, Self, ParserContext>>::run(self, ctx)
+    }
 }
 
-impl<'a> BlockItemParser for ParserRules<'a> {
-    fn parse_block_item(&mut self) -> ParseResult<AstBlockItem> {
-        if self.parser.source_tokens.peek()?.kind() == &TokenKind::Keyword(KeywordKind::Int) {
-            Some(AstBlockItem::Declaration(self.parse_declaration()?))
+impl<'a> Factory<Option<AstBlockItem>, Self, ParserContext<'_, '_>> for ParserRules<'a> {
+    fn run(rules: &mut Self, ctx: &mut ParserContext) -> Option<AstBlockItem> {
+        if rules.parser.source_tokens.peek()?.kind() == &TokenKind::Keyword(KeywordKind::Int) {
+            Some(AstBlockItem::Declaration(rules.parse_declaration(ctx)?))
         } else {
-            Some(AstBlockItem::Statement(self.parse_statement()?))
+            Some(AstBlockItem::Statement(rules.parse_statement(ctx)?))
         }
     }
 }

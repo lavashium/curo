@@ -4,4 +4,3 @@ pub mod analyzer;
 
 pub use lexer::*;
 pub use parser::*;
-pub use analyzer::*;
