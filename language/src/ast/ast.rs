@@ -21,6 +21,7 @@ pub struct AstFunctionDeclaration {
     span: Span,
 }
 
+
 #[accessors]
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]

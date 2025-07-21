@@ -61,12 +61,24 @@ impl<'a> CompilerDriver<'a> {
         };
 
         let mut program = program;
+        let program = match AnalysisStage::run(&mut program, &mut pipeline_ctx) {
+            PipelineResult::Continue(program) => program,
+            PipelineResult::Halt(result) => return result,
+        };
+
+        let mut program = program;
         let tac = match TacGeneratorStage::run(&mut program, &mut pipeline_ctx) {
             PipelineResult::Continue(tac) => tac,
             PipelineResult::Halt(result) => return result,
         };
 
-        Ok(format!("{:#?}", tac))
+        let mut tac = tac;
+        let asm = match X86_64::run(&mut tac, &mut pipeline_ctx) {
+            PipelineResult::Continue(asm) => asm,
+            PipelineResult::Halt(result) => return result,
+        };
+
+        Ok(asm)
     }
 
 

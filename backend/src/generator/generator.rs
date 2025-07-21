@@ -9,7 +9,7 @@ pub struct AsmGenerator;
 
 impl AsmGenerator {
     #[zawarudo(label = "AsmGenerator")]
-    pub fn generate(&mut self, program: TacProgram) -> AsmProgram {
+    pub fn generate(&mut self, program: &mut TacProgram) -> AsmProgram {
         GeneratorCasts::new(self).cast_program(&program)
     }
 }

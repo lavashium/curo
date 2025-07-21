@@ -7,8 +7,8 @@ use super::*;
 
 pub struct TacGeneratorStage;
 
-impl Factory<PipelineResult<TacProgram>, AstProgram, PipelineContext<'_, '_>> for TacGeneratorStage {
-    fn run(program: &mut AstProgram, ctx: &mut PipelineContext) -> PipelineResult<TacProgram> {
+impl Factory<PipelineResult<TacProgram>, TypedProgram, PipelineContext<'_, '_>> for TacGeneratorStage {
+    fn run(program: &mut TypedProgram, ctx: &mut PipelineContext) -> PipelineResult<TacProgram> {
         let mut tac_ctx = TacGenContext::new(
             ctx.ctx
         );

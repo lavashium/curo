@@ -1,0 +1,35 @@
+[2025-07-19] tough week huh. went full feral on the compiler (someone take a bite out of me next👅💦💦)
+[2025-07-13] add suport for functions (pre-analysis) (not-so-functional type checker), at least I committed for the first time in 3 days. sidetracked and changed a lot of stuff
+[2025-07-11] add full support for loops; refactored semantic analysis; (can't believe this project is already 5k+ LOC)
+[2025-07-10] add parsing support for loops; refactor parsing statements
+[2025-07-10] add block support; changed (heh) the README.md
+[2025-07-09] add if-else and ternary; rename the project to "Curo" (iykyk)
+[2025-07-07] add #[zawarudo] macro to log execution time only if debug-assertions=true, may stop time
+[2025-07-07] oops forgot to delete the test file
+[2025-07-07] add semantic analysis and debug macro; full support for variables
+[2025-07-06] forgot to delete the test file
+[2025-07-06] slight refactor + prepare the codebase for semantic analysis
+[2025-07-05] add support for logical and relational operators; added a savage e621 joke :3 (I swear I'm not a furry)
+[2025-07-04] refactor of the whole codebase, finally using #[accessors] and #[constructors]
+[2025-07-04] make AsmGenerator more expandable
+[2025-07-04] refactor AST -> TAC, 2 new proc macros for future refactor plans
+[2025-07-03] emiiter hotfix, forgot to add cdq.. oops
+[2025-07-03] added some top level wizardry (procedual macros); make emitter more modular
+[2025-07-02] made assembly legalizer more modular (lexer-like design)
+[2025-07-02] added binary expression support - it's messy but functional; refactor coming
+[2025-07-01] accidentally left testing files in the previous commit... oops
+[2025-07-01] added support for unary expressions!!!! also minor refactors and ran cargo fmt (which touched a bunch of files)
+[2025-06-30] refactor parser to improve expandability; add GenericKind and generic error variants for easier error handling
+[2025-06-30] added support for operators in the lexer. added basic TAC. fixed a bug in compiler.rs
+[2025-06-29] added support for operators in lexer, rewritten most of lexer to be more expandable
+[2025-06-28] rewrite driver crate from scratch
+[2025-06-27] first working version of the compiler! add (barely) functional backend
+[2025-06-27] added comment skipping for lexer; fixed parser error handling; not pretty, but will work (hopefully)
+[2025-06-26] Redesign project structure for modularity and expandability via workspace and crates; add basic CLI interface
+[2025-06-26] clean up parser logic; apply style changes elsewhere; 0/0 tests passed
+[2025-06-25] add diagnostic system for user error reporting; integrate DiagnosticsManager in lexer and parser; sacrificed unit tests for science
+[2025-06-24] add recursive descent parser; clean up TokenKind enum; fix 1 warning
+[2025-06-24] add strongly typed AST with visitor-acceptor pattern
+[2025-06-23] Add producer-based lexer with tests; add macros for token creation
+[2025-06-23] add README.md
+[2025-06-22] add TokenKind, Token, TokenStream, and Span

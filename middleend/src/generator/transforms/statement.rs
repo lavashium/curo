@@ -3,25 +3,25 @@ use language::*;
 use common::*;
 
 impl<'scp, 'ctx> GeneratorTransforms<'scp, 'ctx> {
-    pub fn transform_statement(&mut self, statement: &mut AstStatement) -> Vec<TacInstruction> {
-        <Self as Factory<Vec<TacInstruction>, Self, AstStatement>>::run(self, statement)
+    pub fn transform_statement(&mut self, statement: &mut TypedStatement) -> Vec<TacInstruction> {
+        <Self as Factory<Vec<TacInstruction>, Self, TypedStatement>>::run(self, statement)
     }
 }
 
-impl<'scp, 'ctx> Factory<Vec<TacInstruction>, Self, AstStatement> for GeneratorTransforms<'scp, 'ctx> {
-    fn run(driver: &mut Self, statement: &mut AstStatement) -> Vec<TacInstruction> {
+impl<'scp, 'ctx> Factory<Vec<TacInstruction>, Self, TypedStatement> for GeneratorTransforms<'scp, 'ctx> {
+    fn run(driver: &mut Self, statement: &mut TypedStatement) -> Vec<TacInstruction> {
         let mut instructions: Vec<TacInstruction> = Vec::new();
         match statement {
-            AstStatement::Return { expression, .. } => {
+            TypedStatement::Return { expression, .. } => {
                 let (mut expression, value) = driver.transform_expression(expression);
                 instructions.append(&mut expression);
                 instructions.push(TacInstruction::new_return(value));
             }
-            AstStatement::Expression { expression, .. } => {
+            TypedStatement::Expression { expression, .. } => {
                 let (mut expr_instrs, _) = driver.transform_expression(expression);
                 instructions.append(&mut expr_instrs);
             }
-            AstStatement::If { condition, then_branch, else_branch, .. } => {
+            TypedStatement::If { condition, then_branch, else_branch, .. } => {
                 let (mut condition_instrs, condition_res) = driver.transform_expression(condition);
                 let mut then_instr = driver.transform_statement(then_branch);
                 let end_label = driver.ctx.ctx.tempgen.label("end");
@@ -50,21 +50,21 @@ impl<'scp, 'ctx> Factory<Vec<TacInstruction>, Self, AstStatement> for GeneratorT
 
                 instructions.push(TacInstruction::new_label(end_label));
             }
-            AstStatement::Compound { block, .. } => {
+            TypedStatement::Compound { block, .. } => {
                 instructions.append(&mut driver.transform_block(block));
             },
-            AstStatement::Null => {},
-            AstStatement::Break { label, .. } => {
+            TypedStatement::Null => {},
+            TypedStatement::Break { label, .. } => {
                 let jump_label = driver.ctx.ctx.tempgen.loop_label(label, "break");
                 instructions.push(TacInstruction::new_jump(jump_label));
             }
 
-            AstStatement::Continue { label, .. } => {
+            TypedStatement::Continue { label, .. } => {
                 let jump_label = driver.ctx.ctx.tempgen.loop_label(label, "continue");
                 instructions.push(TacInstruction::new_jump(jump_label));
             }
 
-            AstStatement::While { label, condition, body, .. } => {
+            TypedStatement::While { label, condition, body, .. } => {
                 let continue_label = driver.ctx.ctx.tempgen.loop_label(label, "continue");
                 let break_label = driver.ctx.ctx.tempgen.loop_label(label, "break");
 
@@ -81,7 +81,7 @@ impl<'scp, 'ctx> Factory<Vec<TacInstruction>, Self, AstStatement> for GeneratorT
                 instructions.push(TacInstruction::new_label(break_label));
             }
 
-            AstStatement::DoWhile { label, body, condition, .. } => {
+            TypedStatement::DoWhile { label, body, condition, .. } => {
                 let start_label = driver.ctx.ctx.tempgen.loop_label(label, "start");
                 let continue_label = driver.ctx.ctx.tempgen.loop_label(label, "continue");
                 let break_label = driver.ctx.ctx.tempgen.loop_label(label, "break");
@@ -98,7 +98,7 @@ impl<'scp, 'ctx> Factory<Vec<TacInstruction>, Self, AstStatement> for GeneratorT
                 instructions.push(TacInstruction::new_label(break_label));
             }
 
-            AstStatement::For { for_init, condition, post, body, label, .. } => {
+            TypedStatement::For { for_init, condition, post, body, label, .. } => {
                 let start_label = driver.ctx.ctx.tempgen.loop_label(label, "start");
                 let continue_label = driver.ctx.ctx.tempgen.loop_label(label, "continue");
                 let break_label = driver.ctx.ctx.tempgen.loop_label(label, "break");

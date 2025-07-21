@@ -3,19 +3,19 @@ use language::*;
 use common::*;
 
 impl<'scp, 'ctx> GeneratorTransforms<'scp, 'ctx> {
-    pub fn transform_expression(&mut self, expression: &mut AstExpression) -> (Vec<TacInstruction>, TacVal) {
-        <Self as Factory<(Vec<TacInstruction>, TacVal), Self, AstExpression>>::run(self, expression)
+    pub fn transform_expression(&mut self, expression: &mut TypedExpression) -> (Vec<TacInstruction>, TacVal) {
+        <Self as Factory<(Vec<TacInstruction>, TacVal), Self, TypedExpression>>::run(self, expression)
     }
 }
 
-impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, AstExpression> for GeneratorTransforms<'scp, 'ctx> {
-    fn run(driver: &mut Self, expression: &mut AstExpression) -> (Vec<TacInstruction>, TacVal) {
+impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, TypedExpression> for GeneratorTransforms<'scp, 'ctx> {
+    fn run(driver: &mut Self, expression: &mut TypedExpression) -> (Vec<TacInstruction>, TacVal) {
         match expression {
-            AstExpression::Constant { constant, .. } => {
+            TypedExpression::Constant { constant, .. } => {
                 let val = TacVal::new_constant(constant.clone());
                 (vec![], val)
             }
-            AstExpression::Unary { operator, operand, .. } => {
+            TypedExpression::Unary { operator, operand, .. } => {
                 let (mut instructions, source) = driver.transform_expression(operand);
 
                 let destination = TacVal::new_var(driver.ctx.ctx.tempgen.temp());
@@ -28,7 +28,7 @@ impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, AstExpression> for
 
                 (instructions, destination)
             }
-            AstExpression::Binary { operator, left, right, .. } => {
+            TypedExpression::Binary { operator, left, right, .. } => {
                 if *operator == AstBinaryKind::And || *operator == AstBinaryKind::Or {
                     let mut instructions = vec![];
 
@@ -136,13 +136,13 @@ impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, AstExpression> for
                     (instructions, destination)
                 }
             }
-            AstExpression::Var { identifier, .. } => {
+            TypedExpression::Var { identifier, .. } => {
                 let val = TacVal::new_var(identifier.clone());
                 (vec![], val)
             }
 
-            AstExpression::Assignment { left, right, .. } => {
-                if let AstExpression::Var { identifier, .. } = &**left {
+            TypedExpression::Assignment { left, right, .. } => {
+                if let TypedExpression::Var { identifier, .. } = &**left {
                     let (mut rhs_instrs, rhs_val) = driver.transform_expression(right);
                     let lhs = TacVal::new_var(identifier.clone());
 
@@ -156,7 +156,7 @@ impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, AstExpression> for
                     panic!("Invalid assignment target; only simple variables supported");
                 }
             }
-            AstExpression::Conditional { condition, then_branch, else_branch, .. } => {
+            TypedExpression::Conditional { condition, then_branch, else_branch, .. } => {
                 let else_label = driver.ctx.ctx.tempgen.label("cond_else");
                 let end_label = driver.ctx.ctx.tempgen.label("cond_end");
 
@@ -198,7 +198,7 @@ impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, AstExpression> for
 
                 (instructions, result)
             }
-            AstExpression::FunctionCall { identifier, args, span } => {
+            TypedExpression::FunctionCall { identifier, args, .. } => {
                 let mut instructions = vec![];
                 let mut tac_args = Vec::new();
 

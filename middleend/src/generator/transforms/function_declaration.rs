@@ -3,13 +3,13 @@ use language::*;
 use common::*;
 
 impl<'scp, 'ctx> GeneratorTransforms<'scp, 'ctx> {
-    pub fn transform_function_declaration(&mut self, function: &mut AstFunctionDeclaration) -> TacFunction {
-        <Self as Factory<TacFunction, Self, AstFunctionDeclaration>>::run(self, function)
+    pub fn transform_function_declaration(&mut self, function: &mut TypedFunctionDeclaration) -> TacFunction {
+        <Self as Factory<TacFunction, Self, TypedFunctionDeclaration>>::run(self, function)
     }
 }
 
-impl<'scp, 'ctx> Factory<TacFunction, Self, AstFunctionDeclaration> for GeneratorTransforms<'scp, 'ctx> {
-    fn run(driver: &mut Self, function: &mut AstFunctionDeclaration) -> TacFunction {
+impl<'scp, 'ctx> Factory<TacFunction, Self, TypedFunctionDeclaration> for GeneratorTransforms<'scp, 'ctx> {
+    fn run(driver: &mut Self, function: &mut TypedFunctionDeclaration) -> TacFunction {
         let identifier = function.get_identifier();
         let args = function.get_params();
 

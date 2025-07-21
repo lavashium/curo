@@ -1,83 +1,83 @@
-use language::*;
+use common::*;
 use super::*;
 
-pub fn resolve_statement(
-    stmt: &mut AstStatement,
-    ctx: &mut SemanticContext,
-    map: &mut IdentifierMap,
-) {
-    match stmt {
-        AstStatement::Return { expression, .. } => {
-            resolve_expression(expression, ctx, map);
-        }
-        AstStatement::Expression { expression, .. } => {
-            resolve_expression(expression, ctx, map);
-        }
-        AstStatement::If {
-            condition,
-            then_branch,
-            else_branch,
-            ..
-        } => {
-            resolve_expression(condition, ctx, map);
-            resolve_statement(then_branch, ctx, map);
-            if let Some(else_branch) = else_branch {
-                resolve_statement(else_branch, ctx, map);
-            }
-        }
-        AstStatement::Compound { block, .. } => {
-            resolve_block(block, ctx, map);
-        }
-        AstStatement::While { condition, body, .. } => {
-            ctx.loop_depth += 1;
-            resolve_expression(condition, ctx, map);
-            resolve_statement(body, ctx, map);
-            ctx.loop_depth -= 1;
-        }
-        AstStatement::DoWhile { condition, body, .. } => {
-            ctx.loop_depth += 1;
-            resolve_statement(body, ctx, map);
-            resolve_expression(condition, ctx, map);
-            ctx.loop_depth -= 1;
-        }
-        AstStatement::For {
-            for_init,
-            condition,
-            post,
-            body,
-            ..
-        } => {
-            ctx.loop_depth += 1;
-            let mut loop_map = copy_identifier_map(map);
+impl IdentifierResolution {
+    pub fn resolve_statement(stmt: &mut TypedStatement, ctx: &mut AnalyzerContext) {
+        <Self as Factory<(), TypedStatement, AnalyzerContext<'_, '_>>>::run(stmt, ctx)
+    }
+}
 
-            match for_init {
-                AstForInit::InitDeclaration{decl, ..} => {
-                    resolve_variable_declaration(decl, ctx, &mut loop_map)
+impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for IdentifierResolution {
+    fn run(stmt: &mut TypedStatement, ctx: &mut AnalyzerContext) {
+        match stmt {
+            TypedStatement::Return { expression, .. } => {
+                Self::resolve_expression(expression, ctx);
+            }
+            TypedStatement::Expression { expression, .. } => {
+                Self::resolve_expression(expression, ctx);
+            }
+            TypedStatement::If { condition, then_branch, else_branch, .. } => {
+                Self::resolve_expression(condition, ctx);
+                Self::resolve_statement(then_branch, ctx);
+                if let Some(else_branch) = else_branch {
+                    Self::resolve_statement(else_branch, ctx);
                 }
-                AstForInit::InitExpression{expr, ..} => {
-                    if let Some(expr) = expr {
-                        resolve_expression(expr, ctx, &loop_map);
+            }
+            TypedStatement::Compound { block, .. } => {
+                Self::resolve_block(block, ctx);
+            }
+            TypedStatement::While { condition, body, .. } => {
+                ctx.loop_depth += 1;
+                Self::resolve_expression(condition, ctx);
+                Self::resolve_statement(body, ctx);
+                ctx.loop_depth -= 1;
+            }
+            TypedStatement::DoWhile { condition, body, .. } => {
+                ctx.loop_depth += 1;
+                Self::resolve_statement(body, ctx);
+                Self::resolve_expression(condition, ctx);
+                ctx.loop_depth -= 1;
+            }
+            TypedStatement::For { for_init, condition, post, body, .. } => {
+                ctx.loop_depth += 1;
+                ctx.push_scope(true);
+                
+                match for_init {
+                    TypedForInit::InitDeclaration{ decl, .. } => {
+                        Self::resolve_variable_declaration(decl, ctx);
+                    }
+                    TypedForInit::InitExpression{ expr, .. } => {
+                        if let Some(expr) = expr {
+                            Self::resolve_expression(expr, ctx);
+                        }
                     }
                 }
+                
+                if let Some(cond) = condition {
+                    Self::resolve_expression(cond, ctx);
+                }
+                
+                if let Some(p) = post {
+                    Self::resolve_expression(p, ctx);
+                }
+                
+                Self::resolve_statement(body, ctx);
+                ctx.pop_scope();
+                ctx.loop_depth -= 1;
             }
-            if let Some(cond) = condition {
-                resolve_expression(cond, ctx, &loop_map);
+            TypedStatement::Break { span, .. } if ctx.loop_depth == 0 => {
+                ctx.ctx.diagnostics.push(Diagnostic::error(
+                    *span,
+                    DiagnosticKind::Custom("break not in loop".into()),
+                ));
             }
-            if let Some(p) = post {
-                resolve_expression(p, ctx, &loop_map);
+            TypedStatement::Continue { span, .. } if ctx.loop_depth == 0 => {
+                ctx.ctx.diagnostics.push(Diagnostic::error(
+                    *span,
+                    DiagnosticKind::Custom("continue not in loop".into()),
+                ));
             }
-            resolve_statement(body, ctx, &mut loop_map);
-            ctx.loop_depth -= 1;
-        }
-        AstStatement::Break { span, .. } => {
-            if ctx.loop_depth == 0 {
-                push_error(ctx, *span, DiagnosticKind::Custom("break not in loop".into()));
-            }
-        }
-        AstStatement::Continue { span, .. } => {
-            if ctx.loop_depth == 0 {
-                push_error(ctx, *span, DiagnosticKind::Custom("continue not in loop".into()));
-            }
+            _ => {}
         }
     }
 }

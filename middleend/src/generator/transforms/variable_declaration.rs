@@ -3,13 +3,13 @@ use language::*;
 use common::*;
 
 impl<'scp, 'ctx> GeneratorTransforms<'scp, 'ctx> {
-    pub fn transform_variable_declaration(&mut self, declaration: &mut AstVariableDeclaration) -> Vec<TacInstruction> {
-        <Self as Factory<Vec<TacInstruction>, Self, AstVariableDeclaration>>::run(self, declaration)
+    pub fn transform_variable_declaration(&mut self, declaration: &mut TypedVariableDeclaration) -> Vec<TacInstruction> {
+        <Self as Factory<Vec<TacInstruction>, Self, TypedVariableDeclaration>>::run(self, declaration)
     }
 }
 
-impl<'scp, 'ctx> Factory<Vec<TacInstruction>, Self, AstVariableDeclaration> for GeneratorTransforms<'scp, 'ctx> {
-    fn run(driver: &mut Self, declaration: &mut AstVariableDeclaration) -> Vec<TacInstruction> {
+impl<'scp, 'ctx> Factory<Vec<TacInstruction>, Self, TypedVariableDeclaration> for GeneratorTransforms<'scp, 'ctx> {
+    fn run(driver: &mut Self, declaration: &mut TypedVariableDeclaration) -> Vec<TacInstruction> {
         let mut instructions = vec![];
 
         let var_name = declaration.identifier().clone();

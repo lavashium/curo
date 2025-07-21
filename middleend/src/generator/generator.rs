@@ -9,12 +9,12 @@ use crate::*;
 #[accessors]
 #[constructors]
 pub struct TacGenerator<'scp> {
-    pub source_ast: &'scp mut AstProgram,
+    pub program: &'scp mut TypedProgram,
 }
 
 impl<'scp> TacGenerator<'scp> {
     #[zawarudo(label = "Tac Generator")]
     pub fn generate(&mut self, ctx: &'scp mut TacGenContext<'scp, '_>) -> TacProgram {
-        GeneratorTransforms::new(ctx).transform_program(self.source_ast)
+        GeneratorTransforms::new(ctx).transform_program(self.program)
     }
 }

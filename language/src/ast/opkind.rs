@@ -25,3 +25,10 @@ pub enum AstBinaryKind {
     GreaterThan,
     GreaterOrEqual,
 }
+
+#[constructors]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+pub enum AstType {
+    #[default]
+    Placeholder
+}

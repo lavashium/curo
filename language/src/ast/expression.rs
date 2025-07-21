@@ -1,8 +1,10 @@
 use constructors::constructors;
+use typed_ast::*;
 
 use crate::Span;
 use super::*;
 
+#[derive(TypedAst)]
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AstExpression {

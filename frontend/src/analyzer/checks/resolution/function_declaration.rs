@@ -1,96 +1,40 @@
-use language::*;
+use common::*;
 use super::*;
 
-pub fn resolve_function_declaration(
-    func: &mut AstFunctionDeclaration,
-    ctx: &mut SemanticContext,
-    map: &mut IdentifierMap,
-) {
-    if is_illegal_nested_definition(func, ctx) {
-        report_nested_function_error(ctx);
-        return;
+impl IdentifierResolution {
+    pub fn resolve_function_declaration(function_declaration: &mut TypedFunctionDeclaration, ctx: &mut AnalyzerContext) {
+        <Self as Factory<(), TypedFunctionDeclaration, AnalyzerContext<'_, '_>>>::run(function_declaration, ctx)
     }
+}
 
-    if !declare_function_name(func, ctx, map) {
-        return;
-    }
-
-    {
-        let mut scratch = IdentifierMap::new();
-        for param in func.params() {
-            let _ = declare_identifier(param, false, Span::default(), ctx, &mut scratch);
+impl Factory<(), TypedFunctionDeclaration, AnalyzerContext<'_, '_>> for IdentifierResolution {
+    fn run(func: &mut TypedFunctionDeclaration, ctx: &mut AnalyzerContext) {
+        if ctx.inside_function && func.body().is_some() {
+            ctx.ctx.diagnostics.push(Diagnostic::error(
+                func.get_span(),
+                DiagnosticKind::NestedFunctionDefinition,
+            ));
+            return;
         }
-    }
 
-    if func.body().is_none() {
-        return;
-    }
-
-    resolve_function_definition(func, ctx, map);
-}
-
-fn is_illegal_nested_definition(
-    func: &AstFunctionDeclaration,
-    ctx: &SemanticContext,
-) -> bool {
-    ctx.inside_function && func.body().is_some()
-}
-
-fn report_nested_function_error(ctx: &mut SemanticContext) {
-    push_error(
-        ctx,
-        Span::default(),
-        DiagnosticKind::NestedFunctionDefinition,
-    );
-}
-
-fn declare_function_name(
-    func: &AstFunctionDeclaration,
-    ctx: &mut SemanticContext,
-    map: &mut IdentifierMap,
-) -> bool {
-    declare_identifier(
-        func.identifier(),
-        true,
-        Span::default(),
-        ctx,
-        map,
-    )
-}
-
-fn resolve_function_definition(
-    func: &mut AstFunctionDeclaration,
-    ctx: &mut SemanticContext,
-    outer_map: &mut IdentifierMap,
-) {
-    ctx.inside_function = true;
-    ctx.push_scope();
-
-    let mut fn_scope = copy_identifier_map(outer_map);
-    declare_parameters(func, ctx, &mut fn_scope);
-
-    if let Some(body) = func.body_mut() {
-        for item in body.block_items_mut() {
-            resolve_block_item(item, ctx, &mut fn_scope);
+        if func.body().is_none() {
+            return;
         }
-    }
 
-    ctx.pop_scope();
-    ctx.inside_function = false;
-}
+        ctx.inside_function = true;
+        ctx.push_scope(true);
+        
+        for param in func.params_mut() {
+            if let Some(unique_name) = ctx.declare_identifier(param, false, Span::default()) {
+                *param = unique_name;
+            }
+        }
 
-fn declare_parameters(
-    func: &AstFunctionDeclaration,
-    ctx: &mut SemanticContext,
-    fn_scope: &mut IdentifierMap,
-) {
-    for param in func.params() {
-        let _ = declare_identifier(
-            param,
-            false,
-            Span::default(),
-            ctx,
-            fn_scope,
-        );
+        if let Some(body) = func.body_mut() {
+            Self::resolve_block(body, ctx);
+        }
+        
+        ctx.pop_scope();
+        ctx.inside_function = false;
     }
 }

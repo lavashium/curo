@@ -40,7 +40,11 @@ impl<'a> ParserRules<'a> {
     }
 
     pub fn parse_binary_expression(&mut self, ctx: &mut ParserContext, min_prec: u8) -> Option<AstExpression> {
-        ParseBinaryExpression::run(self, ctx)
+        let old_prec = ctx.min_prec;
+        ctx.min_prec = min_prec;
+        let result = ParseBinaryExpression::run(self, ctx);
+        ctx.min_prec = old_prec;
+        result
     }
 
     pub fn parse_primary_expression(&mut self, ctx: &mut ParserContext) -> Option<AstExpression> {
@@ -177,7 +181,7 @@ impl<'a> Factory<Option<AstExpression>, ParserRules<'a>, ParserContext<'_, '_>> 
             | TokenKind::Operator(op @ OperatorKind::Minus) => {
                 let span = rules.parser.source_tokens.peek()?.get_span();
                 let operator = op.to_unary()?.clone();
-                rules.parser.source_tokens.consume();
+                rules.parser.source_tokens.consume()?;
                 let operand = rules.parse_binary_expression(ctx, 100)?;
                 Some(AstExpression::Unary {
                     operator,

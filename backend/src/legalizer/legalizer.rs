@@ -1,3 +1,4 @@
+use super::*;
 use super::fixes::*;
 use crate::asm::*;
 use accessors::accessors;
@@ -6,18 +7,18 @@ use zawarudo::zawarudo;
 
 #[accessors]
 #[constructors]
-pub struct AsmLegalizer {
-    stack_size: i32,
+pub struct AsmLegalizer<'scp> {
+    source_asm: &'scp mut AsmProgram,
 }
 
-impl AsmLegalizer {
+impl<'scp> AsmLegalizer<'scp> {
     #[zawarudo(label = "Assembly Legalizer")]
-    pub fn legalize(&self, program: AsmProgram) -> AsmProgram {
+    pub fn legalize(&self, ctx: &mut LegalizerContext) -> AsmProgram {
         let mut program_instructions = Vec::new();
 
-        for mut function in program.get_function_definitions() {
+        for mut function in self.source_asm.get_function_definitions() {
             let mut instructions = Vec::with_capacity(function.instructions().len() + 3);
-            instructions.push(AsmInstruction::AllocateStack(self.stack_size));
+            instructions.push(AsmInstruction::AllocateStack(ctx.stack_size));
 
             for instr in function.get_instructions() {
                 instructions.extend(self.fix_instruction(instr));

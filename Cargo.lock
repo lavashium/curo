@@ -72,6 +72,7 @@ version = "0.1.0"
 dependencies = [
  "accessors",
  "constructors",
+ "typed_ast",
 ]
 
 [[package]]
@@ -121,6 +122,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "typed_ast"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

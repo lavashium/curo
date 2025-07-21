@@ -1,8 +1,11 @@
 use constructors::constructors;
+use typed_ast::*;
 
 use crate::Span;
 use super::*;
 
+#[derive(TypedAst)]
+#[typed_ast(no_ty)]
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AstForInit {
@@ -16,6 +19,8 @@ pub enum AstForInit {
     },
 }
 
+#[derive(TypedAst)]
+#[typed_ast(no_ty)]
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AstStatement {
