@@ -11,6 +11,7 @@ pub struct AnalyzerContext<'scp, 'ctx> {
     pub scopes: Vec<IdentifierMap>,
     pub loop_depth: usize,
     pub inside_function: bool,
+    pub current_loop: Option<String>
 }
 
 pub type IdentifierMap = HashMap<String, IdentifierInfo>;

@@ -13,7 +13,8 @@ impl Factory<PipelineResult<TypedProgram>, AstProgram, PipelineContext<'_, '_>> 
             ctx.ctx,
             Vec::new(),
             0,
-            false
+            false,
+            None
         );
 
         analyzer_ctx.push_scope(false);

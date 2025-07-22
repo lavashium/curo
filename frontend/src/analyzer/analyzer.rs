@@ -15,6 +15,7 @@ pub struct Analyzer<'a> {
 impl<'a> Analyzer<'a> {
     #[zawarudo(label = "Semantic Analyzer")]
     pub fn analyze(&mut self, ctx: &mut AnalyzerContext) {
-        IdentifierResolutionCheck::run(self.program, ctx)
+        IdentifierResolutionCheck::run(self.program, ctx);
+        LoopLabelingCheck::run(self.program, ctx)
     }
 } 

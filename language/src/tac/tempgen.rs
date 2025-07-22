@@ -8,6 +8,7 @@ pub struct TempGen {
     temp_prefix_counter: HashMap<String, usize>,
     label_counter: usize,
     loop_label_counters: HashMap<String, usize>,
+    loop_label_ids: HashMap<String, usize>
 }
 
 impl TempGen {
@@ -17,6 +18,7 @@ impl TempGen {
             temp_prefix_counter: HashMap::new(),
             label_counter:       0,
             loop_label_counters: HashMap::new(),
+            loop_label_ids:      HashMap::new(),
         }
     }
 
@@ -40,9 +42,13 @@ impl TempGen {
     }
 
     pub fn loop_label(&mut self, user_label: &str, kind: &str) -> String {
-        let count = self.loop_label_counters.entry(user_label.to_string()).or_insert(0);
-        let label = format!("_{}_{}_{}", kind, user_label, count);
-        *count += 1;
-        label
+        let id = *self.loop_label_ids.entry(user_label.to_string()).or_insert_with(|| {
+            let counter = self.loop_label_counters.entry(user_label.to_string()).or_insert(0);
+            let current = *counter;
+            *counter += 1;
+            current
+        });
+
+        format!("_{}_{}_{}", kind, user_label, id)
     }
 }
