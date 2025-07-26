@@ -1,5 +1,5 @@
 use accessors::accessors;
-use common::Factory;
+use common::*;
 use constructors::constructors;
 use zawarudo::zawarudo;
 use language::*;
@@ -15,7 +15,6 @@ pub struct Analyzer<'a> {
 impl<'a> Analyzer<'a> {
     #[zawarudo(label = "Semantic Analyzer")]
     pub fn analyze(&mut self, ctx: &mut AnalyzerContext) {
-        IdentifierResolutionCheck::run(self.program, ctx);
-        LoopLabelingCheck::run(self.program, ctx)
+        CHECKS::run(self.program, ctx)
     }
 } 

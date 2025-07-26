@@ -30,5 +30,6 @@ pub enum AstBinaryKind {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 pub enum AstType {
     #[default]
-    Placeholder
+    Int,
+    FunType(usize)
 }

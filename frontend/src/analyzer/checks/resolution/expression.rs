@@ -1,17 +1,11 @@
 use common::*;
 use super::*;
 
-impl IdentifierResolution {
-    pub fn resolve_expression(expr: &mut TypedExpression, ctx: &mut AnalyzerContext) {
-        <Self as Factory<(), TypedExpression, AnalyzerContext<'_, '_>>>::run(expr, ctx)
-    }
-}
-
 impl Factory<(), TypedExpression, AnalyzerContext<'_, '_>> for IdentifierResolution {
     fn run(expr: &mut TypedExpression, ctx: &mut AnalyzerContext) {
         match expr {
-            TypedExpression::Var { identifier, span, .. } => {
-                if let Some(info) = ctx.current_scope().get(identifier) {
+           TypedExpression::Var { identifier, span, .. } => {
+                if let Some(info) = ctx.scope.get(identifier) {
                     *identifier = info.unique_name.clone();
                 } else {
                     ctx.ctx.diagnostics.push(Diagnostic::error(
@@ -22,63 +16,45 @@ impl Factory<(), TypedExpression, AnalyzerContext<'_, '_>> for IdentifierResolut
                     ));
                 }
             }
-            TypedExpression::Constant { .. } => {}
-            TypedExpression::Unary { operand, .. } => {
-                Self::resolve_expression(operand, ctx);
-            }
-            TypedExpression::Binary { operator, left, right, span, .. } => {
-                Self::resolve_expression(left, ctx);
-                Self::resolve_expression(right, ctx);
-
-                let is_comparison = matches!(
-                    operator,
-                    AstBinaryKind::LessThan
-                    | AstBinaryKind::LessOrEqual
-                    | AstBinaryKind::GreaterThan
-                    | AstBinaryKind::GreaterOrEqual
-                    | AstBinaryKind::Equal
-                    | AstBinaryKind::NotEqual
-                );
-                
-                if is_comparison && matches!(**right, TypedExpression::Assignment { .. }) {
-                    ctx.ctx.diagnostics.push(Diagnostic::error(
-                        *span,
-                        DiagnosticKind::Custom("mixed precedence assignment".into()),
-                    ));
-                }
-            }
             TypedExpression::Assignment { left, right, span, ..} => {
-                Self::resolve_expression(left, ctx);
-                Self::resolve_expression(right, ctx);
+                if let TypedExpression::Var { .. } = **left {
 
-                if !matches!(**left, TypedExpression::Var { .. }) {
+                } else {
                     ctx.ctx.diagnostics.push(Diagnostic::error(
                         *span,
                         DiagnosticKind::Custom("invalid lvalue".into()),
                     ));
                 }
+
+                Self::run(&mut **left, ctx);
+                Self::run(&mut **right, ctx);
             }
-            TypedExpression::Conditional { condition, then_branch, else_branch, .. } => {
-                Self::resolve_expression(condition, ctx);
-                Self::resolve_expression(then_branch, ctx);
-                Self::resolve_expression(else_branch, ctx);
-            }
-            TypedExpression::FunctionCall { identifier, args, span, ..} => {
-                if let Some(info) = ctx.current_scope().get(identifier) {
-                    *identifier = info.unique_name.clone();
+            TypedExpression::FunctionCall { identifier, args, span, .. } => {
+                if let Some(new_fun_name) = ctx.scope.get(identifier) {
+                    *identifier = new_fun_name.get_unique_name();
+                    for arg in args {
+                        Self::run(&mut **arg, ctx);
+                    }
                 } else {
                     ctx.ctx.diagnostics.push(Diagnostic::error(
-                        *span,
-                        DiagnosticKind::UseOfUndeclared {
-                            name: identifier.clone(),
-                        },
+                        *span, 
+                        DiagnosticKind::UseOfUndeclared { name: identifier.clone() }
                     ));
                 }
-
-                for arg in args {
-                    Self::resolve_expression(arg, ctx);
-                }
             }
+            TypedExpression::Unary { operand, .. } => {
+                Self::run(&mut **operand, ctx);
+            }
+            TypedExpression::Binary { left, right, .. } => {
+                Self::run(&mut **left, ctx);
+                Self::run(&mut **right, ctx);
+            }
+            TypedExpression::Conditional { condition, then_branch, else_branch, .. } => {
+                Self::run(&mut **condition, ctx);
+                Self::run(&mut **then_branch, ctx);
+                Self::run(&mut **else_branch, ctx);
+            }
+            TypedExpression::Constant { .. } => {}
         }
     }
 }

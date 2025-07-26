@@ -14,7 +14,7 @@ pub struct IdentifierResolutionCheck;
 
 impl Factory<(), TypedProgram, AnalyzerContext<'_, '_>> for IdentifierResolutionCheck {
     fn run(program: &mut TypedProgram, ctx: &mut AnalyzerContext) {
-        IdentifierResolution::resolve_program(program, ctx);
+        IdentifierResolution::run(program, ctx);
     }
 }
 

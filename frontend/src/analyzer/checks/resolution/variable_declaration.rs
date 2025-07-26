@@ -1,20 +1,30 @@
 use common::*;
 use super::*;
 
-impl IdentifierResolution {
-    pub fn resolve_variable_declaration(decl: &mut TypedVariableDeclaration, ctx: &mut AnalyzerContext) {
-        <Self as Factory<(), TypedVariableDeclaration, AnalyzerContext<'_, '_>>>::run(decl, ctx)
-    }
-}
-
 impl Factory<(), TypedVariableDeclaration, AnalyzerContext<'_, '_>> for IdentifierResolution {
     fn run(decl: &mut TypedVariableDeclaration, ctx: &mut AnalyzerContext) {
-        let span = decl.init().as_ref().map(|e| e.get_span()).unwrap_or_default();
-        if let Some(unique_name) = ctx.declare_identifier(decl.identifier(), false, span) {
-            decl.set_identifier(unique_name);
-            if let Some(init) = decl.init_mut() {
-                Self::resolve_expression(init, ctx);
+        if let Some(entry) = ctx.scope.get(decl.identifier()) {
+            if *entry.from_current_scope() {
+                ctx.ctx.diagnostics.push(Diagnostic::error(
+                    decl.get_span(),
+                    DiagnosticKind::DuplicateDeclaration { name: decl.get_identifier() }
+                ));
             }
+        }
+        
+        let unique_name = ctx.ctx.tempgen.temp_from(decl.get_identifier().clone());
+        ctx.scope.insert(
+            decl.get_identifier().clone(),
+            IdentifierInfo {
+                unique_name: unique_name.clone(),
+                has_linkage: false,
+                from_current_scope: true, 
+            }
+        );
+        decl.set_identifier(unique_name);
+        
+        if let Some(init) = decl.init_mut() {
+            Self::run(init, ctx);
         }
     }
 }

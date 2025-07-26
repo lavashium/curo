@@ -11,13 +11,11 @@ impl Factory<PipelineResult<TypedProgram>, AstProgram, PipelineContext<'_, '_>> 
     fn run(program: &mut AstProgram, ctx: &mut PipelineContext) -> PipelineResult<TypedProgram> {
         let mut analyzer_ctx = AnalyzerContext::new(
             ctx.ctx,
-            Vec::new(),
+            IdentifierMap::new(),
             0,
             false,
             None
         );
-
-        analyzer_ctx.push_scope(false);
 
         let mut program = program.to_typed();
         let mut analyzer = Analyzer::new(&mut program);

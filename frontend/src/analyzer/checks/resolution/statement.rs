@@ -1,68 +1,63 @@
 use common::*;
 use super::*;
 
-impl IdentifierResolution {
-    pub fn resolve_statement(stmt: &mut TypedStatement, ctx: &mut AnalyzerContext) {
-        <Self as Factory<(), TypedStatement, AnalyzerContext<'_, '_>>>::run(stmt, ctx)
-    }
-}
-
 impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for IdentifierResolution {
     fn run(stmt: &mut TypedStatement, ctx: &mut AnalyzerContext) {
         match stmt {
             TypedStatement::Return { expression, .. } => {
-                Self::resolve_expression(expression, ctx);
+                Self::run(expression, ctx);
             }
             TypedStatement::Expression { expression, .. } => {
-                Self::resolve_expression(expression, ctx);
+                Self::run(expression, ctx);
             }
             TypedStatement::If { condition, then_branch, else_branch, .. } => {
-                Self::resolve_expression(condition, ctx);
-                Self::resolve_statement(then_branch, ctx);
+                Self::run(condition, ctx);
+                Self::run(&mut **then_branch, ctx);
                 if let Some(else_branch) = else_branch {
-                    Self::resolve_statement(else_branch, ctx);
+                    Self::run(&mut **else_branch, ctx);
                 }
             }
             TypedStatement::Compound { block, .. } => {
-                Self::resolve_block(block, ctx);
+                Self::run(block, ctx);
             }
             TypedStatement::While { condition, body, .. } => {
                 ctx.loop_depth += 1;
-                Self::resolve_expression(condition, ctx);
-                Self::resolve_statement(body, ctx);
+                Self::run(condition, ctx);
+                Self::run(&mut **body, ctx);
                 ctx.loop_depth -= 1;
             }
             TypedStatement::DoWhile { condition, body, .. } => {
                 ctx.loop_depth += 1;
-                Self::resolve_statement(body, ctx);
-                Self::resolve_expression(condition, ctx);
+                Self::run(&mut **body, ctx);
+                Self::run(condition, ctx);
                 ctx.loop_depth -= 1;
             }
             TypedStatement::For { for_init, condition, post, body, .. } => {
                 ctx.loop_depth += 1;
-                ctx.push_scope(true);
+                let old_scope = ctx.scope.clone();
+                ctx.scope = copy_identifier_map(&ctx.scope);
                 
                 match for_init {
                     TypedForInit::InitDeclaration{ decl, .. } => {
-                        Self::resolve_variable_declaration(decl, ctx);
+                        Self::run(decl, ctx);
                     }
                     TypedForInit::InitExpression{ expr, .. } => {
                         if let Some(expr) = expr {
-                            Self::resolve_expression(expr, ctx);
+                            Self::run(expr, ctx);
                         }
                     }
                 }
                 
                 if let Some(cond) = condition {
-                    Self::resolve_expression(cond, ctx);
+                    Self::run(cond, ctx);
                 }
                 
                 if let Some(p) = post {
-                    Self::resolve_expression(p, ctx);
+                    Self::run(p, ctx);
                 }
                 
-                Self::resolve_statement(body, ctx);
-                ctx.pop_scope();
+                Self::run(&mut **body, ctx);
+                ctx.scope = old_scope;
                 ctx.loop_depth -= 1;
             }
             TypedStatement::Break { span, .. } if ctx.loop_depth == 0 => {
@@ -77,7 +72,9 @@ impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for IdentifierResoluti
                     DiagnosticKind::Custom("continue not in loop".into()),
                 ));
             }
-            _ => {}
+            TypedStatement::Null 
+            | TypedStatement::Break { .. } 
+            | TypedStatement::Continue { .. } => {}
         }
     }
 }

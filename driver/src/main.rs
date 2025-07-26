@@ -25,8 +25,8 @@ fn main() {
             "--validate" => stage = PipelineStage::Analysis,
             "--tacky" => stage = PipelineStage::TacGeneration,
             "--codegen" => stage = PipelineStage::AssemblyGeneration,
-            "--allocation" => stage = PipelineStage::AssemblyAllocation,
-            "--legalization" => stage = PipelineStage::AssemblyLegalization,
+            "--alloc" => stage = PipelineStage::AssemblyAllocation,
+            "--legal" => stage = PipelineStage::AssemblyLegalization,
             "-S" => {
                 stage = PipelineStage::CodeEmission;
                 emit_assembly_only = true;

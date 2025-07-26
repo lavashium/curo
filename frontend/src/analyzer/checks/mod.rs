@@ -10,6 +10,6 @@ use common::*;
 
 pub type CHECKS = factory_pipeline!(
     IdentifierResolutionCheck,
-    TypeCheck,
+    TypeCheckCheck,
     LoopLabelingCheck,
 );

@@ -38,7 +38,8 @@ impl<'a> CompilerDriver<'a> {
 
         let mut ctx = CompilerContext::new(
             &mut diagnostics,
-            &mut tempgen
+            &mut tempgen,
+            SymbolTable::new(),
         );
 
         let mut pipeline_ctx = PipelineContext::new(

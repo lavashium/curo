@@ -24,7 +24,7 @@ impl<'a> InstructionCast for GeneratorCasts<'a> {
             instr @ TacInstruction::JumpIfZero { .. } => self.cast_jump(instr),
             instr @ TacInstruction::JumpIfNotZero { .. } => self.cast_jump(instr),
             instr @ TacInstruction::Label( name ) => vec![AsmInstruction::new_label(name.clone())],
-                        TacInstruction::FunCall {
+            TacInstruction::FunCall {
                 fun_name,
                 args,
                 dst,

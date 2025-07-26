@@ -13,7 +13,7 @@ pub struct AsmAllocator<'scp> {
 
 impl<'scp> AsmAllocator<'scp> {
     #[zawarudo(label = "Register Allocator")]
-    pub fn allocate(&mut self, ctx: &'scp mut AllocatorContext<'scp, '_>) -> i32 {
+    pub fn allocate(&mut self, ctx: &'scp mut AllocatorContext<'scp, '_>) -> Vec<i32> {
         AllocatorAllocations::new(ctx).allocate_program(self.source_asm)
     }
 }

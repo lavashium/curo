@@ -1,57 +1,43 @@
 use super::GeneratorCasts;
-use crate::asm::AsmInstruction::*;
-use crate::asm::AsmReg::*;
 use crate::asm::*;
 use language::*;
 
+
 impl<'a> GeneratorCasts<'a> {
     pub fn cast_funcall(&self, fun_name: &str, args: &[TacVal], dst: &TacVal) -> Vec<AsmInstruction> {
-        let arg_registers = vec![DI, SI, DX, CX, R8, R9];
-        let n_reg_args = std::cmp::min(6, args.len());
-        let n_stack_args = args.len() - n_reg_args;
-        let padding = if n_stack_args % 2 == 0 { 8 } else { 0 };
-        let mut instructions = Vec::new();
+        let arg_registers = [
+            AsmReg::DI, AsmReg::SI, AsmReg::DX,
+            AsmReg::CX, AsmReg::R8, AsmReg::R9,
+        ];
+        let n_reg_args = args.len().min(arg_registers.len());
+        let n_stack_args = args.len().saturating_sub(n_reg_args);
+        let padding = if n_stack_args % 2 != 0 { 8 } else { 0 };
+        let mut instrs = Vec::new();
 
         if padding != 0 {
-            instructions.push(AllocateStack(padding));
+            instrs.push(AsmInstruction::AllocateStack(padding));
         }
-
         for i in 0..n_reg_args {
             let src = convert_operand(&args[i]);
-            instructions.push(Mov {
-                src,
-                dst: AsmOperand::new_reg(arg_registers[i].clone()),
-            });
+            let dst_reg = AsmOperand::Reg(arg_registers[i].clone());
+            instrs.push(AsmInstruction::Mov { src, dst: dst_reg });
         }
-
         for i in (n_reg_args..args.len()).rev() {
             let src = convert_operand(&args[i]);
-            match src {
-                AsmOperand::Imm(_) | AsmOperand::Reg(_) => {
-                    instructions.push(Push(src));
-                }
+            match &src {
+                AsmOperand::Imm(_) | AsmOperand::Reg(_) => instrs.push(AsmInstruction::Push(src)),
                 _ => {
-                    instructions.push(Mov {
-                        src,
-                        dst: AsmOperand::new_reg(AX),
-                    });
-                    instructions.push(Push(AsmOperand::new_reg(AX)));
+                    instrs.push(AsmInstruction::Mov { src: src.clone(), dst: AsmOperand::Reg(AsmReg::AX) });
+                    instrs.push(AsmInstruction::Push(AsmOperand::Reg(AsmReg::AX)));
                 }
             }
         }
-
-        instructions.push(Call(fun_name.to_string()));
-
-        let bytes_to_remove = (n_stack_args * 8) + padding as usize;
-        if bytes_to_remove != 0 {
-            instructions.push(DeallocateStack(bytes_to_remove as i32));
+        instrs.push(AsmInstruction::Call(fun_name.to_string()));
+        let cleanup = (n_stack_args * 8) as i32 + padding;
+        if cleanup > 0 {
+            instrs.push(AsmInstruction::DeallocateStack(cleanup as i32));
         }
-
-        instructions.push(Mov {
-            src: AsmOperand::new_reg(AX),
-            dst: convert_operand(dst),
-        });
-
-        instructions
+        instrs.push(AsmInstruction::Mov { src: AsmOperand::Reg(AsmReg::AX), dst: convert_operand(dst) });
+        instrs
     }
 }

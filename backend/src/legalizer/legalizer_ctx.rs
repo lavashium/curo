@@ -6,5 +6,5 @@ use constructors::constructors;
 #[constructors]
 pub struct LegalizerContext<'scp, 'ctx> {
     pub ctx: &'scp mut CompilerContext<'ctx>,
-    pub stack_size: i32
+    pub stack_sizes: Vec<i32>
 }

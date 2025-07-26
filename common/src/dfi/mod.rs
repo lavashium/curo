@@ -19,8 +19,8 @@ impl<T> Chain<Option<T>> for Option<T> {
 }
 
 impl Chain<()> for () {
-    fn chain(_: (), _: impl FnOnce() -> ()) -> () {
-        ()
+    fn chain(_: (), f: impl FnOnce() -> ()) -> () {
+        f()
     }
 }
 

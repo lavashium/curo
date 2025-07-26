@@ -16,9 +16,8 @@ impl<'scp, 'ctx> AllocatorAllocations<'scp, 'ctx> {
         match operand {
             AsmOperand::Pseudo(identifier) => {
                 let offset = self.ctx.stack_map.entry(identifier.clone()).or_insert_with(|| {
-                    let offset = self.ctx.next_offset;
                     self.ctx.next_offset -= 4;
-                    offset
+                    self.ctx.next_offset
                 });
                 AsmOperand::new_stack(*offset)
             }
