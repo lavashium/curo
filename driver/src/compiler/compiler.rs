@@ -29,9 +29,14 @@ impl<'a> CompilerDriver<'a> {
     #[zawarudo(label = "main")]
     pub fn compile(&mut self, stage: PipelineStage) -> Result<String, ErrCode> {
 
-        let mut diagnostics = DiagnosticsManager::new(
-            self.source_code, 
-            self.filename
+        let diagnostic_configuration = DiagnosticConfiguration::new(
+            DiagnosticFormat::Normal,
+            self.source_code.into(),
+            self.filename.into(),
+        );
+
+        let mut diagnostics = DiagnosticManager::new(
+            diagnostic_configuration
         );
 
         let mut tempgen = TempGen::new();

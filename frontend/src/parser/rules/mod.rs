@@ -18,22 +18,29 @@ use language::*;
 
 macro_rules! push_eof_error {
     ($ctx:expr) => {
-        $ctx.ctx.diagnostics.push(Diagnostic::error(
-            Span::default(),
-            DiagnosticKind::UnexpectedEof,
-        ));
+        $ctx.ctx.diagnostics.push(
+            Diagnostic::error(
+                Span::default(),
+                DiagnosticKind::Lexical(LexicalError::UnexpectedEof),
+            )
+        );
     };
 }
 
 macro_rules! error_expect {
     ($self:expr, $ctx:expr, $kind:expr) => {{
         match $self.parser.source_tokens.consume() {
-            Some(token) if token.kind() == &$kind => Some(token),
+            Some(tok) if tok.kind() == &$kind => Some(tok),
             Some(found) => {
-                $ctx.ctx.diagnostics.push(Diagnostic::error(
-                    found.get_span(),
-                    DiagnosticKind::new_expected_token($kind, found.clone()),
-                ));
+                $ctx.ctx.diagnostics.push(
+                    Diagnostic::error(
+                        found.get_span(),
+                        DiagnosticKind::Syntax(SyntaxError::ExpectedToken {
+                            expected: $kind.clone(),
+                            found: found.clone(),
+                        })
+                    )
+                );
                 None
             }
             None => {
@@ -45,19 +52,24 @@ macro_rules! error_expect {
 }
 
 macro_rules! error_consume_unwrap {
-    ($self:expr, $ctx:expr, $kind:ident) => {{
+    ($self:expr, $ctx:expr, $variant:ident, $expected_kind:expr) => {{
         match $self.parser.source_tokens.consume() {
-            Some(token) => match token.kind() {
-                TokenKind::$kind(inner) => Some(inner.to_owned()),
-                _ => {
-                    let expected_kind = GenericKind::$kind;
-                    $ctx.ctx.diagnostics.push(Diagnostic::error(
-                        token.get_span(),
-                        DiagnosticKind::new_unexpected_generic(token.clone(), vec![expected_kind]),
-                    ));
+            Some(tok) => {
+                if let TokenKind::$variant(inner) = tok.kind() {
+                    Some(inner.clone())
+                } else {
+                    $ctx.ctx.diagnostics.push(
+                        Diagnostic::error(
+                            tok.get_span(),
+                            DiagnosticKind::Syntax(SyntaxError::ExpectedToken {
+                                expected: $expected_kind.clone(),
+                                found: tok.clone(),
+                            })
+                        )
+                    );
                     None
                 }
-            },
+            }
             None => {
                 push_eof_error!($ctx);
                 None
@@ -65,7 +77,6 @@ macro_rules! error_consume_unwrap {
         }
     }};
 }
-
 
 #[constructors]
 #[accessors]
@@ -80,31 +91,51 @@ impl<'a> ParserRules<'a> {
 
     #[allow(dead_code)]
     pub fn unwrap_identifier(&mut self, ctx: &mut ParserContext) -> Option<String> {
-        error_consume_unwrap!(self, ctx, Identifier)
+        error_consume_unwrap!(
+            self,
+            ctx,
+            Identifier,
+            TokenKind::Identifier(String::new())
+        )
     }
 
     #[allow(dead_code)]
     pub fn unwrap_constant(&mut self, ctx: &mut ParserContext) -> Option<String> {
-        error_consume_unwrap!(self, ctx, Constant)
+        error_consume_unwrap!(
+            self,
+            ctx,
+            Constant,
+            TokenKind::Constant(String::new())
+        )
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_unknown(&mut self, ctx: &mut ParserContext) -> Option<String> {
-        error_consume_unwrap!(self, ctx, Unknown)
+    pub fn unwrap_operator(&mut self, ctx: &mut ParserContext, expected_op: OperatorKind) -> Option<OperatorKind> {
+        error_consume_unwrap!(
+            self,
+            ctx,
+            Operator,
+            TokenKind::Operator(expected_op.clone())
+        )
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_operator(&mut self, ctx: &mut ParserContext) -> Option<OperatorKind> {
-        error_consume_unwrap!(self, ctx, Operator)
+    pub fn unwrap_keyword(&mut self, ctx: &mut ParserContext, expected_kw: KeywordKind) -> Option<KeywordKind> {
+        error_consume_unwrap!(
+            self,
+            ctx,
+            Keyword,
+            TokenKind::Keyword(expected_kw.clone())
+        )
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_keyword(&mut self, ctx: &mut ParserContext) -> Option<KeywordKind> {
-        error_consume_unwrap!(self, ctx, Keyword)
-    }
-
-    #[allow(dead_code)]
-    pub fn unwrap_punctuation(&mut self, ctx: &mut ParserContext) -> Option<PunctuationKind> {
-        error_consume_unwrap!(self, ctx, Punctuation)
+    pub fn unwrap_punctuation(&mut self, ctx: &mut ParserContext, expected_punct: PunctuationKind) -> Option<PunctuationKind> {
+        error_consume_unwrap!(
+            self,
+            ctx,
+            Punctuation,
+            TokenKind::Punctuation(expected_punct.clone())
+        )
     }
 }

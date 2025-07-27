@@ -63,13 +63,13 @@ impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for IdentifierResoluti
             TypedStatement::Break { span, .. } if ctx.loop_depth == 0 => {
                 ctx.ctx.diagnostics.push(Diagnostic::error(
                     *span,
-                    DiagnosticKind::Custom("break not in loop".into()),
+                    DiagnosticKind::ControlFlow(ControlFlowError::BreakOutsideLoop),
                 ));
             }
             TypedStatement::Continue { span, .. } if ctx.loop_depth == 0 => {
                 ctx.ctx.diagnostics.push(Diagnostic::error(
                     *span,
-                    DiagnosticKind::Custom("continue not in loop".into()),
+                    DiagnosticKind::ControlFlow(ControlFlowError::ContinueOutsideLoop),
                 ));
             }
             TypedStatement::Null 

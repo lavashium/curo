@@ -20,8 +20,3 @@ impl Factory<(), TypedProgram, AnalyzerContext<'_, '_>> for TypeCheckCheck {
 }
 
 pub struct TypeCheck;
-
-pub(crate) fn report_error(ctx: &mut AnalyzerContext, span: Span, message: String) {
-    let diag = Diagnostic::error(span, DiagnosticKind::Custom(message));
-    ctx.ctx.diagnostics_mut().push(diag);
-}

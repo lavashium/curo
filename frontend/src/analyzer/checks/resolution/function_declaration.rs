@@ -7,7 +7,7 @@ impl Factory<(), TypedFunctionDeclaration, AnalyzerContext<'_, '_>> for Identifi
             if entry.from_current_scope && !entry.has_linkage {
                 ctx.ctx.diagnostics.push(Diagnostic::error(
                     function_declaration.get_span(),
-                    DiagnosticKind::DuplicateDeclaration { name: function_declaration.get_identifier() },
+                    DiagnosticKind::Semantic(SemanticError::ConflictingDeclarations { name: function_declaration.get_identifier() }),
                 ));
             }
         }
@@ -25,7 +25,7 @@ impl Factory<(), TypedFunctionDeclaration, AnalyzerContext<'_, '_>> for Identifi
             if ctx.inside_function {
                 ctx.ctx.diagnostics.push(Diagnostic::error(
                     body.get_span(),
-                    DiagnosticKind::Custom("nested functions not allowed".to_string()),
+                    DiagnosticKind::Semantic(SemanticError::NestedFunctionDefinition),
                 ));
             }
         }
@@ -40,7 +40,7 @@ impl Factory<(), TypedFunctionDeclaration, AnalyzerContext<'_, '_>> for Identifi
                 if entry.from_current_scope {
                     ctx.ctx.diagnostics.push(Diagnostic::error(
                         function_declaration_span,
-                        DiagnosticKind::DuplicateDeclaration { name: orig_name.clone() },
+                        DiagnosticKind::Semantic(SemanticError::DuplicateDeclaration { name: orig_name.clone() }),
                     ));
                 }
             }

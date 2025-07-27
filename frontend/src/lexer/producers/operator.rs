@@ -20,7 +20,7 @@ impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for OperatorProduce
                     let span = lexer.span_from(start_pos);
                     diagnostics.push(Diagnostic::error(
                         span,
-                        DiagnosticKind::Custom("Decrement operator is NOT supported".to_string()),
+                        DiagnosticKind::Custom(CustomError::Message("Decrement operator is NOT supported".into())),
                     ));
                     return None;
                 }
@@ -31,7 +31,7 @@ impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for OperatorProduce
                     let span = lexer.span_from(start_pos);
                     diagnostics.push(Diagnostic::error(
                         span,
-                        DiagnosticKind::Custom("Increment operator is NOT supported".to_string()),
+                       DiagnosticKind::Custom(CustomError::Message("Increment operator is NOT supported".into())),
                     ));
                     return None;
                 }

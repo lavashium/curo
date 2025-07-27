@@ -7,7 +7,7 @@ pub struct CommentProducer;
 impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for CommentProducer {
     fn run(lexer: &mut Lexer, ctx: &mut LexerContext) -> Option<Token> {
         let start_pointer = lexer.get_pointer();
-
+        
         let diagnostics = ctx.ctx.diagnostics_mut();
 
         let next_two = lexer.peek_slice((start_pointer, start_pointer + 2))?;
@@ -29,6 +29,8 @@ impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for CommentProducer
         }
 
         if next_two == "/*" {
+            let start_pointer = lexer.get_pointer();
+
             lexer.advance();
             lexer.advance();
 
@@ -49,10 +51,14 @@ impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for CommentProducer
                 }
                 lexer.advance();
             }
+
+            let end_pointer = lexer.get_pointer();
+
             diagnostics.push(Diagnostic::error(
-                Span::default(),
-                DiagnosticKind::Custom("Unterminated multi-line comment".to_string()),
+                lexer.span_from((start_pointer, end_pointer)),
+                DiagnosticKind::Lexical(LexicalError::UnterminatedMultilineComment),
             ));
+
             return Some(Token::new(
                 TokenKind::Irrelevant,
                 "".to_string(),

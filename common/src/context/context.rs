@@ -6,7 +6,7 @@ use constructors::constructors;
 #[accessors]
 #[constructors]
 pub struct CompilerContext<'ctx> {
-    pub diagnostics: &'ctx mut DiagnosticsManager,
+    pub diagnostics: &'ctx mut DiagnosticManager,
     pub tempgen: &'ctx mut TempGen,
 
     pub symtable: SymbolTable

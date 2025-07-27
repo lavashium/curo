@@ -75,7 +75,7 @@ impl<'a> Lexer<'a> {
 
                 ctx.ctx.diagnostics.push(Diagnostic::error(
                     span,
-                    DiagnosticKind::new_unknown_token(token),
+                    DiagnosticKind::Lexical(LexicalError::UnknownToken { token }),
                 ));
             }
         }

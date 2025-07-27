@@ -7,7 +7,7 @@ impl Factory<(), TypedVariableDeclaration, AnalyzerContext<'_, '_>> for Identifi
             if *entry.from_current_scope() {
                 ctx.ctx.diagnostics.push(Diagnostic::error(
                     decl.get_span(),
-                    DiagnosticKind::DuplicateDeclaration { name: decl.get_identifier() }
+                    DiagnosticKind::Semantic(SemanticError::DuplicateDeclaration { name: decl.get_identifier() }),
                 ));
             }
         }

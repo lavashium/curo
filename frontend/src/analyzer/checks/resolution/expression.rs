@@ -10,9 +10,9 @@ impl Factory<(), TypedExpression, AnalyzerContext<'_, '_>> for IdentifierResolut
                 } else {
                     ctx.ctx.diagnostics.push(Diagnostic::error(
                         *span,
-                        DiagnosticKind::UseOfUndeclared {
+                        DiagnosticKind::Semantic(SemanticError::UseOfUndeclared {
                             name: identifier.clone(),
-                        },
+                        }),
                     ));
                 }
             }
@@ -22,7 +22,7 @@ impl Factory<(), TypedExpression, AnalyzerContext<'_, '_>> for IdentifierResolut
                 } else {
                     ctx.ctx.diagnostics.push(Diagnostic::error(
                         *span,
-                        DiagnosticKind::Custom("invalid lvalue".into()),
+                        DiagnosticKind::Syntax(SyntaxError::InvalidLValue),
                     ));
                 }
 
@@ -38,7 +38,9 @@ impl Factory<(), TypedExpression, AnalyzerContext<'_, '_>> for IdentifierResolut
                 } else {
                     ctx.ctx.diagnostics.push(Diagnostic::error(
                         *span, 
-                        DiagnosticKind::UseOfUndeclared { name: identifier.clone() }
+                        DiagnosticKind::Semantic(SemanticError::UseOfUndeclared {
+                            name: identifier.clone(),
+                        }),
                     ));
                 }
             }

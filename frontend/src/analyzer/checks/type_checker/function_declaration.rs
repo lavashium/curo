@@ -14,12 +14,12 @@ impl Factory<(), TypedFunctionDeclaration, AnalyzerContext<'_, '_>> for TypeChec
             if old_symbol.ty() != &fun_ty {
                 ctx.ctx.diagnostics.push(Diagnostic::error(
                     span,
-                    DiagnosticKind::Custom(format!("Redeclared function {} with a different type", name)),
+                    DiagnosticKind::Semantic(SemanticError::FunctionRedefinition { name: name.clone() }),
                 ));
             } else if old_symbol.get_defined() && has_body {
                 ctx.ctx.diagnostics.push(Diagnostic::error(
                     span,
-                    DiagnosticKind::Custom(format!("Defined body of function {} twice", name)),
+                    DiagnosticKind::Semantic(SemanticError::FunctionRedefinition { name: name.clone() }),
                 ));
             }
         }

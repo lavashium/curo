@@ -202,9 +202,14 @@ impl<'a> Factory<Option<AstExpression>, ParserRules<'a>, ParserContext<'_, '_>> 
                 ctx.ctx.diagnostics.push(
                     Diagnostic::error(
                         token.get_span(),
-                        DiagnosticKind::UnknownToken(token.clone()),
+                        DiagnosticKind::Lexical(LexicalError::UnknownToken { token: token.clone() }),
                     )
-                    .with(Diagnostic::note(token.get_span(), "expected an expression here")),
+                    .with(
+                        Diagnostic::note(
+                            token.get_span(),
+                            DiagnosticKind::Custom(CustomError::Message("expected an expression here".into()))
+                        )
+                    )
                 );
                 None
             }

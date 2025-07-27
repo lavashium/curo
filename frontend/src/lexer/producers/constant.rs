@@ -38,11 +38,11 @@ impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for ConstantProduce
                 let lexeme = lexer.peek_slice((start_ptr, end_ptr))?.to_string();
                 let span = lexer.span_from(start_pos);
 
-                let invalid_token =
-                    Token::new(TokenKind::Unknown(lexeme.clone()), lexeme.clone(), span);
+                let invalid_token = Token::new(TokenKind::Unknown(lexeme.clone()), lexeme.clone(), span);
+
                 diagnostics.push(Diagnostic::error(
                     span,
-                    DiagnosticKind::UnknownToken(invalid_token.clone()),
+                    DiagnosticKind::Lexical(LexicalError::UnknownToken { token: invalid_token.clone() }),
                 ));
 
                 return Some(invalid_token);
