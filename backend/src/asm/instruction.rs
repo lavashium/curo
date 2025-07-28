@@ -14,6 +14,7 @@ pub struct AsmProgram {
 pub struct AsmFunction {
     identifier: String,
     instructions: Vec<AsmInstruction>,
+    stack_size: i32,
 }
 
 #[constructors]

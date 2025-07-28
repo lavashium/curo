@@ -1,12 +1,6 @@
 use common::*;
 use super::*;
 
-impl LoopLabeling {
-    pub fn label_statement(statement: &mut TypedStatement, ctx: &mut AnalyzerContext) {
-        <Self as Factory<(), TypedStatement, AnalyzerContext<'_, '_>>>::run(statement, ctx)
-    }
-}
-
 impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for LoopLabeling {
     fn run(statement: &mut TypedStatement, ctx: &mut AnalyzerContext) -> () {
         match statement {
@@ -15,14 +9,12 @@ impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for LoopLabeling {
             | TypedStatement::Null => {}
 
             TypedStatement::If { then_branch, else_branch, .. } => {
-                Self::label_statement(then_branch, ctx);
-                if let Some(else_stmt) = else_branch {
-                    Self::label_statement(else_stmt, ctx);
-                }
+                Self::run_box(then_branch, ctx);
+                Self::run_option_box(else_branch, ctx);
             }
 
             TypedStatement::Compound { block, .. } => {
-                Self::label_block(block, ctx);
+                Self::run(block, ctx);
             }
 
             TypedStatement::Break { label, .. }
@@ -37,7 +29,7 @@ impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for LoopLabeling {
                 *label = new_lbl.clone();
                 let old_loop = ctx.get_current_loop();
                 ctx.current_loop = Some(new_lbl);
-                Self::label_statement(body, ctx);
+                Self::run_box(body, ctx);
                 ctx.current_loop = old_loop;
             }
         }

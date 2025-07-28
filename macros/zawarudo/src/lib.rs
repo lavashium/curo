@@ -45,7 +45,9 @@ pub fn zawarudo(attr: TokenStream, item: TokenStream) -> TokenStream {
         );
 
         let timer_start = std::time::Instant::now();
-        let result = (|| #block)();
+        let result = {
+            #block
+        };
         let elapsed = timer_start.elapsed();
 
         eprintln!(

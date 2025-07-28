@@ -2,8 +2,8 @@ use super::GeneratorCasts;
 use crate::asm::*;
 use language::*;
 
-impl<'a> GeneratorCasts<'a> {
-    pub fn cast_jump(&self, instr: &TacInstruction) -> Vec<AsmInstruction> {
+impl GeneratorCasts {
+    pub fn cast_jump(instr: &TacInstruction) -> Vec<AsmInstruction> {
         match instr {
             TacInstruction::Jump { target } => {
                 vec![

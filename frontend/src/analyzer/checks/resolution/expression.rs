@@ -26,14 +26,14 @@ impl Factory<(), TypedExpression, AnalyzerContext<'_, '_>> for IdentifierResolut
                     ));
                 }
 
-                Self::run(&mut **left, ctx);
-                Self::run(&mut **right, ctx);
+                Self::run_box(left, ctx);
+                Self::run_box(right, ctx);
             }
             TypedExpression::FunctionCall { identifier, args, span, .. } => {
                 if let Some(new_fun_name) = ctx.scope.get(identifier) {
                     *identifier = new_fun_name.get_unique_name();
                     for arg in args {
-                        Self::run(&mut **arg, ctx);
+                        Self::run_box(arg, ctx);
                     }
                 } else {
                     ctx.ctx.diagnostics.push(Diagnostic::error(
@@ -45,16 +45,16 @@ impl Factory<(), TypedExpression, AnalyzerContext<'_, '_>> for IdentifierResolut
                 }
             }
             TypedExpression::Unary { operand, .. } => {
-                Self::run(&mut **operand, ctx);
+                Self::run_box(operand, ctx);
             }
             TypedExpression::Binary { left, right, .. } => {
-                Self::run(&mut **left, ctx);
-                Self::run(&mut **right, ctx);
+                Self::run_box(left, ctx);
+                Self::run_box(right, ctx);
             }
             TypedExpression::Conditional { condition, then_branch, else_branch, .. } => {
-                Self::run(&mut **condition, ctx);
-                Self::run(&mut **then_branch, ctx);
-                Self::run(&mut **else_branch, ctx);
+                Self::run_box(condition, ctx);
+                Self::run_box(then_branch, ctx);
+                Self::run_box(else_branch, ctx);
             }
             TypedExpression::Constant { .. } => {}
         }

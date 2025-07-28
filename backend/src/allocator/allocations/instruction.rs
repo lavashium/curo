@@ -2,38 +2,32 @@ use super::*;
 use crate::asm::*;
 use common::*;
 
-impl<'scp, 'ctx> AllocatorAllocations<'scp, 'ctx> {
-    pub fn allocate_instruction(&mut self, instruction: &mut AsmInstruction) {
-        <Self as Factory<(), Self, AsmInstruction>>::run(self, instruction)
-    }
-}
-
-impl<'scp, 'ctx> Factory<(), Self, AsmInstruction> for AllocatorAllocations<'scp, 'ctx> {
-    fn run(driver: &mut Self, instruction: &mut AsmInstruction) {
+impl Factory<(), AsmInstruction, AllocatorContext<'_, '_>> for AllocatorAllocations {
+    fn run(instruction: &mut AsmInstruction, ctx: &mut AllocatorContext) {
         match instruction {
             AsmInstruction::Mov { src, dst } => {
-                *src = driver.replace_operand(src);
-                *dst = driver.replace_operand(dst);
+                *src = Self::replace_operand(src, ctx);
+                *dst = Self::replace_operand(dst, ctx);
             }
             AsmInstruction::Unary { unary_operator: _, operand } => {
-                *operand = driver.replace_operand(operand);
+                *operand = Self::replace_operand(operand, ctx);
             }
             AsmInstruction::Binary { binary_operator: _, src, dst } => {
-                *src = driver.replace_operand(src);
-                *dst = driver.replace_operand(dst);
+                *src = Self::replace_operand(src, ctx);
+                *dst = Self::replace_operand(dst, ctx);
             }
             AsmInstruction::Idiv { operand } => {
-                *operand = driver.replace_operand(operand);
+                *operand = Self::replace_operand(operand, ctx);
             }
             AsmInstruction::Cmp { operand1, operand2 } => {
-                *operand1 = driver.replace_operand(operand1);
-                *operand2 = driver.replace_operand(operand2);
+                *operand1 = Self::replace_operand(operand1, ctx);
+                *operand2 = Self::replace_operand(operand2, ctx);
             }
             AsmInstruction::SetCC { cond: _, operand } => {
-                *operand = driver.replace_operand(operand);
+                *operand = Self::replace_operand(operand, ctx);
             }
             AsmInstruction::Push(asm_operand) => {
-                *asm_operand = driver.replace_operand(asm_operand);
+                *asm_operand = Self::replace_operand(asm_operand, ctx);
             }
             AsmInstruction::Ret => {}
             AsmInstruction::Cdq => {}

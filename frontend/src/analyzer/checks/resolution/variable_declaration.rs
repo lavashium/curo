@@ -23,8 +23,6 @@ impl Factory<(), TypedVariableDeclaration, AnalyzerContext<'_, '_>> for Identifi
         );
         decl.set_identifier(unique_name);
         
-        if let Some(init) = decl.init_mut() {
-            Self::run(init, ctx);
-        }
+        Self::run_option(decl.init_mut(), ctx);
     }
 }

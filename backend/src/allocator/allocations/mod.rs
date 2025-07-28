@@ -7,17 +7,15 @@ use super::*;
 use constructors::constructors;
 
 #[constructors]
-pub struct AllocatorAllocations<'scp, 'ctx> {
-    pub ctx: &'scp mut AllocatorContext<'scp, 'ctx>,
-}
+pub struct AllocatorAllocations;
 
-impl<'scp, 'ctx> AllocatorAllocations<'scp, 'ctx> {
-    pub fn replace_operand(&mut self, operand: &mut AsmOperand) -> AsmOperand {
+impl AllocatorAllocations {
+    pub fn replace_operand(operand: &mut AsmOperand, ctx: &mut AllocatorContext) -> AsmOperand {
         match operand {
             AsmOperand::Pseudo(identifier) => {
-                let offset = self.ctx.stack_map.entry(identifier.clone()).or_insert_with(|| {
-                    self.ctx.next_offset -= 4;
-                    self.ctx.next_offset
+                let offset = ctx.stack_map.entry(identifier.clone()).or_insert_with(|| {
+                    ctx.next_offset -= 4;
+                    ctx.next_offset
                 });
                 AsmOperand::new_stack(*offset)
             }

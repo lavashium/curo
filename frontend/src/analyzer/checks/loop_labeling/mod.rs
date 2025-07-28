@@ -12,7 +12,7 @@ pub struct LoopLabelingCheck;
 
 impl Factory<(), TypedProgram, AnalyzerContext<'_, '_>> for LoopLabelingCheck {
     fn run(program: &mut TypedProgram, ctx: &mut AnalyzerContext<'_, '_>) {
-        LoopLabeling::label_program(program, ctx)
+        LoopLabeling::run(program, ctx)
     }
 }
 

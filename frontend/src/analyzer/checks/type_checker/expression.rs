@@ -36,7 +36,7 @@ impl Factory<(), TypedExpression, AnalyzerContext<'_, '_>> for TypeCheck {
                                 );
                             } else {
                                 for arg in args.iter_mut() {
-                                    TypeCheck::run(&mut **arg, ctx);
+                                    Self::run_box(arg, ctx);
                                 }
                             }
                         }
@@ -89,23 +89,23 @@ impl Factory<(), TypedExpression, AnalyzerContext<'_, '_>> for TypeCheck {
             }
 
             TypedExpression::Unary { operand, .. } => {
-                TypeCheck::run(&mut **operand, ctx);
+                Self::run_box(operand, ctx);
             }
 
             TypedExpression::Binary { left, right, .. } => {
-                TypeCheck::run(&mut **left, ctx);
-                TypeCheck::run(&mut **right, ctx);
+                Self::run_box(left, ctx);
+                Self::run_box(right, ctx);
             }
 
             TypedExpression::Assignment { left, right, .. } => {
-                TypeCheck::run(&mut **left, ctx);
-                TypeCheck::run(&mut **right, ctx);
+                Self::run_box(left, ctx);
+                Self::run_box(right, ctx);
             }
 
             TypedExpression::Conditional { condition, then_branch, else_branch, .. } => {
-                TypeCheck::run(&mut **condition, ctx);
-                TypeCheck::run(&mut **then_branch, ctx);
-                TypeCheck::run(&mut **else_branch, ctx);
+                Self::run_box(condition, ctx);
+                Self::run_box(then_branch, ctx);
+                Self::run_box(else_branch, ctx);
             }
 
             TypedExpression::Constant { .. } => {}

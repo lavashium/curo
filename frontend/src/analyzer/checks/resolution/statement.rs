@@ -12,10 +12,8 @@ impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for IdentifierResoluti
             }
             TypedStatement::If { condition, then_branch, else_branch, .. } => {
                 Self::run(condition, ctx);
-                Self::run(&mut **then_branch, ctx);
-                if let Some(else_branch) = else_branch {
-                    Self::run(&mut **else_branch, ctx);
-                }
+                Self::run_box(then_branch, ctx);
+                Self::run_option_box(else_branch, ctx);
             }
             TypedStatement::Compound { block, .. } => {
                 Self::run(block, ctx);
@@ -23,12 +21,12 @@ impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for IdentifierResoluti
             TypedStatement::While { condition, body, .. } => {
                 ctx.loop_depth += 1;
                 Self::run(condition, ctx);
-                Self::run(&mut **body, ctx);
+                Self::run_box(body, ctx);
                 ctx.loop_depth -= 1;
             }
             TypedStatement::DoWhile { condition, body, .. } => {
                 ctx.loop_depth += 1;
-                Self::run(&mut **body, ctx);
+                Self::run_box(body, ctx);
                 Self::run(condition, ctx);
                 ctx.loop_depth -= 1;
             }
@@ -42,21 +40,15 @@ impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for IdentifierResoluti
                         Self::run(decl, ctx);
                     }
                     TypedForInit::InitExpression{ expr, .. } => {
-                        if let Some(expr) = expr {
-                            Self::run(expr, ctx);
-                        }
+                        Self::run_option(expr, ctx);
                     }
                 }
                 
-                if let Some(cond) = condition {
-                    Self::run(cond, ctx);
-                }
+                Self::run_option(condition, ctx);
                 
-                if let Some(p) = post {
-                    Self::run(p, ctx);
-                }
+                Self::run_option(post, ctx);
                 
-                Self::run(&mut **body, ctx);
+                Self::run_box(body, ctx);
                 ctx.scope = old_scope;
                 ctx.loop_depth -= 1;
             }

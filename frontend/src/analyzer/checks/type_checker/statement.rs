@@ -4,8 +4,8 @@ use super::*;
 impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for TypeCheck {
     fn run(stmt: &mut TypedStatement, ctx: &mut AnalyzerContext) {
         match stmt {
-            TypedStatement::Return { expression, .. } => TypeCheck::run(expression, ctx),
-            TypedStatement::Expression { expression, .. } => TypeCheck::run(expression, ctx),
+            TypedStatement::Return { expression, .. } => Self::run(expression, ctx),
+            TypedStatement::Expression { expression, .. } => Self::run(expression, ctx),
             
             TypedStatement::If { 
                 condition, 
@@ -13,15 +13,13 @@ impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for TypeCheck {
                 else_branch,  
                 .. 
             } => {
-                TypeCheck::run(condition, ctx);
-                TypeCheck::run(&mut **then_branch, ctx);
-                if let Some(else_stmt) = else_branch {
-                    TypeCheck::run(&mut **else_stmt, ctx);
-                }
+                Self::run(condition, ctx);
+                Self::run_box(then_branch, ctx);
+                Self::run_option_box(else_branch, ctx);
             }
             
             TypedStatement::Compound { block, .. } => {
-                TypeCheck::run(block, ctx);
+                Self::run(block, ctx);
             }
             
             TypedStatement::While { 
@@ -29,8 +27,8 @@ impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for TypeCheck {
                 body, 
                 .. 
             } => {
-                TypeCheck::run(condition, ctx);
-                TypeCheck::run(&mut **body, ctx);
+                Self::run(condition, ctx);
+                Self::run_box(body, ctx);
             }
             
             TypedStatement::DoWhile { 
@@ -38,8 +36,8 @@ impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for TypeCheck {
                 body, 
                 .. 
             } => {
-                TypeCheck::run(&mut **body, ctx);
-                TypeCheck::run(condition, ctx);
+                Self::run_box(body, ctx);
+                Self::run(condition, ctx);
             }
             
             TypedStatement::For { 
@@ -51,24 +49,16 @@ impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for TypeCheck {
             } => {
                 match for_init {
                     TypedForInit::InitDeclaration { decl, .. } => {
-                        TypeCheck::run(decl, ctx);
+                        Self::run(decl, ctx);
                     }
                     TypedForInit::InitExpression { expr, .. } => {
-                        if let Some(e) = expr {
-                            TypeCheck::run(e, ctx);
-                        }
+                        Self::run_option(expr, ctx);
                     }
                 }
                 
-                if let Some(cond) = condition {
-                    TypeCheck::run(cond, ctx);
-                }
-                
-                if let Some(p) = post {
-                    TypeCheck::run(p, ctx);
-                }
-                
-                TypeCheck::run(&mut **body, ctx);
+                Self::run_option(condition, ctx);
+                Self::run_option(post, ctx);
+                Self::run_box(body, ctx);
             }
             
             TypedStatement::Null | 

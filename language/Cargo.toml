@@ -3,7 +3,11 @@ name = "language"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+zawarudo = []
+
 [dependencies]
 accessors = { path = "../macros/accessors"}
 constructors = { path = "../macros/constructors"}
 typed_ast = { path = "../macros/typed_ast"}
+zawarudo = { path = "../macros/zawarudo" }

@@ -2,8 +2,8 @@ use super::GeneratorCasts;
 use crate::asm::*;
 use language::*;
 
-impl<'a> GeneratorCasts<'a> {
-    pub fn cast_binary(&self, instruction: &TacInstruction) -> Vec<AsmInstruction> {
+impl GeneratorCasts {
+    pub fn cast_binary(instruction: &TacInstruction) -> Vec<AsmInstruction> {
         if let TacInstruction::Binary { operator, source1, source2, destination } = instruction {
             let src1 = convert_operand(source1);
             let src2 = convert_operand(source2);

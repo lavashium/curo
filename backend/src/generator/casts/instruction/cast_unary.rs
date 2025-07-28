@@ -2,8 +2,8 @@ use super::GeneratorCasts;
 use crate::asm::*;
 use language::*;
 
-impl<'a> GeneratorCasts<'a> {
-    pub fn cast_unary(&self, instruction: &TacInstruction) -> Vec<AsmInstruction> {
+impl GeneratorCasts {
+    pub fn cast_unary(instruction: &TacInstruction) -> Vec<AsmInstruction> {
         if let TacInstruction::Unary {
             operator,
             source,

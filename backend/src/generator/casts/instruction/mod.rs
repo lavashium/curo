@@ -7,28 +7,25 @@ mod cast_funcall;
 use super::*;
 use crate::asm::*;
 use language::*;
+use common::*;
 
-pub trait InstructionCast {
-    fn cast_instruction(&self, instruction: &TacInstruction) -> Vec<AsmInstruction>;
-}
-
-impl<'a> InstructionCast for GeneratorCasts<'a> {
-    fn cast_instruction(&self, instruction: &TacInstruction) -> Vec<AsmInstruction> {
+impl Factory<Vec<AsmInstruction>, TacInstruction, ()> for GeneratorCasts {
+    fn run(instruction: &mut TacInstruction, _: &mut ()) -> Vec<AsmInstruction> {
         #[allow(unused_variables)]
         match instruction {
-            instr @ TacInstruction::Return { .. } => self.cast_return(instr),
-            instr @ TacInstruction::Unary { .. } => self.cast_unary(instr),
-            instr @ TacInstruction::Binary { .. } => self.cast_binary(instr),
-            instr @ TacInstruction::Copy { src, dst } => vec![AsmInstruction::new_mov(convert_operand(src), convert_operand(dst))],
-            instr @ TacInstruction::Jump { .. } => self.cast_jump(instr),
-            instr @ TacInstruction::JumpIfZero { .. } => self.cast_jump(instr),
-            instr @ TacInstruction::JumpIfNotZero { .. } => self.cast_jump(instr),
-            instr @ TacInstruction::Label( name ) => vec![AsmInstruction::new_label(name.clone())],
+            TacInstruction::Return { .. } => Self::cast_return(instruction),
+            TacInstruction::Unary { .. } => Self::cast_unary(instruction),
+            TacInstruction::Binary { .. } => Self::cast_binary(instruction),
+            TacInstruction::Jump { .. } => Self::cast_jump(instruction),
+            TacInstruction::JumpIfZero { .. } => Self::cast_jump(instruction),
+            TacInstruction::JumpIfNotZero { .. } => Self::cast_jump(instruction),
+            TacInstruction::Copy { src, dst } => vec![AsmInstruction::new_mov(convert_operand(src), convert_operand(dst))],
+            TacInstruction::Label( name ) => vec![AsmInstruction::new_label(name.clone())],
             TacInstruction::FunCall {
                 fun_name,
                 args,
                 dst,
-            } => self.cast_funcall(fun_name, args, dst),
+            } => Self::cast_funcall(fun_name, args, dst),
         }
     }
 }

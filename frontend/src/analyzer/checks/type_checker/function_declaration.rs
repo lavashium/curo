@@ -33,7 +33,7 @@ impl Factory<(), TypedFunctionDeclaration, AnalyzerContext<'_, '_>> for TypeChec
                 symtable.add_var(param.clone(), AstType::Int);
             }
 
-            TypeCheck::run(body, ctx);
+            Self::run(body, ctx);
         }
     }
 }

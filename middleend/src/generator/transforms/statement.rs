@@ -2,35 +2,29 @@ use super::*;
 use language::*;
 use common::*;
 
-impl<'scp, 'ctx> GeneratorTransforms<'scp, 'ctx> {
-    pub fn transform_statement(&mut self, statement: &mut TypedStatement) -> Vec<TacInstruction> {
-        <Self as Factory<Vec<TacInstruction>, Self, TypedStatement>>::run(self, statement)
-    }
-}
-
-impl<'scp, 'ctx> Factory<Vec<TacInstruction>, Self, TypedStatement> for GeneratorTransforms<'scp, 'ctx> {
-    fn run(driver: &mut Self, statement: &mut TypedStatement) -> Vec<TacInstruction> {
+impl Factory<Vec<TacInstruction>, TypedStatement, TacGenContext<'_, '_>> for GeneratorTransforms {
+    fn run(statement: &mut TypedStatement, ctx: &mut TacGenContext) -> Vec<TacInstruction> {
         let mut instructions: Vec<TacInstruction> = Vec::new();
         match statement {
             TypedStatement::Return { expression, .. } => {
-                let (mut expression, value) = driver.transform_expression(expression);
+                let (mut expression, value) = Self::run(expression, ctx);
                 instructions.append(&mut expression);
                 instructions.push(TacInstruction::new_return(value));
             }
             TypedStatement::Expression { expression, .. } => {
-                let (mut expr_instrs, _) = driver.transform_expression(expression);
+                let (mut expr_instrs, _) = Self::run(expression, ctx);
                 instructions.append(&mut expr_instrs);
             }
             TypedStatement::If { condition, then_branch, else_branch, .. } => {
-                let (mut condition_instrs, condition_res) = driver.transform_expression(condition);
-                let mut then_instr = driver.transform_statement(then_branch);
-                let end_label = driver.ctx.ctx.tempgen.label("end");
+                let (mut condition_instrs, condition_res) = Self::run(condition, ctx);
+                let mut then_instr = Self::run_box(then_branch, ctx);
+                let end_label = ctx.ctx.tempgen.label("end");
                 let mut else_label = end_label.clone();
                 let mut else_instr = Vec::new();
 
                 if let Some(boxed_else) = else_branch {
-                    else_label = driver.ctx.ctx.tempgen.label("else");
-                    else_instr = driver.transform_statement(boxed_else);
+                    else_label = ctx.ctx.tempgen.label("else");
+                    else_instr = Self::run_box(boxed_else, ctx);
                 }
 
                 instructions.append(&mut condition_instrs);
@@ -51,30 +45,30 @@ impl<'scp, 'ctx> Factory<Vec<TacInstruction>, Self, TypedStatement> for Generato
                 instructions.push(TacInstruction::new_label(end_label));
             }
             TypedStatement::Compound { block, .. } => {
-                instructions.append(&mut driver.transform_block(block));
+                instructions.append(&mut Self::run(block, ctx));
             },
             TypedStatement::Null => {},
             TypedStatement::Break { label, .. } => {
-                let jump_label = driver.ctx.ctx.tempgen.loop_label(label, "break");
+                let jump_label = ctx.ctx.tempgen.loop_label(label, "break");
                 instructions.push(TacInstruction::new_jump(jump_label));
             }
 
             TypedStatement::Continue { label, .. } => {
-                let jump_label = driver.ctx.ctx.tempgen.loop_label(label, "continue");
+                let jump_label = ctx.ctx.tempgen.loop_label(label, "continue");
                 instructions.push(TacInstruction::new_jump(jump_label));
             }
 
             TypedStatement::While { label, condition, body, .. } => {
-                let continue_label = driver.ctx.ctx.tempgen.loop_label(label, "continue");
-                let break_label = driver.ctx.ctx.tempgen.loop_label(label, "break");
+                let continue_label = ctx.ctx.tempgen.loop_label(label, "continue");
+                let break_label = ctx.ctx.tempgen.loop_label(label, "break");
 
                 instructions.push(TacInstruction::new_label(continue_label.clone()));
 
-                let (mut cond_instrs, cond_val) = driver.transform_expression(condition);
+                let (mut cond_instrs, cond_val) = Self::run(condition, ctx);
                 instructions.append(&mut cond_instrs);
                 instructions.push(TacInstruction::new_jump_if_zero(cond_val.clone(), break_label.clone()));
 
-                let mut body_instrs = driver.transform_statement(body);
+                let mut body_instrs = Self::run_box(body, ctx);
                 instructions.append(&mut body_instrs);
 
                 instructions.push(TacInstruction::new_jump(continue_label));
@@ -82,16 +76,16 @@ impl<'scp, 'ctx> Factory<Vec<TacInstruction>, Self, TypedStatement> for Generato
             }
 
             TypedStatement::DoWhile { label, body, condition, .. } => {
-                let start_label = driver.ctx.ctx.tempgen.loop_label(label, "start");
-                let continue_label = driver.ctx.ctx.tempgen.loop_label(label, "continue");
-                let break_label = driver.ctx.ctx.tempgen.loop_label(label, "break");
+                let start_label = ctx.ctx.tempgen.loop_label(label, "start");
+                let continue_label = ctx.ctx.tempgen.loop_label(label, "continue");
+                let break_label = ctx.ctx.tempgen.loop_label(label, "break");
 
                 instructions.push(TacInstruction::new_label(start_label.clone()));
 
-                instructions.append(&mut driver.transform_statement(body));
+                instructions.append(&mut Self::run_box(body, ctx));
                 instructions.push(TacInstruction::new_label(continue_label.clone()));
 
-                let (mut cond_instrs, cond_val) = driver.transform_expression(condition);
+                let (mut cond_instrs, cond_val) = Self::run(condition, ctx);
                 instructions.append(&mut cond_instrs);
                 instructions.push(TacInstruction::new_jump_if_not_zero(cond_val, start_label));
 
@@ -99,25 +93,25 @@ impl<'scp, 'ctx> Factory<Vec<TacInstruction>, Self, TypedStatement> for Generato
             }
 
             TypedStatement::For { for_init, condition, post, body, label, .. } => {
-                let start_label = driver.ctx.ctx.tempgen.loop_label(label, "start");
-                let continue_label = driver.ctx.ctx.tempgen.loop_label(label, "continue");
-                let break_label = driver.ctx.ctx.tempgen.loop_label(label, "break");
+                let start_label = ctx.ctx.tempgen.loop_label(label, "start");
+                let continue_label = ctx.ctx.tempgen.loop_label(label, "continue");
+                let break_label = ctx.ctx.tempgen.loop_label(label, "break");
 
-                instructions.append(&mut driver.transform_for_init(for_init));
+                instructions.append(&mut Self::run(for_init, ctx));
 
                 instructions.push(TacInstruction::new_label(start_label.clone()));
 
                 if let Some(cond_expr) = condition {
-                    let (mut cond_instrs, cond_val) = driver.transform_expression(cond_expr);
+                    let (mut cond_instrs, cond_val) = Self::run(cond_expr, ctx);
                     instructions.append(&mut cond_instrs);
                     instructions.push(TacInstruction::new_jump_if_zero(cond_val, break_label.clone()));
                 }
 
-                instructions.append(&mut driver.transform_statement(body));
+                instructions.append(&mut Self::run_box(body, ctx));
                 instructions.push(TacInstruction::new_label(continue_label.clone()));
 
                 if let Some(post_expr) = post {
-                    let (mut post_instrs, _) = driver.transform_expression(post_expr);
+                    let (mut post_instrs, _) = Self::run(post_expr, ctx);
                     instructions.append(&mut post_instrs);
                 }
 

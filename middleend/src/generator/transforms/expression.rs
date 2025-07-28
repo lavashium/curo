@@ -2,23 +2,17 @@ use super::*;
 use language::*;
 use common::*;
 
-impl<'scp, 'ctx> GeneratorTransforms<'scp, 'ctx> {
-    pub fn transform_expression(&mut self, expression: &mut TypedExpression) -> (Vec<TacInstruction>, TacVal) {
-        <Self as Factory<(Vec<TacInstruction>, TacVal), Self, TypedExpression>>::run(self, expression)
-    }
-}
-
-impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, TypedExpression> for GeneratorTransforms<'scp, 'ctx> {
-    fn run(driver: &mut Self, expression: &mut TypedExpression) -> (Vec<TacInstruction>, TacVal) {
+impl Factory<(Vec<TacInstruction>, TacVal), TypedExpression, TacGenContext<'_, '_>> for GeneratorTransforms{
+    fn run(expression: &mut TypedExpression, ctx: &mut TacGenContext) -> (Vec<TacInstruction>, TacVal) {
         match expression {
             TypedExpression::Constant { constant, .. } => {
                 let val = TacVal::new_constant(constant.clone());
                 (vec![], val)
             }
             TypedExpression::Unary { operator, operand, .. } => {
-                let (mut instructions, source) = driver.transform_expression(operand);
+                let (mut instructions, source) = Self::run_box(operand, ctx);
 
-                let destination = TacVal::new_var(driver.ctx.ctx.tempgen.temp());
+                let destination = TacVal::new_var(ctx.ctx.tempgen.temp());
 
                 instructions.push(TacInstruction::new_unary(
                     operator.to_tac().unwrap(),
@@ -32,17 +26,17 @@ impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, TypedExpression> f
                 if *operator == AstBinaryKind::And || *operator == AstBinaryKind::Or {
                     let mut instructions = vec![];
 
-                    let result = TacVal::new_var(driver.ctx.ctx.tempgen.temp());
+                    let result = TacVal::new_var(ctx.ctx.tempgen.temp());
 
-                    let short_circuit_label = driver.ctx.ctx.tempgen.label(match operator {
+                    let short_circuit_label = ctx.ctx.tempgen.label(match operator {
                         AstBinaryKind::And => "and_false",
                         AstBinaryKind::Or => "or_true",
                         _ => unreachable!(),
                     });
 
-                    let end_label = driver.ctx.ctx.tempgen.label("end");
+                    let end_label = ctx.ctx.tempgen.label("end");
 
-                    let (mut instr_left, val_left) = driver.transform_expression(left);
+                    let (mut instr_left, val_left) = Self::run_box(left, ctx);
                     instructions.append(&mut instr_left);
 
                     match operator {
@@ -61,7 +55,7 @@ impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, TypedExpression> f
                         _ => unreachable!(),
                     }
 
-                    let (mut instr_right, val_right) = driver.transform_expression(right);
+                    let (mut instr_right, val_right) = Self::run_box(right, ctx);
                     instructions.append(&mut instr_right);
 
                     match operator {
@@ -118,10 +112,10 @@ impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, TypedExpression> f
                 } else {
                     let mut instructions = Vec::new();
 
-                    let (mut instructions_left, dest_left) = driver.transform_expression(left);
-                    let (mut instructions_right, dest_right) = driver.transform_expression(right);
+                    let (mut instructions_left, dest_left) = Self::run_box(left, ctx);
+                    let (mut instructions_right, dest_right) = Self::run_box(right, ctx);
 
-                    let destination = TacVal::new_var(driver.ctx.ctx.tempgen.temp());
+                    let destination = TacVal::new_var(ctx.ctx.tempgen.temp());
 
                     instructions.append(&mut instructions_left);
                     instructions.append(&mut instructions_right);
@@ -143,7 +137,7 @@ impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, TypedExpression> f
 
             TypedExpression::Assignment { left, right, .. } => {
                 if let TypedExpression::Var { identifier, .. } = &**left {
-                    let (mut rhs_instrs, rhs_val) = driver.transform_expression(right);
+                    let (mut rhs_instrs, rhs_val) = Self::run_box(right, ctx);
                     let lhs = TacVal::new_var(identifier.clone());
 
                     rhs_instrs.push(TacInstruction::Copy {
@@ -157,12 +151,12 @@ impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, TypedExpression> f
                 }
             }
             TypedExpression::Conditional { condition, then_branch, else_branch, .. } => {
-                let else_label = driver.ctx.ctx.tempgen.label("cond_else");
-                let end_label = driver.ctx.ctx.tempgen.label("cond_end");
+                let else_label = ctx.ctx.tempgen.label("cond_else");
+                let end_label = ctx.ctx.tempgen.label("cond_end");
 
-                let (mut cond_instrs, cond_val) = driver.transform_expression(condition);
+                let (mut cond_instrs, cond_val) = Self::run_box(condition, ctx);
 
-                let result = TacVal::new_var(driver.ctx.ctx.tempgen.temp());
+                let result = TacVal::new_var(ctx.ctx.tempgen.temp());
 
                 let mut instructions = Vec::new();
                 instructions.append(&mut cond_instrs);
@@ -172,7 +166,7 @@ impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, TypedExpression> f
                     target: else_label.clone(),
                 });
 
-                let (mut then_instrs, then_val) = driver.transform_expression(then_branch);
+                let (mut then_instrs, then_val) = Self::run_box(then_branch, ctx);
                 instructions.append(&mut then_instrs);
 
                 instructions.push(TacInstruction::Copy {
@@ -186,7 +180,7 @@ impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, TypedExpression> f
 
                 instructions.push(TacInstruction::Label(else_label));
 
-                let (mut else_instrs, else_val) = driver.transform_expression(else_branch);
+                let (mut else_instrs, else_val) = Self::run_box(else_branch, ctx);
                 instructions.append(&mut else_instrs);
 
                 instructions.push(TacInstruction::Copy {
@@ -203,12 +197,12 @@ impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), Self, TypedExpression> f
                 let mut tac_args = Vec::new();
 
                 for arg in args {
-                    let (mut arg_instrs, arg_val) = driver.transform_expression(arg);
+                    let (mut arg_instrs, arg_val) = Self::run_box(arg, ctx);
                     instructions.append(&mut arg_instrs);
                     tac_args.push(arg_val);
                 }
 
-                let result = TacVal::new_var(driver.ctx.ctx.tempgen.temp());
+                let result = TacVal::new_var(ctx.ctx.tempgen.temp());
                 instructions.push(TacInstruction::FunCall {
                     fun_name: identifier.clone(),
                     args: tac_args,
