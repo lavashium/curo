@@ -12,8 +12,8 @@ impl CodeEmitter {
     pub fn emit(&self, program: AsmProgram) -> String {
         let mut output = String::new();
 
-        for function in program.function_definitions() {
-            output.push_str(&self.emit_function(function));
+        for function in program.top_level() {
+            output.push_str(&self.emit_top_level(function));
             output.push('\n');
         }
 
@@ -22,20 +22,50 @@ impl CodeEmitter {
         output
     }
 
-    fn emit_function(&self, function: &AsmFunction) -> String {
-        let mut output = String::new();
+    fn emit_top_level(&self, top_level: &AsmTopLevel) -> String {
+        match top_level {
+            AsmTopLevel::Function { identifier, global, instructions, stack_size: _ } => {
+                let mut out = String::new();
+                
+                if *global {
+                    out.push_str(&format!(".globl {}\n", identifier));
+                }
 
-        output.push_str(&format!(".globl {}\n", function.identifier()));
-        output.push_str(&format!("{}:\n", function.identifier()));
+                out.push_str(".text\n");
 
-        output.push_str("    pushq %rbp\n");
-        output.push_str("    movq %rsp, %rbp\n");
+                out.push_str(&format!("{}:\n", identifier));
 
-        for instr in function.instructions() {
-            output.push_str(&self.emit_instruction(instr));
+                out.push_str("    pushq %rbp\n");
+                out.push_str("    movq %rsp, %rbp\n");
+
+                for instr in instructions {
+                    out.push_str(&self.emit_instruction(instr));
+                }
+                out
+            }
+
+            AsmTopLevel::StaticVariable { identifier, global, init } => {
+                let mut out = String::new();
+
+                if *global {
+                    out.push_str(&format!(".globl {}\n", identifier));
+                }
+
+                if init.parse::<i32>() == Ok(0) {
+                    out.push_str(".bss\n");
+                    out.push_str(".align 4\n");
+                    out.push_str(&format!("{}:\n", identifier));
+                    out.push_str(".zero 4\n");
+                } else {
+                    out.push_str(".data\n");
+                    out.push_str(".align 4\n");
+                    out.push_str(&format!("{}:\n", identifier));
+                    out.push_str(&format!(".long {}\n", init));
+                }
+                out
+            }
         }
 
-        output
     }
 
     fn emit_instruction(&self, instr: &AsmInstruction) -> String {

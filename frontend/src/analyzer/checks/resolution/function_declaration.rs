@@ -1,45 +1,62 @@
 use common::*;
 use super::*;
 
-impl Factory<(), TypedFunctionDeclaration, AnalyzerContext<'_, '_>> for IdentifierResolution {
-    fn run(function_declaration: &mut TypedFunctionDeclaration, ctx: &mut AnalyzerContext) {
-        if let Some(entry) = ctx.scope.get(function_declaration.identifier()) {
+impl<'scp, 'ctx> Factory<(), TypedFunctionDeclaration> for IdentifierResolution<'scp, 'ctx> {
+    fn run(declaration: &mut TypedFunctionDeclaration, ctx: &mut AnalyzerContext<'scp, 'ctx>) {
+        match ctx.global_scope {
+            true  => { GlobalFunctionDeclarationResolver::run(declaration, ctx) }
+            false => { LocalFunctionDeclarationResolver::run(declaration, ctx) }
+        }
+    }
+}
+
+pub struct GlobalFunctionDeclarationResolver<'scp, 'ctx> {
+    _driver: PhantomData<AnalyzerContext<'scp, 'ctx>>
+}
+
+impl<'scp, 'ctx> Driver for GlobalFunctionDeclarationResolver<'scp, 'ctx> {
+    type Context = AnalyzerContext<'scp, 'ctx>;
+}
+
+impl<'scp, 'ctx> Factory<(), TypedFunctionDeclaration> for GlobalFunctionDeclarationResolver<'scp, 'ctx> {
+    fn run(declaration: &mut TypedFunctionDeclaration, ctx: &mut AnalyzerContext<'scp, 'ctx>) {
+        if let Some(entry) = ctx.scope.get(declaration.identifier()) {
             if entry.from_current_scope && !entry.has_linkage {
                 ctx.ctx.diagnostics.push(Diagnostic::error(
-                    function_declaration.get_span(),
-                    DiagnosticKind::Semantic(SemanticError::ConflictingDeclarations { name: function_declaration.get_identifier() }),
-                ));
+                    declaration.get_span(),
+                    DiagnosticKind::Semantic(SemanticError::DuplicateDeclaration {
+                        name: declaration.get_identifier()
+                    })
+                ))
             }
         }
 
         ctx.scope.insert(
-            function_declaration.get_identifier(),
+            declaration.get_identifier(),
             IdentifierInfo {
-                unique_name: function_declaration.get_identifier(),
+                unique_name: declaration.get_identifier(),
                 has_linkage: true, 
                 from_current_scope: true,
             }
         );
 
-        if let Some(body) = function_declaration.body() {
-            if ctx.inside_function {
-                ctx.ctx.diagnostics.push(Diagnostic::error(
-                    body.get_span(),
-                    DiagnosticKind::Semantic(SemanticError::NestedFunctionDefinition),
-                ));
-            }
-        }
-
         let old_scope = ctx.scope.clone();
         ctx.scope = copy_identifier_map(&ctx.scope);
-        let function_declaration_span = function_declaration.get_span();
 
-        for param in function_declaration.params_mut() {
+        let old_global_scope = ctx.global_scope;
+        let old_inside_function = ctx.inside_function;
+
+        ctx.global_scope = false;
+        ctx.inside_function = true;
+
+        let declaration_span = declaration.get_span();
+
+        for param in declaration.params_mut() {
             let orig_name = param.clone();
             if let Some(entry) = ctx.scope.get(&orig_name) {
                 if entry.from_current_scope {
                     ctx.ctx.diagnostics.push(Diagnostic::error(
-                        function_declaration_span,
+                        declaration_span,
                         DiagnosticKind::Semantic(SemanticError::DuplicateDeclaration { name: orig_name.clone() }),
                     ));
                 }
@@ -56,16 +73,46 @@ impl Factory<(), TypedFunctionDeclaration, AnalyzerContext<'_, '_>> for Identifi
             );
         }
 
-        if let Some(block) = function_declaration.body_mut() {
+        if let Some(block) = declaration.body_mut() {
             ctx.inside_function = true;
             
             for item in block.block_items_mut() {
-                Self::run(item, ctx);
+                IdentifierResolution::run(item, ctx);
             }
             
             ctx.inside_function = false;
         }
 
-        ctx.scope = old_scope;
+        ctx.global_scope = old_global_scope;
+        ctx.inside_function = old_inside_function;
+        ctx.scope = old_scope;       
+    }
+}
+
+pub struct LocalFunctionDeclarationResolver<'scp, 'ctx> {
+    _driver: PhantomData<AnalyzerContext<'scp, 'ctx>>
+}
+
+impl<'scp, 'ctx> Driver for LocalFunctionDeclarationResolver<'scp, 'ctx> {
+    type Context = AnalyzerContext<'scp, 'ctx>;
+}
+
+impl<'scp, 'ctx> Factory<(), TypedFunctionDeclaration> for LocalFunctionDeclarationResolver<'scp, 'ctx> {
+    fn run(declaration: &mut TypedFunctionDeclaration, ctx: &mut AnalyzerContext<'scp, 'ctx>) {
+        if declaration.body().is_some() {
+            ctx.ctx.diagnostics.push(Diagnostic::error(
+                declaration.get_span(),
+                DiagnosticKind::Semantic(SemanticError::NestedFunctionDefinition),
+            ));
+        }
+        
+        if declaration.storage_class() == &Some(AstStorageClass::Static) {
+            ctx.ctx.diagnostics.push(Diagnostic::error(
+                declaration.get_span(),
+                DiagnosticKind::Semantic(SemanticError::InvalidStorageSpecifier),
+            ));
+        }
+
+        GlobalFunctionDeclarationResolver::run(declaration, ctx)
     }
 }

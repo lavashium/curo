@@ -1,10 +1,18 @@
+use std::marker::PhantomData;
+
 use crate::lexer::*;
 use common::*;
 use language::*;
 
-pub struct PunctuationProducer;
+pub struct PunctuationProducer<'scp, 'ctx> {
+    _driver: PhantomData<LexerContext<'scp, 'ctx>>,
+}
 
-impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for PunctuationProducer {
+impl<'scp, 'ctx> Driver for PunctuationProducer<'scp, 'ctx> {
+    type Context = LexerContext<'scp, 'ctx>;
+}
+
+impl Factory<Option<Token>, Lexer<'_>> for PunctuationProducer<'_, '_> {
     fn run(lexer: &mut Lexer, _ctx: &mut LexerContext) -> Option<Token> {
         let ch = lexer.peek()?;
 

@@ -7,3 +7,5 @@ use constructors::constructors;
 pub struct LexerContext<'scp, 'ctx> {
     pub ctx: &'scp mut CompilerContext<'ctx>,
 }
+
+impl Context for LexerContext<'_, '_> {}

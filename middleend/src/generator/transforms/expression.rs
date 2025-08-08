@@ -2,8 +2,8 @@ use super::*;
 use language::*;
 use common::*;
 
-impl Factory<(Vec<TacInstruction>, TacVal), TypedExpression, TacGenContext<'_, '_>> for GeneratorTransforms{
-    fn run(expression: &mut TypedExpression, ctx: &mut TacGenContext) -> (Vec<TacInstruction>, TacVal) {
+impl<'scp, 'ctx> Factory<(Vec<TacInstruction>, TacVal), TypedExpression> for GeneratorTransforms<'scp, 'ctx> {
+    fn run(expression: &mut TypedExpression, ctx: &mut TacGenContext<'scp, 'ctx>) -> (Vec<TacInstruction>, TacVal) {
         match expression {
             TypedExpression::Constant { constant, .. } => {
                 let val = TacVal::new_constant(constant.clone());

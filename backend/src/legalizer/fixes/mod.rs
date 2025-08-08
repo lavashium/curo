@@ -1,5 +1,15 @@
 mod program;
-mod function;
+mod top_level;
 mod instruction;
 
-pub struct LegalizerLegalizations;
+use std::marker::PhantomData;
+use crate::*;
+use common::*;
+
+pub struct LegalizerLegalizations<'scp, 'ctx> {
+    _driver: PhantomData<LegalizerContext<'scp, 'ctx>>,
+}
+
+impl<'scp, 'ctx> Driver for LegalizerLegalizations<'scp, 'ctx> {
+    type Context = LegalizerContext<'scp, 'ctx>;
+}

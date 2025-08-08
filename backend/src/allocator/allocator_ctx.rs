@@ -11,3 +11,5 @@ pub struct AllocatorContext<'scp, 'ctx> {
     pub stack_map: HashMap<String, i32>,
     pub next_offset: i32,
 }
+
+impl Context for AllocatorContext<'_, '_> {}

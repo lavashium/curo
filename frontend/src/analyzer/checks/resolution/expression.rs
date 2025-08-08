@@ -1,8 +1,8 @@
 use common::*;
 use super::*;
 
-impl Factory<(), TypedExpression, AnalyzerContext<'_, '_>> for IdentifierResolution {
-    fn run(expr: &mut TypedExpression, ctx: &mut AnalyzerContext) {
+impl<'scp, 'ctx> Factory<(), TypedExpression> for IdentifierResolution<'scp, 'ctx> {
+    fn run(expr: &mut TypedExpression, ctx: &mut AnalyzerContext<'scp, 'ctx>) {
         match expr {
            TypedExpression::Var { identifier, span, .. } => {
                 if let Some(info) = ctx.scope.get(identifier) {

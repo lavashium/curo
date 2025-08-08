@@ -8,7 +8,7 @@ use super::*;
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypedProgram {
-    functions: Vec<TypedFunctionDeclaration>,
+    declarations: Vec<TypedDeclaration>,
 }
 
 #[accessors]
@@ -18,6 +18,7 @@ pub struct TypedFunctionDeclaration {
     identifier: String,
     params: Vec<String>,
     body: Option<TypedBlock>,
+    storage_class: Option<AstStorageClass>,
     ty: AstType,
     span: Span,
 }
@@ -51,6 +52,7 @@ pub enum TypedDeclaration {
 pub struct TypedVariableDeclaration {
     identifier: String,
     init: Option<TypedExpression>,
+    storage_class: Option<AstStorageClass>,
     ty: AstType, 
     span: Span
 }

@@ -26,6 +26,8 @@ pub enum KeywordKind {
     For,
     Break,
     Continue,
+    Static,
+    Extern,
 }
 
 #[constructors]

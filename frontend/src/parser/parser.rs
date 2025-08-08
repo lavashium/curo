@@ -2,8 +2,8 @@ use crate::ParserContext;
 use super::rules::*;
 use accessors::accessors;
 use constructors::constructors;
-use language::ast::*;
-use language::token::*;
+use language::*;
+use common::*;
 use zawarudo::zawarudo;
 
 #[accessors]
@@ -14,7 +14,7 @@ pub struct Parser<'scp> {
 
 impl<'scp> Parser<'scp> {
     #[zawarudo(label = "Parser")]
-    pub fn parse(&'scp mut self, ctx: &mut ParserContext) -> Option<AstProgram> {
-        ParserRules::new(self).parse_program(ctx)
+    pub fn parse(&mut self, ctx: &mut ParserContext) -> Option<AstProgram> {
+        ParserRules::run(self.source_tokens, ctx)
     }
 }

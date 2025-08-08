@@ -1,8 +1,8 @@
 use common::*;
 use super::*;
 
-impl Factory<(), TypedBlock, AnalyzerContext<'_, '_>> for LoopLabeling {
-    fn run(block: &mut TypedBlock, ctx: &mut AnalyzerContext) -> () {
+impl<'scp, 'ctx> Factory<(), TypedBlock> for LoopLabeling<'scp, 'ctx> {
+    fn run(block: &mut TypedBlock, ctx: &mut AnalyzerContext<'scp, 'ctx>) -> () {
         for item in block.block_items_mut() {
             LoopLabeling::run(item, ctx);
         }

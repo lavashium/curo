@@ -10,38 +10,24 @@ mod parse_while;
 mod parse_do;
 mod parse_for;
 
-use parse_return::*;
-use parse_if::*;
-use parse_break::*;
-use parse_continue::*;
-use parse_while::*;
-use parse_do::*;
-use parse_for::*;
-
-impl<'a> ParserRules<'a> {
-    pub fn parse_statement(&mut self, ctx: &mut ParserContext) -> Option<AstStatement> {
-        <Self as Factory<Option<AstStatement>, Self, ParserContext>>::run(self, ctx)
-    }
-}
-
-impl<'a> Factory<Option<AstStatement>, Self, ParserContext<'_, '_>> for ParserRules<'a> {
-    fn run(rules: &mut Self, ctx: &mut ParserContext) -> Option<AstStatement> {
-        match rules.parser.source_tokens.peek()?.kind() {
-            TokenKind::Keyword(KeywordKind::Return)   => parse_return  (rules, ctx),
-            TokenKind::Keyword(KeywordKind::If)       => parse_if      (rules, ctx),
-            TokenKind::Keyword(KeywordKind::Break)    => parse_break   (rules, ctx),
-            TokenKind::Keyword(KeywordKind::Continue) => parse_continue(rules, ctx),
-            TokenKind::Keyword(KeywordKind::While)    => parse_while   (rules, ctx),
-            TokenKind::Keyword(KeywordKind::Do)       => parse_do      (rules, ctx),
-            TokenKind::Keyword(KeywordKind::For)      => parse_for     (rules, ctx),
+impl<'scp, 'ctx> Factory<Option<AstStatement>, TokenStream> for ParserRules<'scp, 'ctx> {
+    fn run(stream: &mut TokenStream, ctx: &mut ParserContext<'scp, 'ctx>) -> Option<AstStatement> {
+        match stream.peek()?.kind() {
+            TokenKind::Keyword(KeywordKind::Return)   => Self::parse_return  (stream, ctx),
+            TokenKind::Keyword(KeywordKind::If)       => Self::parse_if      (stream, ctx),
+            TokenKind::Keyword(KeywordKind::Break)    => Self::parse_break   (stream, ctx),
+            TokenKind::Keyword(KeywordKind::Continue) => Self::parse_continue(stream, ctx),
+            TokenKind::Keyword(KeywordKind::While)    => Self::parse_while   (stream, ctx),
+            TokenKind::Keyword(KeywordKind::Do)       => Self::parse_do      (stream, ctx),
+            TokenKind::Keyword(KeywordKind::For)      => Self::parse_for     (stream, ctx),
             TokenKind::Punctuation(PunctuationKind::Semicolon) => {
-                rules.expect(ctx, token_punctuation!(Semicolon))?;
+                Self::expect(stream, ctx, token_punctuation!(Semicolon))?;
                 Some(AstStatement::new_null())
             }
             TokenKind::Punctuation(PunctuationKind::OpenBrace) => {
-                let start_span = &rules.parser.source_tokens.peek()?.get_span();
-                let block = rules.parse_block(ctx)?;
-                let end_span = &rules.parser.source_tokens.peek()?.get_span();
+                let start_span = &stream.peek()?.get_span();
+                let block = try_apply!(Self, _, stream, ctx);
+                let end_span = &stream.peek()?.get_span();
                 let span = combine_spans!(start_span, end_span);
                 Some(AstStatement::new_compound(
                     block,
@@ -49,10 +35,10 @@ impl<'a> Factory<Option<AstStatement>, Self, ParserContext<'_, '_>> for ParserRu
                 ))
             }
             _ => {
-                let start_span = &rules.parser.source_tokens.peek()?.get_span();
-                let expr = rules.parse_expression(ctx)?;
-                rules.expect(ctx, token_punctuation!(Semicolon))?;
-                let end_span = &rules.parser.source_tokens.peek()?.get_span();
+                let start_span = &stream.peek()?.get_span();
+                let expr = Self::parse_expression(stream, ctx)?;
+                Self::expect(stream, ctx, token_punctuation!(Semicolon))?;
+                let end_span = &stream.peek()?.get_span();
                 let span = combine_spans!(start_span, end_span);
                 Some(AstStatement::new_expression(
                     expr,

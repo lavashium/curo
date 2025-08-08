@@ -1,8 +1,8 @@
 use common::*;
 use super::*;
 
-impl Factory<(), TypedBlock, AnalyzerContext<'_, '_>> for IdentifierResolution {
-    fn run(block: &mut TypedBlock, ctx: &mut AnalyzerContext) {
+impl<'scp, 'ctx> Factory<(), TypedBlock> for IdentifierResolution<'scp, 'ctx>  {
+    fn run(block: &mut TypedBlock, ctx: &mut AnalyzerContext<'scp, 'ctx> ) {
         let old_scope = ctx.scope.clone();
         ctx.scope = copy_identifier_map(&ctx.scope);
     

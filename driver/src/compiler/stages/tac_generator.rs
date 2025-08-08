@@ -1,14 +1,20 @@
-use crate::compiler::*;
+use std::marker::PhantomData;
 use common::*;
 use language::*;
 use middleend::*;
 
 use super::*;
 
-pub struct TacGeneratorStage;
+pub struct TacGeneratorStage<'scp, 'ctx> {
+    _driver: PhantomData<PipelineContext<'scp, 'ctx>>
+}
 
-impl Factory<PipelineResult<TacProgram>, TypedProgram, PipelineContext<'_, '_>> for TacGeneratorStage {
-    fn run(program: &mut TypedProgram, ctx: &mut PipelineContext) -> PipelineResult<TacProgram> {
+impl<'scp, 'ctx> Driver for TacGeneratorStage<'scp, 'ctx> {
+    type Context = PipelineContext<'scp, 'ctx>;
+}
+
+impl<'scp, 'ctx> Factory<PipelineResult<TacProgram>, TypedProgram> for TacGeneratorStage<'scp, 'ctx> {
+    fn run(program: &mut TypedProgram, ctx: &mut PipelineContext<'scp, 'ctx>) -> PipelineResult<TacProgram> {
         let mut tac_ctx = TacGenContext::new(
             ctx.ctx
         );

@@ -1,10 +1,16 @@
 use common::*;
 use super::*;
 
-impl Factory<(), TypedProgram, AnalyzerContext<'_, '_>> for IdentifierResolution {
-    fn run(program: &mut TypedProgram, ctx: &mut AnalyzerContext) -> () {
-        for func in program.functions_mut() {
-            Self::run(func, ctx)
+impl<'scp, 'ctx> Factory<(), TypedProgram> for IdentifierResolution<'scp, 'ctx> {
+    fn run(program: &mut TypedProgram, ctx: &mut AnalyzerContext<'scp, 'ctx>) -> () {
+        ctx.global_scope = true;
+        ctx.inside_function = false;
+        
+        for decl in program.declarations_mut() {
+            Self::run(decl, ctx)
         }
+
+        ctx.global_scope = false;
+        ctx.inside_function = false;
     }
 }

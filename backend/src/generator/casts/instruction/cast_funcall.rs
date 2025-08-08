@@ -3,7 +3,7 @@ use crate::asm::*;
 use language::*;
 
 
-impl GeneratorCasts {
+impl<'scp, 'ctx> GeneratorCasts<'scp, 'ctx> {
     pub fn cast_funcall(fun_name: &str, args: &[TacVal], dst: &TacVal) -> Vec<AsmInstruction> {
         const ARG_REGISTERS: [AsmReg; 6] = [
             AsmReg::DI, AsmReg::SI, AsmReg::DX,

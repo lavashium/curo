@@ -1,18 +1,25 @@
-use crate::compiler::*;
+use std::marker::PhantomData;
 use common::*;
 use language::*;
 use frontend::*;
 
 use super::*;
 
-pub struct AnalysisStage;
+pub struct AnalysisStage<'scp, 'ctx> {
+    _driver: PhantomData<PipelineContext<'scp, 'ctx>>
+}
 
-impl Factory<PipelineResult<TypedProgram>, AstProgram, PipelineContext<'_, '_>> for AnalysisStage {
-    fn run(program: &mut AstProgram, ctx: &mut PipelineContext) -> PipelineResult<TypedProgram> {
+impl<'scp, 'ctx> Driver for AnalysisStage<'scp, 'ctx> {
+    type Context = PipelineContext<'scp, 'ctx>;
+}
+
+impl<'scp, 'ctx> Factory<PipelineResult<TypedProgram>, AstProgram> for AnalysisStage<'scp, 'ctx> {
+    fn run(program: &mut AstProgram, ctx: &mut PipelineContext<'scp, 'ctx>) -> PipelineResult<TypedProgram> {
         let mut analyzer_ctx = AnalyzerContext::new(
             ctx.ctx,
             IdentifierMap::new(),
             0,
+            false,
             false,
             None
         );

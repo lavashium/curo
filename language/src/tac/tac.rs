@@ -5,7 +5,24 @@ use constructors::constructors;
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TacProgram {
-    function_definitions: Vec<TacFunction>,
+    top_level: Vec<TacTopLevel>,
+}
+
+#[constructors]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TacTopLevel {
+    Function {
+        identifier: String,
+        global: bool,
+        params: Vec<String>,
+        instructions: Vec<TacInstruction>,
+    },
+
+    StaticVariable {
+        identifier: String,
+        global: bool,
+        init: String
+    }
 }
 
 #[accessors]

@@ -3,8 +3,8 @@ use super::*;
 use crate::asm::*;
 use crate::*;
 
-impl Factory<Option<Vec<AsmInstruction>>, AsmInstruction, LegalizerContext<'_, '_>> for LegalizerLegalizations {
-    fn run(instr: &mut AsmInstruction, _ctx: &mut LegalizerContext) -> Option<Vec<AsmInstruction>> {
+impl<'scp, 'ctx> Factory<Option<Vec<AsmInstruction>>, AsmInstruction> for LegalizerLegalizations<'scp, 'ctx> {
+    fn run(instr: &mut AsmInstruction, _ctx: &mut LegalizerContext<'scp, 'ctx>) -> Option<Vec<AsmInstruction>> {
         match instr {
             AsmInstruction::Binary {
                 binary_operator: AsmBinaryOperator::Mult,
@@ -73,5 +73,5 @@ pub fn both_stack_operands(src: &AsmOperand, dst: &AsmOperand) -> bool {
 }
 
 pub fn is_stack_operand(op: &AsmOperand) -> bool {
-    matches!(op, AsmOperand::Stack(_))
+    matches!(op, AsmOperand::Stack(_) | AsmOperand::Data(_))
 }

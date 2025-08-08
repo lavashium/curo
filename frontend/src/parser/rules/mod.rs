@@ -10,11 +10,19 @@ mod for_init;
 mod param_list;
 mod arg_list;
 
+use std::marker::PhantomData;
+
 use crate::*;
-use accessors::accessors;
-use constructors::constructors;
 use common::*;
 use language::*;
+
+#[macro_export]
+macro_rules! try_apply {
+    ($factory:ty, $product:ty, $input:expr, $ctx:expr) => {{
+        let output: Option<$product> = <$factory as Factory<Option<$product>, _>>::run($input, $ctx);
+        output?
+    }};
+}
 
 macro_rules! push_eof_error {
     ($ctx:expr) => {
@@ -28,8 +36,8 @@ macro_rules! push_eof_error {
 }
 
 macro_rules! error_expect {
-    ($self:expr, $ctx:expr, $kind:expr) => {{
-        match $self.parser.source_tokens.consume() {
+    ($stream:expr, $ctx:expr, $kind:expr) => {{
+        match $stream.consume() {
             Some(tok) if tok.kind() == &$kind => Some(tok),
             Some(found) => {
                 $ctx.ctx.diagnostics.push(
@@ -52,8 +60,8 @@ macro_rules! error_expect {
 }
 
 macro_rules! error_consume_unwrap {
-    ($self:expr, $ctx:expr, $variant:ident, $expected_kind:expr) => {{
-        match $self.parser.source_tokens.consume() {
+    ($stream:expr, $ctx:expr, $variant:ident, $expected_kind:expr) => {{
+        match $stream.consume() {
             Some(tok) => {
                 if let TokenKind::$variant(inner) = tok.kind() {
                     Some(inner.clone())
@@ -78,21 +86,23 @@ macro_rules! error_consume_unwrap {
     }};
 }
 
-#[constructors]
-#[accessors]
-pub struct ParserRules<'scp> {
-    parser: &'scp mut Parser<'scp>,
+pub struct ParserRules<'scp, 'ctx> {
+    _driver: PhantomData<ParserContext<'scp, 'ctx>>,
 }
 
-impl<'a> ParserRules<'a> {
-    pub fn expect(&mut self, ctx: &mut ParserContext, kind: TokenKind) -> Option<Token> {
-        error_expect!(self, ctx, kind)
+impl<'scp, 'ctx> Driver for ParserRules<'scp, 'ctx> {
+    type Context = ParserContext<'scp, 'ctx>;
+}
+
+impl<'scp, 'ctx> ParserRules<'scp, 'ctx> {
+    pub fn expect(stream: &mut TokenStream, ctx: &mut ParserContext<'scp, 'ctx>, kind: TokenKind) -> Option<Token> {
+        error_expect!(stream, ctx, kind)
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_identifier(&mut self, ctx: &mut ParserContext) -> Option<String> {
+    pub fn unwrap_identifier(stream: &mut TokenStream, ctx: &mut ParserContext<'scp, 'ctx>) -> Option<String> {
         error_consume_unwrap!(
-            self,
+            stream,
             ctx,
             Identifier,
             TokenKind::Identifier(String::new())
@@ -100,9 +110,9 @@ impl<'a> ParserRules<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_constant(&mut self, ctx: &mut ParserContext) -> Option<String> {
+    pub fn unwrap_constant(stream: &mut TokenStream, ctx: &mut ParserContext<'scp, 'ctx>) -> Option<String> {
         error_consume_unwrap!(
-            self,
+            stream,
             ctx,
             Constant,
             TokenKind::Constant(String::new())
@@ -110,9 +120,9 @@ impl<'a> ParserRules<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_operator(&mut self, ctx: &mut ParserContext, expected_op: OperatorKind) -> Option<OperatorKind> {
+    pub fn unwrap_operator(stream: &mut TokenStream, ctx: &mut ParserContext<'scp, 'ctx>, expected_op: OperatorKind) -> Option<OperatorKind> {
         error_consume_unwrap!(
-            self,
+            stream,
             ctx,
             Operator,
             TokenKind::Operator(expected_op.clone())
@@ -120,9 +130,9 @@ impl<'a> ParserRules<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_keyword(&mut self, ctx: &mut ParserContext, expected_kw: KeywordKind) -> Option<KeywordKind> {
+    pub fn unwrap_keyword(stream: &mut TokenStream, ctx: &mut ParserContext<'scp, 'ctx>, expected_kw: KeywordKind) -> Option<KeywordKind> {
         error_consume_unwrap!(
-            self,
+            stream,
             ctx,
             Keyword,
             TokenKind::Keyword(expected_kw.clone())
@@ -130,9 +140,9 @@ impl<'a> ParserRules<'a> {
     }
 
     #[allow(dead_code)]
-    pub fn unwrap_punctuation(&mut self, ctx: &mut ParserContext, expected_punct: PunctuationKind) -> Option<PunctuationKind> {
+    pub fn unwrap_punctuation(stream: &mut TokenStream, ctx: &mut ParserContext<'scp, 'ctx>, expected_punct: PunctuationKind) -> Option<PunctuationKind> {
         error_consume_unwrap!(
-            self,
+            stream,
             ctx,
             Punctuation,
             TokenKind::Punctuation(expected_punct.clone())

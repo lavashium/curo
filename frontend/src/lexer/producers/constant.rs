@@ -1,10 +1,18 @@
+use std::marker::PhantomData;
+
 use crate::lexer::*;
 use common::*;
 use language::*;
 
-pub struct ConstantProducer;
+pub struct ConstantProducer<'scp, 'ctx> {
+    _driver: PhantomData<LexerContext<'scp, 'ctx>>,
+}
 
-impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for ConstantProducer {
+impl<'scp, 'ctx> Driver for ConstantProducer<'scp, 'ctx> {
+    type Context = LexerContext<'scp, 'ctx>;
+}
+
+impl Factory<Option<Token>, Lexer<'_>> for ConstantProducer<'_, '_> {
     fn run(lexer: &mut Lexer, ctx: &mut LexerContext) -> Option<Token> {
         let start_pos = lexer.current_position();
         let start_ptr = lexer.get_pointer();

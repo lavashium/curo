@@ -179,13 +179,25 @@ impl DiagnosticFormatter for NormalFormatter {
             }
             SemanticError::InvalidStorageSpecifier => {
                 format!("invalid storage class specifier")
-            }
+            },
             SemanticError::ConflictingStorageSpecifiers => {
-                format!("conflicting storage class specifiers")
-            }
+                format!("multiple storage classes in declaration")
+            },
+            SemanticError::InvalidTypeSpecifierCount { expected, found } => {
+                format!(
+                    "invalid type specifier: expected {} type specifier(s), found {}",
+                    expected, found
+                )
+            },
+            SemanticError::MissingTypeSpecifier => {
+                format!("missing type specifier in declaration")
+            },
+            SemanticError::InvalidStorageSpecifierLocation => {
+                format!("storage class specifier not allowed in this context")
+            },
             SemanticError::ConflictingTypeSpecifiers => {
                 format!("conflicting type specifiers")
-            }
+            },
         }
     }
     
@@ -314,6 +326,8 @@ fn lower_tokenkind(token: &TokenKind) -> &str {
             KeywordKind::For             => "for",
             KeywordKind::Break           => "break",
             KeywordKind::Continue        => "continue",
+            KeywordKind::Static          => "static",
+            KeywordKind::Extern          => "extern",
         },
 
         TokenKind::Operator(op) => match op {

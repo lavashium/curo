@@ -1,8 +1,8 @@
 use common::*;
 use super::*;
 
-impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for LoopLabeling {
-    fn run(statement: &mut TypedStatement, ctx: &mut AnalyzerContext) -> () {
+impl<'scp, 'ctx> Factory<(), TypedStatement> for LoopLabeling<'scp, 'ctx> {
+    fn run(statement: &mut TypedStatement, ctx: &mut AnalyzerContext<'scp, 'ctx>) -> () {
         match statement {
             TypedStatement::Return { .. }
             | TypedStatement::Expression { .. }

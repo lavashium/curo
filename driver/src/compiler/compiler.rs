@@ -2,6 +2,8 @@ use common::*;
 use language::*;
 use zawarudo::zawarudo;
 
+use std::path::PathBuf;
+
 use crate::*;
 use super::stages::*;
 
@@ -87,40 +89,30 @@ impl<'a> CompilerDriver<'a> {
         Ok(asm)
     }
 
-
     pub fn preprocess(input_file: &std::path::Path) -> Result<std::path::PathBuf, String> {
-        let preprocessed_file = input_file.with_extension("i");
-        let status = std::process::Command::new("gcc")
-            .args(["-E", "-P"])
-            .arg(input_file)
-            .arg("-o")
-            .arg(&preprocessed_file)
-            .status();
-
-        match status {
-            Err(e) => Err(format!("Failed to run preprocessor: {}", e)),
-            Ok(s) if !s.success() => Err("Preprocessing failed".to_string()),
-            Ok(_) => Ok(preprocessed_file),
-        }
+        let output = input_file.with_extension("i");
+        std::process::Command::new("gcc")
+            .args(["-E", "-P", "-o", &output.to_string_lossy(), &input_file.to_string_lossy()])
+            .status()
+            .map_err(|e| format!("Preprocessor failed: {e}"))
+            .and_then(|s| if s.success() { Ok(output) } else { Err("Preprocessor returned non-zero".into()) })
     }
 
-    pub fn assemble_and_link(
-        asm_file: &std::path::Path,
-        input_file: &std::path::Path,
-    ) -> Result<(), String> {
-        let output_exe = input_file.with_extension("");
-        let status = std::process::Command::new("gcc")
-            .arg(asm_file)
-            .arg("-o")
-            .arg(&output_exe)
-            .status();
-
-        let _ = std::fs::remove_file(asm_file);
-
-        match status {
-            Err(e) => Err(format!("Failed to assemble/link: {}", e)),
-            Ok(s) if !s.success() => Err("Assembly/linking failed".to_string()),
-            Ok(_) => Ok(()),
-        }
+    pub fn assemble(asm_file: &std::path::Path) -> Result<PathBuf, String> {
+        let obj_file = asm_file.with_extension("o");
+        run_command("gcc", &["-c", &asm_file.to_string_lossy(), "-o", &obj_file.to_string_lossy()])
+            .map(|_| obj_file)
     }
+
+    pub fn link(asm_file: &std::path::Path, exe_name: &str) -> Result<(), String> {
+        run_command("gcc", &[&asm_file.to_string_lossy(), "-o", exe_name])
+    }
+}
+
+fn run_command(cmd: &str, args: &[&str]) -> Result<(), String> {
+    std::process::Command::new(cmd)
+        .args(args)
+        .status()
+        .map_err(|e| format!("{cmd} failed: {e}"))
+        .and_then(|s| if s.success() { Ok(()) } else { Err(format!("{cmd} returned non-zero")) })
 }

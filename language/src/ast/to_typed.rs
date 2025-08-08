@@ -3,7 +3,7 @@ use crate::*;
 impl AstProgram {
     pub fn to_typed(&self) -> TypedProgram {
         TypedProgram::new(
-            self.functions()
+            self.declarations()
                 .iter()
                 .map(|f| f.to_typed())
                 .collect()
@@ -17,6 +17,7 @@ impl AstFunctionDeclaration {
             self.identifier().clone(),
             self.params().clone(),
             self.body().as_ref().map(|b| b.to_typed()),
+            self.storage_class().clone(),
             AstType::default(),
             *self.span()
         )
@@ -59,6 +60,7 @@ impl AstVariableDeclaration {
         TypedVariableDeclaration::new(
             self.identifier().clone(),
             self.init().as_ref().map(|e| e.to_typed()),
+            self.storage_class().clone(),
             AstType::default(),
             *self.span()
         )

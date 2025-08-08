@@ -14,11 +14,11 @@ use whitespace::*;
 
 use common::*;
 
-pub type PRODUCERS = factory_pipeline!(
-    WhitespaceProducer,
-    CommentProducer,
-    KeywordProducer,
-    ConstantProducer,
-    PunctuationProducer,
-    OperatorProducer,
+pub type PRODUCERS<'scp, 'ctx> = factory_list!(
+    WhitespaceProducer<'scp, 'ctx>,
+    CommentProducer<'scp, 'ctx>,
+    KeywordProducer<'scp, 'ctx>,
+    ConstantProducer<'scp, 'ctx>,
+    PunctuationProducer<'scp, 'ctx>,
+    OperatorProducer<'scp, 'ctx>,
 );

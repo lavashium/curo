@@ -8,7 +8,7 @@ use super::*;
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AstProgram {
-    functions: Vec<AstFunctionDeclaration>,
+    declarations: Vec<AstDeclaration>,
 }
 
 #[accessors]
@@ -18,9 +18,9 @@ pub struct AstFunctionDeclaration {
     identifier: String,
     params: Vec<String>,
     body: Option<AstBlock>,
+    storage_class: Option<AstStorageClass>,
     span: Span,
 }
-
 
 #[accessors]
 #[constructors]
@@ -50,6 +50,7 @@ pub enum AstDeclaration {
 pub struct AstVariableDeclaration {
     identifier: String,
     init: Option<AstExpression>,
+    storage_class: Option<AstStorageClass>,
     span: Span,
 }
 

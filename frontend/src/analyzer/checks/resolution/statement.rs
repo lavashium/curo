@@ -1,8 +1,8 @@
 use common::*;
 use super::*;
 
-impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for IdentifierResolution {
-    fn run(stmt: &mut TypedStatement, ctx: &mut AnalyzerContext) {
+impl<'scp, 'ctx> Factory<(), TypedStatement> for IdentifierResolution<'scp, 'ctx> {
+    fn run(stmt: &mut TypedStatement, ctx: &mut AnalyzerContext<'scp, 'ctx>) {
         match stmt {
             TypedStatement::Return { expression, .. } => {
                 Self::run(expression, ctx);

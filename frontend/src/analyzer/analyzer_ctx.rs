@@ -10,8 +10,11 @@ pub struct AnalyzerContext<'scp, 'ctx> {
     pub scope: IdentifierMap,
     pub loop_depth: usize,
     pub inside_function: bool,
+    pub global_scope: bool,
     pub current_loop: Option<String>
 }
+
+impl<'scp, 'ctx> Context for AnalyzerContext<'scp, 'ctx> {}
 
 pub type IdentifierMap = HashMap<String, IdentifierInfo>;
 
@@ -24,13 +27,12 @@ pub struct IdentifierInfo {
     pub from_current_scope: bool,
 }
 
-pub fn copy_identifier_map(m: &IdentifierMap) -> IdentifierMap {
-    m.iter()
-        .map(|(k, v)| {
-            (
-                k.clone(),
-                IdentifierInfo { unique_name: v.unique_name.clone(), from_current_scope: false, has_linkage: v.has_linkage },
-            )
-        })
+pub fn copy_identifier_map(map: &IdentifierMap) -> IdentifierMap {
+    map.iter()
+        .map(|(k, v)| (k.clone(), IdentifierInfo {
+            unique_name: v.unique_name.clone(),
+            has_linkage: v.has_linkage,
+            from_current_scope: false,
+        }))
         .collect()
 }

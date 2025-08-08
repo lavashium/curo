@@ -9,8 +9,8 @@ use crate::asm::*;
 use language::*;
 use common::*;
 
-impl Factory<Vec<AsmInstruction>, TacInstruction, ()> for GeneratorCasts {
-    fn run(instruction: &mut TacInstruction, _: &mut ()) -> Vec<AsmInstruction> {
+impl<'scp, 'ctx> Factory<Vec<AsmInstruction>, TacInstruction> for GeneratorCasts<'scp, 'ctx> {
+    fn run(instruction: &mut TacInstruction, _: &mut GeneratorContext<'scp, 'ctx>) -> Vec<AsmInstruction> {
         #[allow(unused_variables)]
         match instruction {
             TacInstruction::Return { .. } => Self::cast_return(instruction),

@@ -1,12 +1,26 @@
-#[macro_export]
-macro_rules! factory_pipeline {
-    () => {
-        ()
-    };
-    ($head:ty $(, $tail:ty)* $(,)?) => {
-        ($head, factory_pipeline!($($tail),*))
-    };
+pub trait Context {}
+
+pub trait Driver {
+    type Context: Context;
 }
+
+pub trait Factory<Product, Source>: Driver {
+    fn run(source: &mut Source, ctx: &mut Self::Context) -> Product;
+
+    fn run_box(boxed: &mut Box<Source>, ctx: &mut Self::Context) -> Product {
+        Self::run(boxed.as_mut(), ctx)
+    }
+
+    fn run_option(option: &mut Option<Source>, ctx: &mut Self::Context) -> Option<Product> {
+        option.as_mut().map(|source| Self::run(source, ctx))
+    }
+
+    fn run_option_box(option: &mut Option<Box<Source>>, ctx: &mut Self::Context) -> Option<Product> {
+        option.as_mut().map(|boxed| Self::run(&mut **boxed, ctx))
+    }
+}
+
+
 
 pub trait Chain<T> {
     fn chain(lhs: T, rhs: impl FnOnce() -> T) -> T;
@@ -26,40 +40,48 @@ impl Chain<()> for () {
     }
 }
 
-pub trait Factory<T, Source, Context> {
-    fn run(source: &mut Source, ctx: &mut Context) -> T;
 
-    fn run_box(boxed: &mut Box<Source>, ctx: &mut Context) -> T {
-        Self::run(boxed.as_mut(), ctx)
-    }
 
-    fn run_option(option: &mut Option<Source>, ctx: &mut Context) -> Option<T> {
-        option.as_mut().map(|source| Self::run(source, ctx))
-    }
-
-    fn run_option_box(option: &mut Option<Box<Source>>, ctx: &mut Context) -> Option<T> {
-        option.as_mut().map(|boxed| Self::run(&mut **boxed, ctx))
-    }
+#[macro_export]
+macro_rules! factory_list {
+    () => {
+        ()
+    };
+    ($head:ty $(, $tail:ty)* $(,)?) => {
+        Then<$head, factory_list!($($tail),*)>
+    };
 }
 
-pub trait FactoryList<T, Source, Context> {
-    fn run(source: &mut Source, ctx: &mut Context) -> T;
-}
+pub struct Then<A, B> (pub A, pub B);
 
-impl<T: Default, Source, Context> FactoryList<T, Source, Context> for () {
-    fn run(_source: &mut Source, _ctx: &mut Context) -> T {
-        T::default()
-    }
-}
-
-impl<T, Source, Context, Head, Tail> FactoryList<T, Source, Context> for (Head, Tail)
+pub trait FactoryList<Product, Source, Context> 
 where
-    Head: Factory<T, Source, Context>,
-    Tail: FactoryList<T, Source, Context>,
-    T: Chain<T> {
+    Context: self::Context, {
 
-    fn run(source: &mut Source, ctx: &mut Context) -> T {
+    fn run(source: &mut Source, ctx: &mut Context) -> Product;
+}
+
+impl<Product, Source, Context> FactoryList<Product, Source, Context> for () 
+where
+    Product: Default,
+    Context: self::Context, {
+
+    #[inline(always)]
+    fn run(_source: &mut Source, _ctx: &mut Context) -> Product {
+        Product::default()
+    }
+}
+
+impl<Product, Source, Context, Head, Tail> FactoryList<Product, Source, Context> for Then<Head, Tail>
+where
+    Head: Factory<Product, Source> + Driver<Context = Context>,
+    Tail: FactoryList<Product, Source, Context>,
+    Product: Chain<Product>,
+    Context: self::Context, {
+
+    #[inline(always)]
+    fn run(source: &mut Source, ctx: &mut Context) -> Product {
         let head_result = Head::run(source, ctx);
-        T::chain(head_result, || Tail::run(source, ctx))
+        Product::chain(head_result, || { Tail::run(source, ctx) })
     }
 }

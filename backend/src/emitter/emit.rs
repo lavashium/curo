@@ -15,6 +15,7 @@ impl ToAsm for AsmOperand {
         match self {
             AsmOperand::Reg(reg) => reg.to_asm(),
             AsmOperand::Stack(offset) => format!("{}(%rbp)", offset),
+            AsmOperand::Data(name) => format!("{}(%rip)", name),
             AsmOperand::Imm(value) => format!("${}", value),
             AsmOperand::Pseudo(_) => panic!("Pseudo operand should not exist at emission"),
         }

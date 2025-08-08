@@ -2,8 +2,8 @@ use super::*;
 use crate::asm::*;
 use common::*;
 
-impl Factory<(), AsmInstruction, AllocatorContext<'_, '_>> for AllocatorAllocations {
-    fn run(instruction: &mut AsmInstruction, ctx: &mut AllocatorContext) {
+impl<'scp, 'ctx> Factory<(), AsmInstruction> for AllocatorAllocations<'scp, 'ctx> {
+    fn run(instruction: &mut AsmInstruction, ctx: &mut AllocatorContext<'scp, 'ctx>) {
         match instruction {
             AsmInstruction::Mov { src, dst } => {
                 *src = Self::replace_operand(src, ctx);

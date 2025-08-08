@@ -8,8 +8,8 @@ pub use loop_labeling::*;
 
 use common::*;
 
-pub type CHECKS = factory_pipeline!(
-    IdentifierResolutionCheck,
-    TypeCheckCheck,
-    LoopLabelingCheck,
+pub type CHECKS<'scp, 'ctx> = factory_list!(
+    IdentifierResolutionCheck<'scp, 'ctx>,
+    TypeCheckCheck<'scp, 'ctx>,
+    LoopLabelingCheck<'scp, 'ctx>,
 );

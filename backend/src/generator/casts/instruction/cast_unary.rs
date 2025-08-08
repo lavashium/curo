@@ -2,7 +2,7 @@ use super::GeneratorCasts;
 use crate::asm::*;
 use language::*;
 
-impl GeneratorCasts {
+impl<'scp, 'ctx> GeneratorCasts<'scp, 'ctx> {
     pub fn cast_unary(instruction: &TacInstruction) -> Vec<AsmInstruction> {
         if let TacInstruction::Unary {
             operator,

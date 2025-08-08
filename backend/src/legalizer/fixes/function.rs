@@ -3,8 +3,8 @@ use crate::asm::*;
 use crate::*;
 use common::*;
 
-impl Factory<(), AsmFunction, LegalizerContext<'_, '_>> for LegalizerLegalizations {
-    fn run(function: &mut AsmFunction, ctx: &mut LegalizerContext) {
+impl<'scp, 'ctx> Factory<(), AsmFunction> for LegalizerLegalizations<'scp, 'ctx> {
+    fn run(function: &mut AsmFunction, ctx: &mut LegalizerContext<'scp, 'ctx>) {
         let stack_size = function.stack_size();
         let aligned_size = ((stack_size + 15) / 16) * 16;
         

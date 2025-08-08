@@ -1,10 +1,10 @@
 use common::*;
 use super::*;
 
-impl Factory<(), TypedProgram, AnalyzerContext<'_, '_>> for LoopLabeling {
-    fn run(program: &mut TypedProgram, ctx: &mut AnalyzerContext) -> () {
-        for func in program.functions_mut() {
-            Self::run(func, ctx)
+impl<'scp, 'ctx> Factory<(), TypedProgram> for LoopLabeling<'scp, 'ctx> {
+    fn run(program: &mut TypedProgram, ctx: &mut AnalyzerContext<'scp, 'ctx>) -> () {
+        for decl in program.declarations_mut() {
+            Self::run(decl, ctx)
         }
     }
 }

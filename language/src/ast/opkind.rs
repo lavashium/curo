@@ -33,3 +33,10 @@ pub enum AstType {
     Int,
     FunType(usize)
 }
+
+#[constructors]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AstStorageClass {
+    Static,
+    Extern
+}

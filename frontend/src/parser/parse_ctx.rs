@@ -8,3 +8,5 @@ pub struct ParserContext<'scp, 'ctx> {
     pub ctx: &'scp mut CompilerContext<'ctx>,
     pub min_prec: u8
 }
+
+impl Context for ParserContext<'_, '_> {}

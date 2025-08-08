@@ -11,6 +11,8 @@ pub struct PipelineContext<'scp, 'ctx> {
     pub errcode: ErrCode,
 }
 
+impl Context for PipelineContext<'_, '_> {}
+
 #[constructors]
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum PipelineStage {

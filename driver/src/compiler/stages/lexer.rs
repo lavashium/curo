@@ -1,14 +1,20 @@
-use crate::compiler::*;
+use std::marker::PhantomData;
 use common::*;
 use language::*;
 use frontend::*;
 
 use super::*;
 
-pub struct LexerStage;
+pub struct LexerStage<'scp, 'ctx> {
+    _driver: PhantomData<PipelineContext<'scp, 'ctx>>
+}
 
-impl Factory<PipelineResult<TokenStream>, &str, PipelineContext<'_, '_>> for LexerStage {
-    fn run(source: &mut &str, ctx: &mut PipelineContext) -> PipelineResult<TokenStream> {
+impl<'scp, 'ctx> Driver for LexerStage<'scp, 'ctx> {
+    type Context = PipelineContext<'scp, 'ctx>;
+}
+
+impl<'scp, 'ctx> Factory<PipelineResult<TokenStream>, &str> for LexerStage<'scp, 'ctx> {
+    fn run(source: &mut &str, ctx: &mut PipelineContext<'scp, 'ctx>) -> PipelineResult<TokenStream> {
         let mut lexer_ctx = LexerContext::new(
             ctx.ctx
         );

@@ -1,10 +1,18 @@
+use std::marker::PhantomData;
+
 use crate::lexer::*;
 use common::*;
 use language::*;
 
-pub struct WhitespaceProducer;
+pub struct WhitespaceProducer<'scp, 'ctx> {
+    _driver: PhantomData<LexerContext<'scp, 'ctx>>,
+}
 
-impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for WhitespaceProducer {
+impl<'scp, 'ctx> Driver for WhitespaceProducer<'scp, 'ctx> {
+    type Context = LexerContext<'scp, 'ctx>;
+}
+
+impl Factory<Option<Token>, Lexer<'_>> for WhitespaceProducer<'_, '_> {
     fn run(lexer: &mut Lexer, _ctx: &mut LexerContext) -> Option<Token> {
         let ch = lexer.peek()?;
         if !ch.is_whitespace() {

@@ -1,10 +1,18 @@
+use std::marker::PhantomData;
+
 use crate::lexer::*;
 use common::*;
 use language::*;
 
-pub struct KeywordProducer;
+pub struct KeywordProducer<'scp, 'ctx> {
+    _driver: PhantomData<LexerContext<'scp, 'ctx>>,
+}
 
-impl Factory<Option<Token>, Lexer<'_>, LexerContext<'_, '_>> for KeywordProducer {
+impl<'scp, 'ctx> Driver for KeywordProducer<'scp, 'ctx> {
+    type Context = LexerContext<'scp, 'ctx>;
+}
+
+impl Factory<Option<Token>, Lexer<'_>> for KeywordProducer<'_, '_> {
     fn run(lexer: &mut Lexer, _ctx: &mut LexerContext) -> Option<Token> {
         let start_pos = lexer.current_position();
         let start_ptr = lexer.get_pointer();
@@ -53,7 +61,9 @@ const KEYWORDS: &[(&str, TokenKind)] = keyword_table!(
     "while" => While,
     "for" => For,
     "break" => Break,
-    "continue" => Continue
+    "continue" => Continue,
+    "static" => Static,
+    "extern" => Extern
 );
 
 fn lookup_keyword(candidate: &str) -> TokenKind {

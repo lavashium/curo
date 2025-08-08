@@ -1,8 +1,8 @@
 use common::*;
 use super::*;
 
-impl Factory<(), TypedExpression, AnalyzerContext<'_, '_>> for TypeCheck {
-    fn run(exp: &mut TypedExpression, ctx: &mut AnalyzerContext) {
+impl<'scp, 'ctx> Factory<(), TypedExpression> for TypeCheck<'scp, 'ctx> {
+    fn run(exp: &mut TypedExpression, ctx: &mut AnalyzerContext<'scp, 'ctx>) {
         let span = exp.get_span();
         match exp {
             TypedExpression::FunctionCall { identifier, args, .. } => {

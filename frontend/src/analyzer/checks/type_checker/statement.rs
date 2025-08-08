@@ -1,8 +1,8 @@
 use common::*;
 use super::*;
 
-impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for TypeCheck {
-    fn run(stmt: &mut TypedStatement, ctx: &mut AnalyzerContext) {
+impl<'scp, 'ctx> Factory<(), TypedStatement> for TypeCheck<'scp, 'ctx> {
+    fn run(stmt: &mut TypedStatement, ctx: &mut AnalyzerContext<'scp, 'ctx>) {
         match stmt {
             TypedStatement::Return { expression, .. } => Self::run(expression, ctx),
             TypedStatement::Expression { expression, .. } => Self::run(expression, ctx),
@@ -49,6 +49,12 @@ impl Factory<(), TypedStatement, AnalyzerContext<'_, '_>> for TypeCheck {
             } => {
                 match for_init {
                     TypedForInit::InitDeclaration { decl, .. } => {
+                        if decl.storage_class().is_some() {
+                            ctx.ctx.diagnostics.push(Diagnostic::error(
+                                decl.get_span(),
+                                DiagnosticKind::Semantic(SemanticError::InvalidStorageSpecifierLocation),
+                            ));
+                        }
                         Self::run(decl, ctx);
                     }
                     TypedForInit::InitExpression { expr, .. } => {

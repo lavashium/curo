@@ -5,16 +5,23 @@ use constructors::constructors;
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AsmProgram {
-    function_definitions: Vec<AsmFunction>,
+    top_level: Vec<AsmTopLevel>,
 }
 
-#[accessors]
 #[constructors]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AsmFunction {
-    identifier: String,
-    instructions: Vec<AsmInstruction>,
-    stack_size: i32,
+pub enum AsmTopLevel {
+    Function {
+        identifier: String,
+        global: bool,
+        instructions: Vec<AsmInstruction>,
+        stack_size: i32,
+    },
+    StaticVariable {
+        identifier: String,
+        global: bool,
+        init: String,
+    }
 }
 
 #[constructors]
@@ -78,6 +85,7 @@ pub enum AsmOperand {
     Reg(AsmReg),
     Pseudo(String),
     Stack(i32),
+    Data(String)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

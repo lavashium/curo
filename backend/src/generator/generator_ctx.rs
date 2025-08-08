@@ -4,8 +4,8 @@ use constructors::constructors;
 
 #[accessors]
 #[constructors]
-pub struct LegalizerContext<'scp, 'ctx> {
+pub struct GeneratorContext<'scp, 'ctx> {
     pub ctx: &'scp mut CompilerContext<'ctx>,
 }
 
-impl Context for LegalizerContext<'_, '_> {}
+impl Context for GeneratorContext<'_, '_> {}

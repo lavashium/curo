@@ -1,14 +1,20 @@
-use crate::compiler::*;
+use std::marker::PhantomData;
 use common::*;
 use language::*;
 use frontend::*;
 
 use super::*;
 
-pub struct ParserStage;
+pub struct ParserStage<'scp, 'ctx> {
+    _driver: PhantomData<PipelineContext<'scp, 'ctx>>
+}
 
-impl Factory<PipelineResult<AstProgram>, TokenStream, PipelineContext<'_, '_>> for ParserStage {
-    fn run(tokens: &mut TokenStream, ctx: &mut PipelineContext) -> PipelineResult<AstProgram> {
+impl<'scp, 'ctx> Driver for ParserStage<'scp, 'ctx> {
+    type Context = PipelineContext<'scp, 'ctx>;
+}
+
+impl<'scp, 'ctx> Factory<PipelineResult<AstProgram>, TokenStream> for ParserStage<'scp, 'ctx> {
+    fn run(tokens: &mut TokenStream, ctx: &mut PipelineContext<'scp, 'ctx>) -> PipelineResult<AstProgram> {
         let mut parser_ctx = ParserContext::new(
             ctx.ctx, 
             0,

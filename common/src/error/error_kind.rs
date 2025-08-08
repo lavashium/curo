@@ -106,6 +106,12 @@ pub enum SemanticError {
     NestedFunctionDefinition,
     InvalidStorageSpecifier,
     ConflictingStorageSpecifiers,
+    InvalidTypeSpecifierCount {
+        expected: usize,
+        found: usize,
+    },
+    MissingTypeSpecifier,
+    InvalidStorageSpecifierLocation,
     ConflictingTypeSpecifiers,
 }
 

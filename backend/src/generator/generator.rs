@@ -1,3 +1,4 @@
+use super::*;
 use super::casts::*;
 use crate::asm::*;
 use constructors::constructors;
@@ -12,7 +13,7 @@ pub struct AsmGenerator<'scp> {
 
 impl<'scp> AsmGenerator<'scp> {
     #[zawarudo(label = "AsmGenerator")]
-    pub fn generate(&mut self, ctx: &mut ()) -> AsmProgram {
+    pub fn generate(&mut self, ctx: &mut GeneratorContext) -> AsmProgram {
         GeneratorCasts::run(self.source_program, ctx)
     }
 }

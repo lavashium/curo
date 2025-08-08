@@ -2,8 +2,8 @@ use super::*;
 use language::*;
 use common::*;
 
-impl Factory<Vec<TacInstruction>, TypedStatement, TacGenContext<'_, '_>> for GeneratorTransforms {
-    fn run(statement: &mut TypedStatement, ctx: &mut TacGenContext) -> Vec<TacInstruction> {
+impl<'scp, 'ctx> Factory<Vec<TacInstruction>, TypedStatement> for GeneratorTransforms<'scp, 'ctx> {
+    fn run(statement: &mut TypedStatement, ctx: &mut TacGenContext<'scp, 'ctx>) -> Vec<TacInstruction> {
         let mut instructions: Vec<TacInstruction> = Vec::new();
         match statement {
             TypedStatement::Return { expression, .. } => {
